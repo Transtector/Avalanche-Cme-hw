@@ -2,18 +2,31 @@ import crcmod.predefined
 import RPi.GPIO as GPIO
 import spidev
 import struct
+import time
+
 
 class stpm34(object):
 
     _spi = 0
+    _bus = 0;
+    _device = 0
     
     def __init__(self, bus, device):
         #setup SPI
-        SPI_SYN = 12
+        self._bus = bus
+        self._device = device 
         self._spi = spidev.SpiDev()
-        self._spi.open(bus, device)
+        self._spi.open(self._bus, self._device)
         #spi.max_speed_hz = 50000
         self._spi.mode = 3     # (CPOL = 1 | CPHA = 1) (0b11)
+
+        #setup GPIO
+        GPIO.setmode(GPIO.BCM)
+        if self._device == 0:
+            GPIO.setup(12, GPIO.OUT, initial=GPIO.HIGH)
+        else:
+            GPIO.setup(13, GPIO.OUT, initial=GPIO.HIGH)
+        
 
     def test(self):
         print 'hello world'
@@ -40,10 +53,23 @@ class stpm34(object):
         crc = crc8_func(hex_bytestring)
         return crc
 
-    #def sync():
-    #    GPIO.output(SPI_SYN, GPIO.LOW)
-    #    time.sleep(.001)
-    #    GPIO.output(SPI_SYN, GPIO.HIGH)
+    def sync(self):
+        if self._device == 0:
+            GPIO.output(12, GPIO.LOW)
+            time.sleep(.001)
+            GPIO.output(12, GPIO.HIGH)
+        else:
+            GPIO.output(13, GPIO.LOW)
+            time.sleep(.001)
+            GPIO.output(13, GPIO.HIGH)
+
+    def hardwareReset(self):
+        self.sync()
+        time.sleep(.001)
+        self.sync()
+        time.sleep(.001)
+        self.sync()
+        time.sleep(.001)
 
     def readReg(self, addr):
         self._spi.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
@@ -86,6 +112,7 @@ class stpm34(object):
 
     def readConfigRegs(self):
         #read configuration registers
+        print 'Configuration Registers'
         for row in xrange(0,21,1):
             addr = row*2
             regvalue = self.readReg(addr)       
