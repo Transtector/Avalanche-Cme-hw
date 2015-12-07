@@ -6,64 +6,11 @@ import time
 import config
 from drivers  import stpm3x    # TODO: rename
 from stpm3x import STPM3X
-
+import cmedata
 
 #declare state object
-cmeStatus = {
-    'channels': [
-        {
-            'id': "ch0",
-            'name': "ch0_name",
-            'description': "ch0_description",
-            'sensors': [
-                {
-                    'id': "s0",
-                    'type': "AC_VOLTAGE",
-                    'unit': "Vrms",
-                    'data': [
-                        [0,0],
-                        [0,0],
-                    ]
-                },
-                {
-                    'id': "s1",
-                    'type': "AC_CURRENT",
-                    'unit': "Arms",
-                    'data': [
-                        [0,0],
-                        [0,0],
-                    ]
-                },
-            ]
-        }, #end channel 0
-        {
-            'id': "ch1",
-            'name': "ch1_name",
-            'description': "ch1_description",
-            'sensors': [
-                {
-                    'id': "s0",
-                    'type': "AC_VOLTAGE",
-                    'unit': "Vrms",
-                    'data': [
-                        [0,0],
-                        [0,0],
-                    ]
-                },
-                {
-                    'id': "s1",
-                    'type': "AC_CURRENT",
-                    'unit': "Arms",
-                    'data': [
-                        [0,0],
-                        [0,0],
-                    ]
-                },
-            ]
-        }, #end channel 1
-    ]
-}
-print (cmeStatus['channels'][0]['sensors'][0]['data'][0])    
+
+print (cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0])    
 
 #setup SPI device 0
 spiDevice0 = spidev.SpiDev()
@@ -151,12 +98,12 @@ while(1):
     v3 = sensor1.read(STPM3X.V2RMS)
     c3 = sensor1.read(STPM3X.C2RMS)
 
-    cmeStatus['channels'][0]['sensors'][0]['data'][0] = [timestamp, v0]
-    cmeStatus['channels'][0]['sensors'][1]['data'][0] = [timestamp, c0]
-    cmeStatus['channels'][1]['sensors'][0]['data'][0] = [timestamp, v1]
-    cmeStatus['channels'][1]['sensors'][1]['data'][0] = [timestamp, c1]
+    cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0] = [timestamp, v0]
+    cmedata.cmestatus['channels'][0]['sensors'][1]['data'][0] = [timestamp, c0]
+    cmedata.cmestatus['channels'][1]['sensors'][0]['data'][0] = [timestamp, v1]
+    cmedata.cmestatus['channels'][1]['sensors'][1]['data'][0] = [timestamp, c1]
     
-    #print(cmeStatus)
+    print(cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0])
     
     #print("V1RMS: " + str(v1) + " | C1RMS: " + str(c1))
     #print("V2RMS: " + str(v2) + " | C2RMS: " + str(c2))
