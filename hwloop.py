@@ -7,10 +7,13 @@ import config
 from drivers  import stpm3x    # TODO: rename
 from stpm3x import STPM3X
 import cmedata
+import memcache
 
-#declare state object
-
-print (cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0])    
+#create shared memory object
+sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
+#initialize sharedmem object
+sharedmem.set('status', cmedata.status)
+print sharedmem
 
 #setup SPI device 0
 spiDevice0 = spidev.SpiDev()
@@ -98,12 +101,15 @@ while(1):
     v3 = sensor1.read(STPM3X.V2RMS)
     c3 = sensor1.read(STPM3X.C2RMS)
 
-    cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0] = [timestamp, v0]
-    cmedata.cmestatus['channels'][0]['sensors'][1]['data'][0] = [timestamp, c0]
-    cmedata.cmestatus['channels'][1]['sensors'][0]['data'][0] = [timestamp, v1]
-    cmedata.cmestatus['channels'][1]['sensors'][1]['data'][0] = [timestamp, c1]
+    cmedata.status['channels'][0]['sensors'][0]['data'][0] = [timestamp, v0]
+    cmedata.status['channels'][0]['sensors'][1]['data'][0] = [timestamp, c0]
+    cmedata.status['channels'][1]['sensors'][0]['data'][0] = [timestamp, v1]
+    cmedata.status['channels'][1]['sensors'][1]['data'][0] = [timestamp, c1]
+
+    #update shared memory object
+    sharedmem.set('status', cmedata.status)
     
-    print(cmedata.cmestatus['channels'][0]['sensors'][0]['data'][0])
+    print(cmedata.status['channels'][0]['sensors'][0]['data'][0])
     
     #print("V1RMS: " + str(v1) + " | C1RMS: " + str(c1))
     #print("V2RMS: " + str(v2) + " | C2RMS: " + str(c2))

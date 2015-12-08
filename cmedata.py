@@ -1,4 +1,4 @@
-cmestatus = {
+status = {
     'channels': [
         {
             'id': "ch0",
