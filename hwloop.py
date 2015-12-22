@@ -92,14 +92,14 @@ while(1):
     GPIO.output(13, GPIO.HIGH)
 
     #read back sensor data
-    v0 = sensor0.read(STPM3X.V1RMS)
-    c0 = sensor0.read(STPM3X.C1RMS)
-    v1 = sensor0.read(STPM3X.V2RMS)
-    c1 = sensor0.read(STPM3X.C2RMS)
-    v2 = sensor1.read(STPM3X.V1RMS)
-    c2 = sensor1.read(STPM3X.C1RMS)
-    v3 = sensor1.read(STPM3X.V2RMS)
-    c3 = sensor1.read(STPM3X.C2RMS)
+    v0 = sensor0.read(STPM3X.V2RMS) * 0.035430
+    c0 = sensor0.read(STPM3X.C2RMS) * 0.003333
+    v1 = sensor0.read(STPM3X.V1RMS)
+    c1 = sensor0.read(STPM3X.C1RMS)
+    v2 = sensor1.read(STPM3X.V2RMS)
+    c2 = sensor1.read(STPM3X.C2RMS)
+    v3 = sensor1.read(STPM3X.V1RMS)
+    c3 = sensor1.read(STPM3X.C1RMS)
 
     cmedata.status['channels'][0]['sensors'][0]['data'][0] = [timestamp, v0]
     cmedata.status['channels'][0]['sensors'][1]['data'][0] = [timestamp, c0]
@@ -109,7 +109,7 @@ while(1):
     #update shared memory object
     sharedmem.set('status', cmedata.status)
     
-    print(cmedata.status['channels'][0]['sensors'][0]['data'][0])
+    #print(cmedata.status['channels'][0]['sensors'][0]['data'][0])
     
     #print("V1RMS: " + str(v1) + " | C1RMS: " + str(c1))
     #print("V2RMS: " + str(v2) + " | C2RMS: " + str(c2))
