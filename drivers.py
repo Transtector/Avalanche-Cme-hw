@@ -5,6 +5,56 @@ import struct
 import time
 from stpm3x import STPM3X
 
+#GPIO assignments
+AVALANCHE_GPIO_SENSOR_POWER     = 5
+AVALANCHE_GPIO_ISOLATE_SPI_BUS  = 6
+
+AVALANCHE_GPIO_SYNC_SENSOR0     = 12
+AVALANCHE_GPIO_SYNC_SENSOR1     = 13
+
+AVALANCHE_GPIO_RELAY_CHANNEL1   = 28
+AVALANCHE_GPIO_RELAY_CHANNEL2   = 29
+AVALANCHE_GPIO_RELAY_CHANNEL3   = 30
+AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
+
+class avalanche(object):
+
+    def __init__(self):
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+
+        #initialize sensor sync pins
+        GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
+        GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
+
+        #initialize relays
+        GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL1, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL2, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL3, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL4, GPIO.OUT, initial=GPIO.LOW)
+
+        #setup GPIO for STPM34 power and bus isolator
+        GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power  
+        GPIO.setup(AVALANCHE_GPIO_ISOLATE_SPI_BUS, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
+
+        #
+        #GPIO.output(28, GPIO.HIGH)
+        #GPIO.output(29, GPIO.HIGH)
+        #GPIO.output(30, GPIO.HIGH)
+        #GPIO.output(31, GPIO.HIGH)
+
+
+
+    def sensorPower(self, state):
+
+    def spiBus0isolate(self, state):
+
+
+    def relayControl(self, channel, state):
+
+    def syncSensors(self):
+
+
 class stpm3x(object):
 
     _spiHandle = 0;
@@ -130,6 +180,26 @@ class stpm3x(object):
         #print ("Converted Value: " + str(value))
         
         return value
+
+    def gatedRead(self, register, gateThreshold):
+
+        regValue = self._readRegister(register['address'])
+        #print("Register Value: " + hex(regValue))
+                                      
+        #get value from register, mask and shift
+        maskedValue = (regValue & register['mask']) >> register['position']
+        #print("Masked Value:   " + hex(maskedValue))
+
+        #convert signed value of various bit width to signed int
+        value = self.convert(maskedValue, register['width'])
+        #print ("Converted Value: " + str(value))
+        
+        if (value < gateThreshold):
+            gatedValue = 0
+        else:
+            gatedValue = value
+
+        return gatedValue
 
     def write(self, register, value):
         #read and modify register contents

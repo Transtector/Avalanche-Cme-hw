@@ -8,4 +8,4 @@ while(1):
 
     time.sleep(1);
     status = sharedmem.get('status')
-    print(status['channels'][0]['sensors'][0]['data'][0])
+    print(status['channels'][0]['sensors'][0]['data'][0][1])

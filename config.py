@@ -1,7 +1,7 @@
 from stpm3x import STPM3X
 
 system = {
-    'loop_freq': 2,
+    'loop_freq': 0.5,
     'sensors': [
         {   #sensor0
             'type': 'STPM34',
@@ -64,7 +64,7 @@ system = {
             'gpio_sync': 12,
             #SPI Interface
             'spi_bus': 0,
-            'spi_device': 0,
+            'spi_device': 1,
             #ZCR/CLK Pin
             'ZCR_SEL': 0,
             'ZCR_EN': 0,
