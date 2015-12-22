@@ -37,13 +37,6 @@ class avalanche(object):
         GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power  
         GPIO.setup(AVALANCHE_GPIO_ISOLATE_SPI_BUS, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
 
-        #
-        #GPIO.output(28, GPIO.HIGH)
-        #GPIO.output(29, GPIO.HIGH)
-        #GPIO.output(30, GPIO.HIGH)
-        #GPIO.output(31, GPIO.HIGH)
-
-
 
     def sensorPower(self, state):
         '''
@@ -55,7 +48,7 @@ class avalanche(object):
         else:
             outputState = GPIO.HIGH
 
-        GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
+        GPIO.output(AVALANCHE_GPIO_SENSOR_POWER, outputState)
 
     def spiBus0isolate(self, state):
         '''

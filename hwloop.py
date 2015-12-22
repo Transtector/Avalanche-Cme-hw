@@ -92,10 +92,7 @@ while(1):
     avalanche.syncSensors()
 
     #read back sensor data
-    v0 = sensor0.read(STPM3X.V2RMS)
-    print (v0)
-    v0 = v0 * 0.035430
-    
+    v0 = sensor0.read(STPM3X.V2RMS)  * 0.035430    
     c0 = sensor0.gatedRead(STPM3X.C2RMS, 7) * 0.003333
     v1 = sensor0.read(STPM3X.V1RMS)
     c1 = sensor0.read(STPM3X.C1RMS)
