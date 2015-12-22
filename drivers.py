@@ -46,13 +46,60 @@ class avalanche(object):
 
 
     def sensorPower(self, state):
+        '''
+        The sensor power bus is controlled via p-channel MOSFET. If output is High,
+        bus power is off. If output is Low, power is sent to sensor bus.
+        '''
+        if state == True:
+            outputState = GPIO.LOW
+        else:
+            outputState = GPIO.HIGH
+
+        GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
     def spiBus0isolate(self, state):
+        '''
+        Bus isolator will isolate the bus if the output is high. The bus is
+        enabled if the output is low.
+        '''
+        if state == True:
+            outputState = GPIO.HIGH
+        else:
+            outputState = GPIO.LOW
+
+        GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
 
     def relayControl(self, channel, state):
+        '''
+        Relays are SPST. If the output is high, the relay will close its normally
+        open contact
+        '''
+        if state == True:
+            relayState = GPIO.HIGH
+        else:
+            relayState = GPIO.LOW 
+
+        if channel == 1:
+            GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL1, relayState)
+        elif channel == 2:
+            GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL2, relayState)
+        elif channel == 3:
+            GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL3, relayState)
+        elif channel == 4:
+            GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL4, relayState)
+
 
     def syncSensors(self):
+        '''
+        STPM3X sensors can be sync'd by briefly pulling the sync line Low for 
+        each sensor board.
+        '''
+        GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)
+        GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.LOW)
+        time.sleep(.001)
+        GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
+        GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
 
 
 class stpm3x(object):

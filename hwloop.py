@@ -5,6 +5,7 @@ import spidev
 import time
 import config
 from drivers  import stpm3x    # TODO: rename
+from drivers import avalanche
 from stpm3x import STPM3X
 import cmedata
 import memcache
@@ -27,35 +28,25 @@ spi0dev1.open(0, 1)   # TODO: read from config file
 spi0dev1.mode = 3     # (CPOL = 1 | CPHA = 1) (0b11)
 
 #setup GPIO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(12, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
-GPIO.setup(13, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
+avalanche = avalanche()
 
 #setup relay GPIO
 print("Initialize Relays")
-GPIO.setup(28, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(29, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(30, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(31, GPIO.OUT, initial=GPIO.LOW)
+avalanche.relayControl(1, True)
+avalanche.relayControl(2, True)
+avalanche.relayControl(3, True)
+avalanche.relayControl(4, True)
 
-GPIO.output(28, GPIO.HIGH)
-GPIO.output(29, GPIO.HIGH)
-GPIO.output(30, GPIO.HIGH)
-GPIO.output(31, GPIO.HIGH)
-
-#setup GPIO for STPM34 power and bus isolator
-GPIO.setup(5, GPIO.OUT, initial=GPIO.HIGH)  #power  
-GPIO.setup(6, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
 print("Sensor boards: Off")
 print("SPI bus 0: Disabled")
 print("Please wait...")
 time.sleep(10);             #give capacitors on sensors boards time to discharge
 print("Sensor boards: On")
-GPIO.output(5, GPIO.LOW)    #enable power 
+
+avalanche.sensorPower(True)
 time.sleep(1);
 print("SPI bus 0: Enabled")
-GPIO.output(6, GPIO.LOW)    #enable bus
+avalanche.spiBus0isolate(False)
 
 
 #setup sensor boards
@@ -98,14 +89,13 @@ while(1):
     #print("Sync Time: " + str(timestamp))
 
     #synchronize sensors
-    GPIO.output(12, GPIO.LOW)
-    GPIO.output(13, GPIO.LOW)
-    time.sleep(.001)
-    GPIO.output(12, GPIO.HIGH)
-    GPIO.output(13, GPIO.HIGH)
+    avalanche.syncSensors()
 
     #read back sensor data
-    v0 = sensor0.read(STPM3X.V2RMS) * 0.035430
+    v0 = sensor0.read(STPM3X.V2RMS)
+    print (v0)
+    v0 = v0 * 0.035430
+    
     c0 = sensor0.gatedRead(STPM3X.C2RMS, 7) * 0.003333
     v1 = sensor0.read(STPM3X.V1RMS)
     c1 = sensor0.read(STPM3X.C1RMS)
@@ -130,10 +120,3 @@ while(1):
     #print("V4RMS: " + str(v4) + " | C4RMS: " + str(c4))
 
     time.sleep(0.5)
-    
-    
-
-
-
-
-
