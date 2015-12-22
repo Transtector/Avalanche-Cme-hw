@@ -94,8 +94,8 @@ while(1):
     #read back sensor data
     v0 = sensor0.read(STPM3X.V2RMS)  * 0.035430    
     c0 = sensor0.gatedRead(STPM3X.C2RMS, 7) * 0.003333
-    v1 = sensor0.read(STPM3X.V1RMS)
-    c1 = sensor0.read(STPM3X.C1RMS)
+    v1 = sensor0.read(STPM3X.V1RMS) * 0.035430 
+    c1 = sensor0.gatedRead(STPM3X.C1RMS, 7) * 0.003333
     #v2 = sensor1.read(STPM3X.V2RMS)
     #c2 = sensor1.read(STPM3X.C2RMS)
     #v3 = sensor1.read(STPM3X.V1RMS)
