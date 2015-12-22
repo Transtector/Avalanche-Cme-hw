@@ -80,6 +80,11 @@ if not status == 0:
 
 print("\nLoop Started...")
 
+
+print("GPIO.HIGH " + str(GPIO.HIGH))
+print("GPIO.LOW  " + str(GPIO.LOW))
+
+
 while(1):
     timestamp = time.time()
     #print("Sync Time: " + str(timestamp))
