@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!./cme_hw_venv/bin/python
 
 import RPi.GPIO as GPIO
 import spidev
