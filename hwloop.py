@@ -111,7 +111,7 @@ while(1):
 		# TODO: update the channel log data
 
 		# update cme channel status
-		if i <= (len(status['channels']) - 1)
+		if i <= (len(status['channels']) - 1):
 			ch = status['channels'][i]
 
 		else:
