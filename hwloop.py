@@ -60,6 +60,7 @@ for i, channel in enumerate(channels):
 	print '\nChannel %d ...' % i
 
 	for g in ['GAIN1', 'GAIN2']:
+		
 		if not g in cfg:
 			print '    %s configuration missing' % g
 
@@ -122,7 +123,7 @@ while(1):
 	# reach each channels' sensors and update cme status
 	for i, channel in enumerate(channels):
 		cmedata.status['channels'][i]['sensors'][0]['data'][0] = [ timestamp, channel.read(STPM3X.V2RMS) * 0.035430 ]
-		cmedata.status['channels'][i]['sensors'][1]['data'][0] = [ timestamp, channel.gatedRead(STPM3X.C2RMS) * 0.003333 ]
+		cmedata.status['channels'][i]['sensors'][1]['data'][0] = [ timestamp, channel.gatedRead(STPM3X.C2RMS, 7) * 0.003333 ]
 
 	#update shared memory object
 	sharedmem.set('status', cmedata.status)
