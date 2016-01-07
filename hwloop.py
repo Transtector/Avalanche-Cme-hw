@@ -136,10 +136,13 @@ while(1):
 
 	# update shared memory object
 	sharedmem.set('status', status)
-	
+
+	print 'status\n-----\n%s' % status
+
+'''	
 	print '%f:  %f Vrms, %f Arms' % (status['channels'][0]['sensors'][0]['data'][0][0], 
 									 status['channels'][0]['sensors'][0]['data'][0][1],
 									 status['channels'][0]['sensors'][1]['data'][0][1])
-
+'''
 	time.sleep(1)
 
