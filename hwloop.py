@@ -8,7 +8,7 @@ from drivers  import stpm3x    # TODO: rename
 from drivers import avalanche
 from drivers import Sensor, Channel
 from stpm3x import STPM3X
-import memcache
+import memcache, json
 
 #create shared memory object
 sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
@@ -57,7 +57,6 @@ channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
 # This initializes as an empty list, but will get filled
 # in the hw loop below.
 status = { 'channels': [] }
-sharedmem.set('status', status)
 
 print("\nLoop starting...")
 while(1):
@@ -87,11 +86,9 @@ while(1):
 		ch.updateSensors([ [ timestamp, v], [ timestamp, c] ])
 
 	# update shared memory object
-	sharedmem.set('status', status)
+	sharedmem.set('status', json.dumps(status))
 
-	print 'status:\n%r\n\n' % sharedmem.get('status')
-
-
+	print 'status:\n%r\n\n' % json.loads(sharedmem.get('status'))
 
 	for i, ch in enumerate(status['channels']):
 		sStr = ''
