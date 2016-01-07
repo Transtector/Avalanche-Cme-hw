@@ -88,7 +88,7 @@ while(1):
 	# update shared memory object
 	sharedmem.set('status', json.dumps(status))
 
-	print 'status:\n%r\n\n' % json.loads(sharedmem.get('status'))
+	print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
 	for i, ch in enumerate(status['channels']):
 		sStr = ''
