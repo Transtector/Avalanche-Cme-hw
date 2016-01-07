@@ -7,14 +7,10 @@ import config
 from drivers  import stpm3x    # TODO: rename
 from drivers import avalanche
 from stpm3x import STPM3X
-import cmedata
 import memcache
 
 #create shared memory object
 sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
-#initialize sharedmem object
-sharedmem.set('status', cmedata.status)
-print sharedmem
 
 #Initialize SPI Devices
 #setup SPI device 0
@@ -49,7 +45,8 @@ print("SPI bus 0: Enabled")
 avalanche.spiBus0isolate(False)
 
 
-# setup sensor boards (== 'channels')
+
+# setup and configure sensor boards (== 'channels')
 channels = [ stpm3x(spi0dev0) , stpm3x(spi0dev1) ]
 
 print '\nConfiguring %d channels:' % len(channels)
@@ -73,38 +70,68 @@ for i, channel in enumerate(channels):
 		print '    done'
 
 
+
+# Setup status data transfer object (array of channels).
+# This initializes as an empty list, but will get filled
+# in the hw loop below.
+status = { 'channels': [] }
+
+class Channel:
+	def __init__(self, index, sensors): 
+		self.id = 'ch' + str(index)
+		self.sensors = sensors
+
+	def updateSensors(self, sensor_data):
+		''' assumes self.sensors is same length as sensor_data '''
+		for i, s in enumerate(self.sensors):
+			s.data[0] = sensor_data[i]
+
+class Sensor:
+	def __init__(self, index, sensorType, unit, data):
+		self.id = 's' + str(index)
+		self.type = sensorType
+		self.unit = unit
+		self.data = [ data, data ]
+
+
+
 print("\nLoop starting...")
 while(1):
 
 	# synchronize sensors - get timestamp for data points
 	timestamp = avalanche.syncSensors()
 
-	'''		
-	v0 = sensor0.read(STPM3X.V2RMS)  * 0.035430    
-	c0 = sensor0.gatedRead(STPM3X.C2RMS, 7) * 0.003333
-	v1 = sensor0.read(STPM3X.V1RMS) * 0.035430 
-	c1 = sensor0.gatedRead(STPM3X.C1RMS, 7) * 0.003333
-	#v2 = sensor1.read(STPM3X.V2RMS)
-	#c2 = sensor1.read(STPM3X.C2RMS)
-	#v3 = sensor1.read(STPM3X.V1RMS)
-	#c3 = sensor1.read(STPM3X.C1RMS)
-	'''
-
-	# reach each channels' sensors and update cme status
+	# process the channels (sensor boards)
 	for i, channel in enumerate(channels):
-		cmedata.status['channels'][i]['sensors'][0]['data'][0] = [ timestamp, channel.read(STPM3X.V2RMS) * 0.035430 ]
-		cmedata.status['channels'][i]['sensors'][1]['data'][0] = [ timestamp, channel.gatedRead(STPM3X.C2RMS, 7) * 0.003333 ]
 
-	#update shared memory object
-	sharedmem.set('status', cmedata.status)
-	
-	print '%f:  %f Vrms, %f Arms' % (cmedata.status['channels'][0]['sensors'][0]['data'][0][0], 
-									 cmedata.status['channels'][0]['sensors'][0]['data'][0][1],
-									 cmedata.status['channels'][0]['sensors'][1]['data'][0][1])
-	
-	#print("V1RMS: " + str(v1) + " | C1RMS: " + str(c1))
-	#print("V2RMS: " + str(v2) + " | C2RMS: " + str(c2))
-	#print("V3RMS: " + str(v3) + " | C3RMS: " + str(c3))
-	#print("V4RMS: " + str(v4) + " | C4RMS: " + str(c4))
+		# read each channel's sensors into current values
+		v = channel.read(STPM3X.V2RMS) * 0.035430 # Vrms
+		c = channel.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
 
-	time.sleep(0.5)
+		# TODO: update the channel log data
+
+		# update cme channel status
+		try:
+			ch = status['channels'][i]
+			
+		except ValueError:
+			s0 = Sensor(0, 'AC_VOLTAGE', 'Vrms', [ timestamp, v ])
+			s1 = Sensor(1, 'AC_CURRENT', 'Arms', [ timestamp, c ])
+			ch = Channel(i, [ s0, s1 ] )
+			status['channels'].append(ch)
+
+		ch.updateSensors([ [ timestamp, v], [ timestamp, c] ])
+
+		#ch['sensors'][0]['data'][0] = [ timestamp, v ]
+		#ch['sensors'][1]['data'][0] = [ timestamp, c ]
+
+
+	# update shared memory object
+	sharedmem.set('status', status)
+	
+	print '%f:  %f Vrms, %f Arms' % (status['channels'][0]['sensors'][0]['data'][0][0], 
+									 status['channels'][0]['sensors'][0]['data'][0][1],
+									 status['channels'][0]['sensors'][1]['data'][0][1])
+
+	time.sleep(1)
+
