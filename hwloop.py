@@ -45,31 +45,9 @@ print("SPI bus 0: Enabled")
 avalanche.spiBus0isolate(False)
 
 
-
 # setup and configure sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0) , stpm3x(spi0dev1) ]
-
-print '\nConfiguring %d channels:' % len(channels)
-
-for i, channel in enumerate(channels):
-	cfg = config.system['sensors'][i]
-
-	print '\nChannel %d ...' % i
-
-	for g in ['GAIN1', 'GAIN2']:
-		if not g in cfg:
-			print '    %s configuration missing' % g
-
-	status = 0
-	status |= channel.write(STPM3X.GAIN1, cfg['GAIN1'])
-	status |= channel.write(STPM3X.GAIN2, cfg['GAIN2'])
-
-	if not status == 0:
-		print '    error configuring channel %d' % i
-	else:
-		print '    done'
-
-
+channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
+			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
 
 # Setup status data transfer object (array of channels).
 # This initializes as an empty list, but will get filled
@@ -131,10 +109,5 @@ while(1):
 
 	print '\n----\nstatus\n%r\n' % status
 
-	'''	
-	print '%f:  %f Vrms, %f Arms' % (status['channels'][0]['sensors'][0]['data'][0][0], 
-									 status['channels'][0]['sensors'][0]['data'][0][1],
-									 status['channels'][0]['sensors'][1]['data'][0][1])
-	'''
 	time.sleep(1)
 
