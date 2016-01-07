@@ -48,8 +48,8 @@ avalanche.spiBus0isolate(False)
 
 
 # setup and configure sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
-			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
+channels = [ stpm3x(spi0dev0, config.system['sensors'][0]) ] #,
+		#	 stpm3x(spi0dev1, config.system['sensors'][1]) ]
 
 
 # Setup status data transfer object (array of channels).
@@ -86,8 +86,8 @@ while(1):
 	for i, channel in enumerate(channels):
 
 		# read each channel's sensors into current values
-		v = channel.read(STPM3X.V1RMS) * 0.035430 # Vrms
-		c = channel.gatedRead(STPM3X.C1RMS, 7) * 0.003333 # Arms
+		v = channel.read(STPM3X.V2RMS) # * 0.035430 # Vrms
+		c = channel.gatedRead(STPM3X.C2RMS, 7) # * 0.003333 # Arms
 
 		# TODO: update the channel log data
 
