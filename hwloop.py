@@ -103,15 +103,10 @@ while(1):
 
 		ch.updateSensors([ [ timestamp, v], [ timestamp, c] ])
 
-		#ch['sensors'][0]['data'][0] = [ timestamp, v ]
-		#ch['sensors'][1]['data'][0] = [ timestamp, c ]
-
-
 	# update shared memory object
 	sharedmem.set('status', status)
 
-	#print '\n----\nstatus\n%r\n' % status
-	print '%f: %f Vrms, %f Arms' % (timestamp, v, c)
+	print '\n+--------+\n| status |\n+--------+\n%r\n' % status
 
 	time.sleep(1)
 
