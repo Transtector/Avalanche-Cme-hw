@@ -48,8 +48,8 @@ avalanche.spiBus0isolate(False)
 
 
 # setup and configure sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0, config.system['sensors'][0]) ] #,
-		#	 stpm3x(spi0dev1, config.system['sensors'][1]) ]
+channels = [ stpm3x(spi0dev0, config.system['sensors'][0]) ],
+			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
 
 
 # Setup status data transfer object (array of channels).
@@ -114,6 +114,7 @@ while(1):
 
 		print '%f - Ch[%d] [ %s ]' % (timestamp, i, sStr) 
 
+	print '--'
 
 	time.sleep(1)
 
