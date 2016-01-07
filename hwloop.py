@@ -104,6 +104,7 @@ while(1):
 		ch.updateSensors([ [ timestamp, v], [ timestamp, c] ])
 
 	# update shared memory object
+	print 'status\n%r\n\n' % status
 	sharedmem.set('status', status)
 
 
