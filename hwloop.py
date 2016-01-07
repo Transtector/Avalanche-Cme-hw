@@ -50,10 +50,7 @@ avalanche.spiBus0isolate(False)
 
 
 # setup sensor boards (== 'channels')
-s0 = stpm3x(spi0dev0)
-channels = [ s0 ] # , stpm3x(spi0dev1) ]
-
-
+channels = [ stpm3x(spi0dev0) , stpm3x(spi0dev1) ]
 
 print '\nConfiguring %d channels:' % len(channels)
 
@@ -72,40 +69,11 @@ for i, channel in enumerate(channels):
 
 	if not status == 0:
 		print '    error configuring channel %d' % i
-
-
-'''
-#sensor 1
-cfg = config.system['sensors'][0]
-#print(bin(cfg['GAIN1']))
-print("#Sensors",len(config.system['sensors']))
-
-if not 'GAIN1' in cfg:
-	print("\nNo GAIN1 Configuration found")
-
-status = 0
-
-status |= sensor0.write(STPM3X.GAIN1, cfg['GAIN1'])
-status |= sensor0.write(STPM3X.GAIN2, cfg['GAIN2'])
-
-if not status == 0:
-	print ("Error configuring sensor 0")
-
-
-#sensor 2 configuration
-cfg = config.system['sensors'][1]
-
-status = 0
-status |= sensor1.write(STPM3X.GAIN1, cfg['GAIN1'])
-status |= sensor1.write(STPM3X.GAIN2, cfg['GAIN2'])
-
-if not status == 0:
-	print ("Error configuring sensor 1")
-'''
+	else:
+		print '    done'
 
 
 print("\nLoop starting...")
-
 while(1):
 
 	# synchronize sensors - get timestamp for data points
