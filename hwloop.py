@@ -106,7 +106,11 @@ while(1):
 	# update shared memory object
 	sharedmem.set('status', status)
 
-	print '\n+--------+\n| status |\n+--------+\n%r\n' % status
+
+	for i, ch in enumerate(status['channels']):
+		for j, s in enumerate(ch['sensors']):
+			print '%f - Ch[%d] : S[%d] = %f' % (timestamp, i, j, s['data'][0][1]) 
+
 
 	time.sleep(1)
 
