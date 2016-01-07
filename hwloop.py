@@ -67,8 +67,8 @@ for i, channel in enumerate(channels):
 			print '    %s configuration missing' % g
 
 	status = 0
-	status |= s0.write(STPM3X.GAIN1, cfg['GAIN1'])
-	status |= s0.write(STPM3X.GAIN2, cfg['GAIN2'])
+	status |= channel.write(STPM3X.GAIN1, cfg['GAIN1'])
+	status |= channel.write(STPM3X.GAIN2, cfg['GAIN2'])
 
 	if not status == 0:
 		print '    error configuring channel %d' % i
