@@ -111,10 +111,10 @@ while(1):
 		# TODO: update the channel log data
 
 		# update cme channel status
-		try:
+		if len(status['channels']) - 1 >= i
 			ch = status['channels'][i]
-			
-		except ValueError:
+
+		else:
 			s0 = Sensor(0, 'AC_VOLTAGE', 'Vrms', [ timestamp, v ])
 			s1 = Sensor(1, 'AC_CURRENT', 'Arms', [ timestamp, c ])
 			ch = Channel(i, [ s0, s1 ] )
