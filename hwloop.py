@@ -86,10 +86,6 @@ class Channel(dict):
 		for i, s in enumerate(self['sensors']):
 			s['data'][0] = sensor_data[i]
 
-	def __repr__(self):
-		dictrepr = dict.__repr__(self)
-		return '%s(%s)' % (type(self).__name__, dictrepr)
-
 
 class Sensor(dict):
 	def __init__(self, index, sensorType, unit, data):
@@ -97,10 +93,6 @@ class Sensor(dict):
 		self['type'] = sensorType
 		self['unit'] = unit
 		self['data'] = [ data, data ]
-
-	def __repr__(self):
-		dictrepr = dict.__repr__(self)
-		return '%s(%s)' % (type(self).__name__, dictrepr)
 
 
 print("\nLoop starting...")
@@ -137,7 +129,7 @@ while(1):
 	# update shared memory object
 	sharedmem.set('status', status)
 
-	print 'status\n-----\n%s' % status
+	print '\n----\nstatus\n%r\n' % status
 
 	'''	
 	print '%f:  %f Vrms, %f Arms' % (status['channels'][0]['sensors'][0]['data'][0][0], 
