@@ -94,6 +94,8 @@ class avalanche(object):
         GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
         GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
 
+        return time.time()
+
 
 class stpm3x(object):
 
