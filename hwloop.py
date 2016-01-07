@@ -108,8 +108,11 @@ while(1):
 
 
 	for i, ch in enumerate(status['channels']):
+		sStr = ''
 		for j, s in enumerate(ch['sensors']):
-			print '%f - Ch[%d] : S[%d] = %f' % (timestamp, i, j, s['data'][0][1]) 
+			sStr = sStr + 'S[%d]: %f, ' % (j, s['data'][0][1]) 
+
+		print '%f - Ch[%d] [ %s ]' % (timestamp, i, sStr) 
 
 
 	time.sleep(1)
