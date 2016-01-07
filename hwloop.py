@@ -35,12 +35,14 @@ avalanche.relayControl(4, True)
 
 print("Sensor boards: Off")
 print("SPI bus 0: Disabled")
-print("Please wait...")
-time.sleep(10);             #give capacitors on sensors boards time to discharge
-print("Sensor boards: On")
 
+print("Please wait...")
+time.sleep(10);             # give capacitors on sensors boards time to discharge
+
+print("Sensor boards: On")
 avalanche.sensorPower(True)
 time.sleep(1);
+
 print("SPI bus 0: Enabled")
 avalanche.spiBus0isolate(False)
 
@@ -48,6 +50,7 @@ avalanche.spiBus0isolate(False)
 # setup and configure sensor boards (== 'channels')
 channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
 			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
+
 
 # Setup status data transfer object (array of channels).
 # This initializes as an empty list, but will get filled
@@ -107,7 +110,8 @@ while(1):
 	# update shared memory object
 	sharedmem.set('status', status)
 
-	print '\n----\nstatus\n%r\n' % status
+	#print '\n----\nstatus\n%r\n' % status
+	print '%f: %f Vrms, %f Arms' % (timestamp, v, c)
 
 	time.sleep(1)
 
