@@ -128,8 +128,9 @@ while(1):
 	#update shared memory object
 	sharedmem.set('status', cmedata.status)
 	
-	print '%f, %f' % (cmedata.status['channels'][0]['sensors'][0]['data'][0], 
-					  cmedata.status['channels'][0]['sensors'][1]['data'][0])
+	print '%f:  %f Vrms, %f Arms' % (cmedata.status['channels'][0]['sensors'][0]['data'][0][0], 
+									 cmedata.status['channels'][0]['sensors'][0]['data'][0][1],
+									 cmedata.status['channels'][0]['sensors'][1]['data'][0][1])
 	
 	#print("V1RMS: " + str(v1) + " | C1RMS: " + str(c1))
 	#print("V2RMS: " + str(v2) + " | C2RMS: " + str(c2))
