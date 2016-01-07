@@ -76,23 +76,31 @@ for i, channel in enumerate(channels):
 # in the hw loop below.
 status = { 'channels': [] }
 
-class Channel:
+class Channel(dict):
 	def __init__(self, index, sensors): 
-		self.id = 'ch' + str(index)
-		self.sensors = sensors
+		self['id'] = 'ch' + str(index)
+		self['sensors'] = sensors
 
 	def updateSensors(self, sensor_data):
-		''' assumes self.sensors is same length as sensor_data '''
-		for i, s in enumerate(self.sensors):
-			s.data[0] = sensor_data[i]
+		''' assumes sensors is same length as sensor_data '''
+		for i, s in enumerate(self['sensors']):
+			s['data'][0] = sensor_data[i]
 
-class Sensor:
+	def __repr__(self):
+		dictrepr = dict.__repr__(self)
+		return '%s(%s)' % (type(self).__name__, dictrepr)
+
+
+class Sensor(dict):
 	def __init__(self, index, sensorType, unit, data):
-		self.id = 's' + str(index)
-		self.type = sensorType
-		self.unit = unit
-		self.data = [ data, data ]
+		self['id'] = 's' + str(index)
+		self['type'] = sensorType
+		self['unit'] = unit
+		self['data'] = [ data, data ]
 
+	def __repr__(self):
+		dictrepr = dict.__repr__(self)
+		return '%s(%s)' % (type(self).__name__, dictrepr)
 
 
 print("\nLoop starting...")
