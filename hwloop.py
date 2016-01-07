@@ -50,7 +50,10 @@ avalanche.spiBus0isolate(False)
 
 
 # setup sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0), stpm3x(spi0dev1) ]
+s0 = stpm3x(spi0dev0)
+channels = [ s0 ] # , stpm3x(spi0dev1) ]
+
+
 
 print '\nConfiguring %d channels:' % len(channels)
 
@@ -64,8 +67,8 @@ for i, channel in enumerate(channels):
 			print '    %s configuration missing' % g
 
 	status = 0
-	status |= channels[i].write(STPM3X.GAIN1, cfg['GAIN1'])
-	status |= channels[i].write(STPM3X.GAIN2, cfg['GAIN2'])
+	status |= s0.write(STPM3X.GAIN1, cfg['GAIN1'])
+	status |= s0.write(STPM3X.GAIN2, cfg['GAIN2'])
 
 	if not status:
 		print '    error configuring channel %d' % i
