@@ -48,7 +48,7 @@ avalanche.spiBus0isolate(False)
 
 
 # setup and configure sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0, config.system['sensors'][0]) ],
+channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
 			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
 
 
