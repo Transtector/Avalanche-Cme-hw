@@ -86,8 +86,8 @@ while(1):
 	for i, channel in enumerate(channels):
 
 		# read each channel's sensors into current values
-		v = channel.read(STPM3X.V2RMS) # * 0.035430 # Vrms
-		c = channel.gatedRead(STPM3X.C2RMS, 7) # * 0.003333 # Arms
+		v = channel.read(STPM3X.V2RMS) * 0.035430 # Vrms
+		c = channel.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
 
 		# TODO: update the channel log data
 
