@@ -6,6 +6,7 @@ import time
 import config
 from drivers  import stpm3x    # TODO: rename
 from drivers import avalanche
+from drivers import Sensor, Channel
 from stpm3x import STPM3X
 import memcache
 
@@ -56,25 +57,7 @@ channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
 # This initializes as an empty list, but will get filled
 # in the hw loop below.
 status = { 'channels': [] }
-
-class Channel(dict):
-	def __init__(self, index, sensors): 
-		self['id'] = 'ch' + str(index)
-		self['sensors'] = sensors
-
-	def updateSensors(self, sensor_data):
-		''' assumes sensors is same length as sensor_data '''
-		for i, s in enumerate(self['sensors']):
-			s['data'][0] = sensor_data[i]
-
-
-class Sensor(dict):
-	def __init__(self, index, sensorType, unit, data):
-		self['id'] = 's' + str(index)
-		self['type'] = sensorType
-		self['unit'] = unit
-		self['data'] = [ data, data ]
-
+sharedmem.set('status', status)
 
 print("\nLoop starting...")
 while(1):
