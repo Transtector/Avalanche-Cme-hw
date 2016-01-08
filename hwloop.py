@@ -41,7 +41,7 @@ class Channel(dict):
 		self['error'] = False
 		self._stale = False
 
-		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, self._initSensorData(sensor)) for i, sensor in enumerate(hw_sensors) ]
+		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, self._initSensorData(timestamp, sensor)) for i, sensor in enumerate(hw_sensors) ]
 
 	def _initSensorData(self, timestamp, hw_sensor):
 		return [ [ timestamp, hw_sensor.value ], [ timestamp, hw_sensor.value ] ]
