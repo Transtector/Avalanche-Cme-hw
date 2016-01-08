@@ -22,6 +22,8 @@ class Avalanche(object):
 
 	_spiDevices = []
 
+	_Sensor = namedtuple('Sensor', [ 'type', 'unit', 'error', 'value' ])
+
 	def __init__(self):
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
@@ -53,6 +55,7 @@ class Avalanche(object):
 
 		GPIO.output(AVALANCHE_GPIO_SENSOR_POWER, outputState)
 
+
 	def spiBus0isolate(self, state):
 		'''
 		Bus isolator will isolate the bus if the output is high. The bus is
@@ -80,16 +83,6 @@ class Avalanche(object):
 			# init and add stpm3x driver
 			self._spiDevices.append(stpm3x(spi, spi_config))
 
-	def getChannelSensorDefs(self, channel_index):
-		'''
-		Return sensor configuration info for the indicated channel
-		'''
-		# TODO: Currently hardcoded (each channel has one voltage and
-		# one current sensor).  Write/create a _channelConfig e.g., when
-		# setupSpiDevices() and read it back from there.
-		SensorDef = namedtuple('SensorDef', [ 'type', 'unit' ])
-		return [ SensorDef('AC_VOLTAGE', 'Vrms'), SensorDef('AC_CURRENT', 'Arms')]
-
 
 	def readSpiDevices(self):
 		'''
@@ -99,10 +92,10 @@ class Avalanche(object):
 		data = []
 		for spi in self._spiDevices:
 			# TODO: get scaling factors from config
-			v0 = spi.read(STPM3X.V2RMS) * 0.035430 # Vrms
-			c0 = spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
-			v1 = spi.read(STPM3X.V1RMS) * 0.035430 # Vrms
-			c1 = spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333 # Arms
+			v0 = _Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V2RMS) * 0.035430)
+			c0 = _Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333)
+			v1 = _Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V1RMS) * 0.035430)
+			c1 = _Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333)
 
 			data.append([ v0, c0 ])
 			data.append([ v1, c1 ])
@@ -149,6 +142,7 @@ class stpm3x(object):
 	
 	def __init__(self, spiHandle, config):
 		self._spiHandle = spiHandle
+		self.error = False
 
 		print '\nConfiguring channel on %s ...' % str(spiHandle)
 
@@ -162,6 +156,7 @@ class stpm3x(object):
 
 		if not status == 0:
 			print '    error configuring channel'
+			self.error = True
 		else:
 			print '    done'
 	
@@ -271,6 +266,9 @@ class stpm3x(object):
 
 	def read(self, register):
 
+		if self.error:
+			return 0
+
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
 									  
@@ -286,6 +284,9 @@ class stpm3x(object):
 
 	def gatedRead(self, register, gateThreshold):
 
+		if self.error:
+			return 0
+			
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
 									  
