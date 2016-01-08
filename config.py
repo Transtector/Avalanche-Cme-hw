@@ -1,7 +1,7 @@
 from stpm3x import STPM3X
 
 system = {
-	'loop_freq': 0.5,
+	'loop_freq': 1.0,
 	'sensors': [
 		{   #sensor0
 			'type': 'STPM34',
