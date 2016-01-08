@@ -19,6 +19,8 @@ AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 
 class Avalanche(object):
 
+	_spiDevices = []
+
 	def __init__(self):
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
@@ -62,6 +64,49 @@ class Avalanche(object):
 
 		GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
+
+	def setupSpiDevices(self, config):
+		'''
+		Setup a SPI for each item in config
+		'''
+		for i, spi_config in enumerate(config):
+
+			# create a SpiDev for each sensor board
+			spi = spidev.SpiDev()
+			spi.open(0, i) # TODO: read from config
+			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
+
+			# init and add stpm3x driver
+			_spiDevices.append(stpm3x(spi, spi_config))
+
+	def getChannelSensorDefs(self, channel_index):
+		'''
+		Return sensor configuration info for the indicated channel
+		'''
+		# TODO: Currently hardcoded (each channel has one voltage and
+		# one current sensor).  Write/create a _channelConfig e.g., when
+		# setupSpiDevices() and read it back from there.
+		SensorDef = namedtuple('SensorDef', [ 'type', 'unit' ])
+		return [ SensorDef('AC_VOLTAGE', 'Vrms'), SensorDef('AC_CURRENT', 'Arms')]
+
+
+	def readSpiDevices(self):
+		'''
+		Read all the SPI devices into channel data.  In Avalanche
+		each SPI device has 2 channels worth of sensor data to read.
+		'''
+		data = []
+		for spi in _spiDevices:
+			# TODO: get scaling factors from config
+			v0 = spi.read(STPM3X.V2RMS) * 0.035430 # Vrms
+			c0 = spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
+			v1 = spi.read(STPM3X.V1RMS) * 0.035430 # Vrms
+			c1 = spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333 # Arms
+
+			data.append([ v0, c0 ])
+			data.append([ v1, c1 ])
+
+		return data
 
 	def relayControl(self, channel, state):
 		'''

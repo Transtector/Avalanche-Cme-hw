@@ -1,32 +1,17 @@
 #!./cme_hw_venv/bin/python
 
-import RPi.GPIO as GPIO
-import spidev
-import time
-import config
-from drivers  import stpm3x    # TODO: rename
+import time, json
+import config, memcache
+
 from drivers import Avalanche
-from stpm3x import STPM3X
-import memcache, json
 
 #create shared memory object
 sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
 
-#Initialize SPI Devices
-#setup SPI device 0
-spi0dev0 = spidev.SpiDev()
-spi0dev0.open(0, 0)   # TODO: read from config file
-spi0dev0.mode = 3     # (CPOL = 1 | CPHA = 1) (0b11)
-
-#setup SPI device 1
-spi0dev1 = spidev.SpiDev()
-spi0dev1.open(0, 1)   # TODO: read from config file
-spi0dev1.mode = 3     # (CPOL = 1 | CPHA = 1) (0b11)
-
-#setup GPIO
+# setup GPIO
 Avalanche = Avalanche()
 
-#setup relay GPIO
+# setup relay GPIO
 print("Initialize Relays")
 Avalanche.relayControl(1, True)
 Avalanche.relayControl(2, True)
@@ -46,11 +31,8 @@ time.sleep(1);
 print("SPI bus 0: Enabled")
 Avalanche.spiBus0isolate(False)
 
-
-# setup and configure sensor boards (== 'channels')
-channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
-			 stpm3x(spi0dev1, config.system['sensors'][1]) ]
-
+print("Setup SPI devices")
+Avalanche.setupSpiDevices(config.system['sensors'])
 
 # Setup status data transfer object (array of channels).
 # This initializes as an empty list, but will get filled
@@ -67,15 +49,12 @@ class Channel(dict):
 		for i, s in enumerate(self['sensors']):
 			s['data'][0] = sensor_data[i]
 
-
 class Sensor(dict):
-	def __init__(self, index, sensorType, unit, data):
+	def __init__(self, index, sensorType, unit):
 		self['id'] = 's' + str(index)
 		self['type'] = sensorType
 		self['unit'] = unit
-		self['data'] = [ data, data ]
-
-
+		self['data'] = []
 
 print("\nLoop starting...")
 while(1):
@@ -83,12 +62,12 @@ while(1):
 	# synchronize sensors - get timestamp for data points
 	timestamp = Avalanche.syncSensors()
 
-	# process the channels (sensor boards)
-	for i, channel in enumerate(channels):
+	# read channel data
+	ch_data = Avalanche.readSpiDevices()
 
-		# read each channel's sensors into current values
-		v = channel.read(STPM3X.V2RMS) * 0.035430 # Vrms
-		c = channel.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
+	# process the channel data into points
+	# ch_data = [ [ meas0, meas1, ..., measN ], ..., [ <each channel defined in Avalanche> ] ]
+	for i, measurements in enumerate(ch_data):
 
 		# TODO: update the channel log data
 
@@ -97,26 +76,20 @@ while(1):
 			ch = status['channels'][i]
 
 		else:
-			s0 = Sensor(0, 'AC_VOLTAGE', 'Vrms', [ timestamp, v ])
-			s1 = Sensor(1, 'AC_CURRENT', 'Arms', [ timestamp, c ])
-			ch = Channel(i, [ s0, s1 ] )
+			# Add a Sensor for every measurement in channel
+			sensors = []
+			for j, s in enumerate(Avalanche.getChannelSensorDefs(i)):
+				sensors.append(Sensor(j, s.type, s.unit))
+
+			ch = Channel(i, sensors)
 			status['channels'].append(ch)
 
-		ch.updateSensors([ [ timestamp, v], [ timestamp, c] ])
+		ch.updateSensors(measurements)
 
 	# update shared memory object
 	sharedmem.set('status', json.dumps(status))
 
-	print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
+	#print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
-	for i, ch in enumerate(status['channels']):
-		sStr = ''
-		for j, s in enumerate(ch['sensors']):
-			sStr = sStr + 'S[%d]: %f, ' % (j, s['data'][0][1]) 
-
-		print '%f - Ch[%d] [ %s ]' % (timestamp, i, sStr) 
-
-	print '--'
-
-	time.sleep(1)
+	time.sleep(config.system['loop_freq'])
 
