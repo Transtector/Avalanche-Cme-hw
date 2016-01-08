@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 import spidev
 import struct
 import time
-import collections.namedtuple
+from collections import namedtuple
 from stpm3x import STPM3X
 
 #GPIO assignments
