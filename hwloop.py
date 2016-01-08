@@ -36,26 +36,38 @@ Avalanche.setupSpiDevices(config.system['sensors'])
 
 
 class Channel(dict):
-	def __init__(self, index, sensors): 
+	def __init__(self, index, timestamp, hw_sensors): 
 		self['id'] = 'ch' + str(index)
 		self['error'] = False
-		self['sensors'] = sensors
 		self._stale = False
 
-	def updateSensors(self, timestamp, sensors):
+		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, self._initSensorData(sensor)) for i, sensor in enumerate(hw_sensors) ]
+
+	def _initSensorData(self, timestamp, hw_sensor):
+		return [ [ timestamp, hw_sensor.value ], [ timestamp, hw_sensor.value ] ]
+
+
+	def updateSensors(self, timestamp, sensor_data):
 		''' Assumes sensors array characteristics have not changed since init '''
 		for i, s in enumerate(self['sensors']):
-			s['data'][0] = [ timestamp, sensors[i] ] # current measurement point
+			s['data'][0] = [ timestamp, sensor_data[i] ] # current measurement point
 
 		self._stale = False
 
 
 class Sensor(dict):
-	def __init__(self, index, sensorType, unit, initial_data_point):
+	def __init__(self, index, sensorType, unit, initial_data_points):
 		self['id'] = 's' + str(index)
 		self['type'] = sensorType
 		self['unit'] = unit
-		self['data'] = [ initial_data_point, initial_data_point ] # [ [ timestamp, value ], [ timestamp, value ] ]
+		
+		# initialize data as two points [ timestamp, value ] in the list:
+		#   data[0] => most recent sensor point
+		#   data[1] => oldest sensor point
+		# [ [ timestamp_recent, value_recent ],
+		#   [ timestamp_oldest, value_oldest ] ]
+		self['data'] = initial_data_points 
+
 
 dto_channels = []
 
@@ -87,7 +99,7 @@ while(1):
 			ch = dto_channels[i] # yes - update it
 
 		else: # no - add it
-			ch = Channel(i, [ Sensor(j, sensor.type, sensor.unit, [ timestamp, sensor.value ]) for j, sensor in enumerate(sensors) ])
+			ch = Channel(i, sensors)
 			dto_channels.append(ch)
 
 		ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
@@ -99,8 +111,7 @@ while(1):
 
 	# update shared memory object
 	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))
-
-	print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
+	#print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
 	time.sleep(config.system['loop_freq'])
 
