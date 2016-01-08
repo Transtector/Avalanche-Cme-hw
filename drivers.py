@@ -92,10 +92,10 @@ class Avalanche(object):
 		data = []
 		for spi in self._spiDevices:
 			# TODO: get scaling factors from config
-			v0 = _Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V2RMS) * 0.035430)
-			c0 = _Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333)
-			v1 = _Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V1RMS) * 0.035430)
-			c1 = _Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333)
+			v0 = self._Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V2RMS) * 0.035430)
+			c0 = self._Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333)
+			v1 = self._Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V1RMS) * 0.035430)
+			c1 = self._Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333)
 
 			data.append([ v0, c0 ])
 			data.append([ v1, c1 ])
@@ -286,7 +286,7 @@ class stpm3x(object):
 
 		if self.error:
 			return 0
-			
+
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
 									  
