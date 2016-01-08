@@ -99,7 +99,7 @@ while(1):
 			ch = dto_channels[i] # yes - update it
 
 		else: # no - add it
-			ch = Channel(i, sensors)
+			ch = Channel(i, timestamp, sensors)
 			dto_channels.append(ch)
 
 		ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
