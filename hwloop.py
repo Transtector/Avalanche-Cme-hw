@@ -34,72 +34,73 @@ Avalanche.spiBus0isolate(False)
 print("Setup SPI devices")
 Avalanche.setupSpiDevices(config.system['sensors'])
 
-# Setup status data transfer object (array of channels).
-# This initializes as an empty list, but will get filled
-# in the hw loop below.
-status = { 'channels': [] }
 
 class Channel(dict):
 	def __init__(self, index, sensors): 
 		self['id'] = 'ch' + str(index)
+		self['error'] = False
 		self['sensors'] = sensors
+		self._stale = False
 
-	def updateSensors(self, timestamp, sensor_data):
-		''' assumes sensors is same length as sensor_data '''
+	def updateSensors(self, timestamp, sensors):
+		''' Assumes sensors array characteristics have not changed since init '''
 		for i, s in enumerate(self['sensors']):
+			s['data'][0] = [ timestamp, sensors[i] ] # current measurement point
 
-			# First time through we add two spots to the data array
-			# from the single measurement.  Subsequently we just
-			# update the 0th element with the most current value.
-			if len(s['data']) == 0:
-				s['data'].append([ timestamp, sensor_data[i] ])
-				s['data'].append([ timestamp, sensor_data[i] ]) # TODO: replace this w/data from log file
-			else:
-				s['data'][0] = [ timestamp, sensor_data[i] ] # current measurement point
+		self._stale = False
 
 
 class Sensor(dict):
-	def __init__(self, index, sensorType, unit):
+	def __init__(self, index, sensorType, unit, initial_data_point):
 		self['id'] = 's' + str(index)
 		self['type'] = sensorType
 		self['unit'] = unit
-		self['data'] = []
+		self['data'] = [ initial_data_point, initial_data_point ] # [ [ timestamp, value ], [ timestamp, value ] ]
 
+dto_channels = []
 
 print("\nLoop starting...")
 while(1):
+
+	# Mark all DTO channels as stale.
+	# We'll freshen the ones we actually read
+	# the delete the stale ones in prep to grow
+	# and shrink channels as their added/removed
+	for ch in dto_channels:
+		ch._stale = True
 
 	# synchronize sensors - get timestamp for data points
 	timestamp = Avalanche.syncSensors()
 
 	# read channel data
-	ch_data = Avalanche.readSpiDevices()
+	channels = Avalanche.readSpiDevices()
 
-	# process the channel data into points
-	# ch_data = [ [ meas0, meas1, ..., measN ], ..., [ <each channel defined in Avalanche> ] ]
-	for i, measurements in enumerate(ch_data):
+	# process Avalanche channels into DTO status channels
+	for i, sensors in enumerate(channels):
 
-		# TODO: update the channel log data
+		# Do we have this channel in our status DTO?
+		# TODO: calculate a hash or some means to uniquely identify
+		# the channel as configured with its sensors.  Currently
+		# we aren't able to add/remove channels dynamically, but we'll
+		# probably need to get there.
+		if i <= (len(dto_channels) - 1):
+			ch = dto_channels[i] # yes - update it
 
-		# update cme channel status
-		if i <= (len(status['channels']) - 1):
-			ch = status['channels'][i]
+		else: # no - add it
+			ch = Channel(i, [ Sensor(j, sensor.type, sensor.unit, [ timestamp, sensor.value ]) for j, sensor in enumerate(sensors) ])
+			dto_channels.append(ch)
 
-		else:
-			# Add a Sensor for every measurement in channel
-			sensors = []
-			for j, s in enumerate(Avalanche.getChannelSensorDefs(i)):
-				sensors.append(Sensor(j, s.type, s.unit))
+		ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
+		ch['error'] = len([s for s in sensors if s.error]) != 0
+		ch._stale = False
 
-			ch = Channel(i, sensors)
-			status['channels'].append(ch) # add to status object
-
-		ch.updateSensors(timestamp, measurements)
+	# delete stale channels
+	dto_channels = [c for c in dto_channels if not c._stale]
 
 	# update shared memory object
-	sharedmem.set('status', json.dumps(status))
+	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))
 
-	#print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
+	print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
 	time.sleep(config.system['loop_freq'])
 
