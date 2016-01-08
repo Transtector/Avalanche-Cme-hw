@@ -77,7 +77,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init and add stpm3x driver
-			_spiDevices.append(stpm3x(spi, spi_config))
+			self._spiDevices.append(stpm3x(spi, spi_config))
 
 	def getChannelSensorDefs(self, channel_index):
 		'''
@@ -96,7 +96,7 @@ class Avalanche(object):
 		each SPI device has 2 channels worth of sensor data to read.
 		'''
 		data = []
-		for spi in _spiDevices:
+		for spi in self._spiDevices:
 			# TODO: get scaling factors from config
 			v0 = spi.read(STPM3X.V2RMS) * 0.035430 # Vrms
 			c0 = spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333 # Arms
