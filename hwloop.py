@@ -44,10 +44,19 @@ class Channel(dict):
 		self['id'] = 'ch' + str(index)
 		self['sensors'] = sensors
 
-	def updateSensors(self, sensor_data):
+	def updateSensors(self, timestamp, sensor_data):
 		''' assumes sensors is same length as sensor_data '''
 		for i, s in enumerate(self['sensors']):
-			s['data'][0] = sensor_data[i]
+
+			# First time through we add two spots to the data array
+			# from the single measurement.  Subsequently we just
+			# update the 0th element with the most current value.
+			if len(s['data']) == 0:
+				s['data'].append([ timestamp, sensor_data[i] ])
+				s['data'].append([ timestamp, sensor_data[i] ]) # TODO: replace this w/data from log file
+			else:
+				s['data'][0] = [ timestamp, sensor_data[i] ] # current measurement point
+
 
 class Sensor(dict):
 	def __init__(self, index, sensorType, unit):
@@ -55,6 +64,7 @@ class Sensor(dict):
 		self['type'] = sensorType
 		self['unit'] = unit
 		self['data'] = []
+
 
 print("\nLoop starting...")
 while(1):
@@ -82,9 +92,9 @@ while(1):
 				sensors.append(Sensor(j, s.type, s.unit))
 
 			ch = Channel(i, sensors)
-			status['channels'].append(ch)
+			status['channels'].append(ch) # add to status object
 
-		ch.updateSensors(measurements)
+		ch.updateSensors(timestamp, measurements)
 
 	# update shared memory object
 	sharedmem.set('status', json.dumps(status))
