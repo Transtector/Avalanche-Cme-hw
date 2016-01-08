@@ -17,26 +17,7 @@ AVALANCHE_GPIO_RELAY_CHANNEL2   = 29
 AVALANCHE_GPIO_RELAY_CHANNEL3   = 30
 AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 
-class Channel(dict):
-	def __init__(self, index, sensors): 
-		self['id'] = 'ch' + str(index)
-		self['sensors'] = sensors
-
-	def updateSensors(self, sensor_data):
-		''' assumes sensors is same length as sensor_data '''
-		for i, s in enumerate(self['sensors']):
-			s['data'][0] = sensor_data[i]
-
-
-class Sensor(dict):
-	def __init__(self, index, sensorType, unit, data):
-		self['id'] = 's' + str(index)
-		self['type'] = sensorType
-		self['unit'] = unit
-		self['data'] = [ data, data ]
-
-
-class avalanche(object):
+class Avalanche(object):
 
 	def __init__(self):
 		GPIO.setwarnings(False)

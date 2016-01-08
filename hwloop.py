@@ -5,8 +5,7 @@ import spidev
 import time
 import config
 from drivers  import stpm3x    # TODO: rename
-from drivers import avalanche
-from drivers import Sensor, Channel
+from drivers import Avalanche
 from stpm3x import STPM3X
 import memcache, json
 
@@ -25,14 +24,14 @@ spi0dev1.open(0, 1)   # TODO: read from config file
 spi0dev1.mode = 3     # (CPOL = 1 | CPHA = 1) (0b11)
 
 #setup GPIO
-avalanche = avalanche()
+Avalanche = Avalanche()
 
 #setup relay GPIO
 print("Initialize Relays")
-avalanche.relayControl(1, True)
-avalanche.relayControl(2, True)
-avalanche.relayControl(3, True)
-avalanche.relayControl(4, True)
+Avalanche.relayControl(1, True)
+Avalanche.relayControl(2, True)
+Avalanche.relayControl(3, True)
+Avalanche.relayControl(4, True)
 
 print("Sensor boards: Off")
 print("SPI bus 0: Disabled")
@@ -41,11 +40,11 @@ print("Please wait...")
 time.sleep(10);             # give capacitors on sensors boards time to discharge
 
 print("Sensor boards: On")
-avalanche.sensorPower(True)
+Avalanche.sensorPower(True)
 time.sleep(1);
 
 print("SPI bus 0: Enabled")
-avalanche.spiBus0isolate(False)
+Avalanche.spiBus0isolate(False)
 
 
 # setup and configure sensor boards (== 'channels')
@@ -58,11 +57,31 @@ channels = [ stpm3x(spi0dev0, config.system['sensors'][0]),
 # in the hw loop below.
 status = { 'channels': [] }
 
+class Channel(dict):
+	def __init__(self, index, sensors): 
+		self['id'] = 'ch' + str(index)
+		self['sensors'] = sensors
+
+	def updateSensors(self, sensor_data):
+		''' assumes sensors is same length as sensor_data '''
+		for i, s in enumerate(self['sensors']):
+			s['data'][0] = sensor_data[i]
+
+
+class Sensor(dict):
+	def __init__(self, index, sensorType, unit, data):
+		self['id'] = 's' + str(index)
+		self['type'] = sensorType
+		self['unit'] = unit
+		self['data'] = [ data, data ]
+
+
+
 print("\nLoop starting...")
 while(1):
 
 	# synchronize sensors - get timestamp for data points
-	timestamp = avalanche.syncSensors()
+	timestamp = Avalanche.syncSensors()
 
 	# process the channels (sensor boards)
 	for i, channel in enumerate(channels):
