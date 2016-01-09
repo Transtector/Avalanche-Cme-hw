@@ -34,7 +34,7 @@ class Channel(dict):
 		# Check the channel log for existing data
 		if os.path.isfile(self._logfile) and os.path.getsize(self._logfile) > 0:
 			with open(self._logfile, 'r') as f:
-    			oldest_points = json.loads(f.readline()) # first line of file
+				oldest_points = json.loads(f.readline()) # first line of file
 
 		else:
 			oldest_points = [[ timestamp, sensor.value ] for sensor in hw_sensors]
