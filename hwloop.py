@@ -61,14 +61,14 @@ while(1):
 		# the channel as configured with its sensors.  Currently
 		# we aren't able to add/remove channels dynamically, but we'll
 		# probably need to get there.
-		if i <= (len(dto_channels) - 1):
-			ch = dto_channels[i] # yes - update it
+		if i <= (len(dto_channels) - 1): # yes - update it
+			ch = dto_channels[i] 
+			ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
 
 		else: # no - add it
 			ch = Channel(i, timestamp, sensors)
 			dto_channels.append(ch)
 
-		ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
 		ch['error'] = len([s for s in sensors if s.error]) != 0
 		ch._stale = False
 
