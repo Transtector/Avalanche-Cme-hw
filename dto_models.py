@@ -51,7 +51,7 @@ class Channel(dict):
 
 		# append to log file
 		with open(self._logfile, 'a') as f:
-			f.write(json.dumps(sensor_data) + '\n')
+			f.write(json.dumps([[ timestamp, s ] for s in sensor_data]) + '\n')
 
 		self._stale = False
 
