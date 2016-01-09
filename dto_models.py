@@ -1,5 +1,5 @@
 
-import os, json
+import os, errno, json
 
 APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
 LOGDIR = os.path.join(APPROOT, 'log') # /home/pi/Cme-hw/log
