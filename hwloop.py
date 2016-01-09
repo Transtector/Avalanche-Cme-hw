@@ -4,6 +4,7 @@ import time, json
 import config, memcache
 
 from drivers import Avalanche
+from dto_models import Channel
 
 #create shared memory object
 sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
@@ -33,41 +34,6 @@ Avalanche.spiBus0isolate(False)
 
 print("Setup SPI devices")
 Avalanche.setupSpiDevices(config.system['sensors'])
-
-
-class Channel(dict):
-	def __init__(self, index, timestamp, hw_sensors): 
-		self['id'] = 'ch' + str(index)
-		self['error'] = False
-		self._stale = False
-
-		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, self._initSensorData(timestamp, sensor)) for i, sensor in enumerate(hw_sensors) ]
-
-	def _initSensorData(self, timestamp, hw_sensor):
-		return [ [ timestamp, hw_sensor.value ], [ timestamp, hw_sensor.value ] ]
-
-
-	def updateSensors(self, timestamp, sensor_data):
-		''' Assumes sensors array characteristics have not changed since init '''
-		for i, s in enumerate(self['sensors']):
-			s['data'][0] = [ timestamp, sensor_data[i] ] # current measurement point
-
-		self._stale = False
-
-
-class Sensor(dict):
-	def __init__(self, index, sensorType, unit, initial_data_points):
-		self['id'] = 's' + str(index)
-		self['type'] = sensorType
-		self['unit'] = unit
-		
-		# initialize data as two points [ timestamp, value ] in the list:
-		#   data[0] => most recent sensor point
-		#   data[1] => oldest sensor point
-		# [ [ timestamp_recent, value_recent ],
-		#   [ timestamp_oldest, value_oldest ] ]
-		self['data'] = initial_data_points 
-
 
 dto_channels = []
 
