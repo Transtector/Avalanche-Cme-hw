@@ -18,7 +18,7 @@ class Channel(dict):
 		self['error'] = False
 
 		self._stale = False
-		self._logfile = os.path.join(LOGDIR, 'ch' + str(index) + '_log.json') 
+		self._logfile = os.path.join(LOGDIR, 'ch' + str(index) + '.json') 
 
 		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
 
@@ -46,15 +46,12 @@ class Channel(dict):
 
 	def updateSensors(self, timestamp, sensor_data):
 		''' Assumes sensors array characteristics have not changed since init '''
-		new_points = []
-		for s in sensor_data:
-			current_point = [ timestamp, s ]
-			self['sensors']['data'][0] = current_point # current measurement point
-			new_points.append(current_point)
+		for i, s in enumerate(sensor_data):
+			self['sensors'][i]['data'][0] = [ timestamp, s ] # current measurement point
 
 		# append to log file
 		with open(self._logfile, 'a') as f:
-			f.write(json.dumps(new_points) + '\n')
+			f.write(json.dumps(sensor_data) + '\n')
 
 		self._stale = False
 
