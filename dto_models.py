@@ -1,5 +1,5 @@
+import os, json
 import config
-import json
 
 class Channel(dict):
 
