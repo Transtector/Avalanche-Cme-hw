@@ -97,8 +97,8 @@ class Avalanche(object):
 				c_read = STPM3X.C2RMS if (j == 0) else STPM3X.C1RMS
 
 				# TODO: Read scale factors from config
-				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lamda: device.read(v_read) * 0.035430))
-				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lamda: device.gatedRead(c_read, 7) * 0.003333))
+				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
+				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
 
 				self._Channels.append(self._Channel(device, device.error, sensors))
 
