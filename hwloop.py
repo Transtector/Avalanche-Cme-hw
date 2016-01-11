@@ -33,7 +33,7 @@ print("SPI bus 0: Enabled")
 Avalanche.spiBus0isolate(False)
 
 print("Setup SPI devices")
-Avalanche.setupSpiDevices(config.system['sensors'])
+Avalanche.setupSpiChannels(config.system['sensors'])
 
 dto_channels = []
 
@@ -51,7 +51,7 @@ while(1):
 	timestamp = Avalanche.syncSensors()
 
 	# read channel data
-	channels = Avalanche.readSpiDevices()
+	channels = Avalanche.readSpiChannels()
 
 	# process Avalanche channels into DTO status channels
 	for i, sensors in enumerate(channels):

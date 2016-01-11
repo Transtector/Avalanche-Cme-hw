@@ -20,9 +20,13 @@ AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 
 class Avalanche(object):
 
-	_spiDevices = []
 
-	_Sensor = namedtuple('Sensor', [ 'type', 'unit', 'error', 'value' ])
+	_Sensor = namedtuple('Sensor', [ 'device', 'error', 'type', 'unit', 'value', 'read' ])
+
+	_Channel = namedtuple('Channel', [ 'device', 'error', 'sensors' ])
+
+	_Channels = [] # list of _Channel
+
 
 	def __init__(self):
 		GPIO.setwarnings(False)
@@ -69,9 +73,9 @@ class Avalanche(object):
 		GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
 
-	def setupSpiDevices(self, config):
+	def setupSpiChannels(self, config):
 		'''
-		Setup a SPI for each item in config
+		Setup channels for each SPI device in config
 		'''
 		for i, spi_config in enumerate(config):
 
@@ -80,25 +84,47 @@ class Avalanche(object):
 			spi.open(0, i) # TODO: read from config
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
-			# init and add stpm3x driver
-			self._spiDevices.append(stpm3x(spi, spi_config))
+			# init stmp3x SPI device
+			device = stmp3x(spi, spi_config)
+
+			# add two channels for each stmp3x SPI device
+			# each channel has 2 sensors (Voltage and Current)
+			sensors = []
+			for j in [0, 1]:
+
+				# SPI read and gated read parameters depend on the channel index
+				v_read = STPM3X.V2RMS if (j == 0) else STPM3X.V1RMS
+				c_read = STPM3X.C2RMS if (j == 0) else STPM3X.C1RMS
+
+				# TODO: Read scale factors from config
+				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lamda: device.read(v_read) * 0.035430))
+				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lamda: device.gatedRead(c_read, 7) * 0.003333))
+
+				self._Channels.append(self._Channel(device, device.error, sensors))
 
 
-	def readSpiDevices(self):
+	def readSpiChannels(self):
 		'''
 		Read all the SPI devices into channel data.  In Avalanche
 		each SPI device has 2 channels worth of sensor data to read.
 		'''
 		data = []
-		for spi in self._spiDevices:
-			# TODO: get scaling factors from config
-			v0 = self._Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V2RMS) * 0.035430)
-			c0 = self._Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C2RMS, 7) * 0.003333)
-			v1 = self._Sensor('AC_VOLTAGE', 'Vrms', spi.error, spi.read(STPM3X.V1RMS) * 0.035430)
-			c1 = self._Sensor('AC_CURRENT', 'Arms', spi.error, spi.gatedRead(STPM3X.C1RMS, 7) * 0.003333)
+		for ch in self._Channels:
+			channel_data = []
+			
+			if not ch.error: 
+				for s in ch.sensors:
+					s.error = '' # reset error
 
-			data.append([ v0, c0 ])
-			data.append([ v1, c1 ])
+					# TODO: update s.error when s.read
+					sensor_data = s.read() 
+
+					if s.error:
+						ch.error = ch.error + ' ' + s.error
+					else:
+						channel_data.append(sensor_data)
+
+			data.append(channel_data)
 
 		return data
 
@@ -121,7 +147,6 @@ class Avalanche(object):
 		elif channel == 4:
 			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL4, relayState)
 
-
 	def syncSensors(self):
 		'''
 		STPM3X sensors can be sync'd by briefly pulling the sync line Low for 
@@ -142,25 +167,29 @@ class stpm3x(object):
 	
 	def __init__(self, spiHandle, config):
 		self._spiHandle = spiHandle
-		self.error = False
+		self.error = '' # empty for no errors
 
 		print '\nConfiguring channel on %s ...' % str(spiHandle)
 
-		for g in ['GAIN1', 'GAIN2']:
-			if not g in config:
-				print '    %s configuration missing' % g
-
 		status = 0
-		status |= self.write(STPM3X.GAIN1, config['GAIN1'])
-		status |= self.write(STPM3X.GAIN2, config['GAIN2'])
+		for i, g in enumerate(['GAIN1', 'GAIN2']):
+			if not g in config:
+				error_msg = 'Error configuring SPI channel %d - missing GAIN parameter' % str(i)
+				self.error = error_msg
+				print error_msg
 
-		if not status == 0:
-			print '    error configuring channel'
-			self.error = True
-		else:
-			print '    done'
+			else:
+				gain_param = STPM3X.GAIN1 if (i == 0) else STPM3X.GAIN2
+
+				status |= self.write(gain_param, g)
+
+				if not status == 0:
+					error_msg = 'Error configuring SPI channel %d - writing GAIN parameter' % str(i)
+					self.error = error_msg
+					print error_msg
+				else:
+					print '    done'
 	
-
 	def test(self):
 		print 'hello world'
 
@@ -185,7 +214,6 @@ class stpm3x(object):
 		hex_bytestring = struct.pack('>I',data)
 		crc = crc8_func(hex_bytestring)
 		return crc
-
 
 	def _readRegister(self, addr):
 		self._spiHandle.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
@@ -239,7 +267,6 @@ class stpm3x(object):
 		data = 0xFFFF
 		regvalue = self.writeReg(rd_addr, wr_addr, data)
 
-
 	def _modify(self, register, value):
 		mask = register['mask']
 		nMask = ~mask
@@ -255,11 +282,11 @@ class stpm3x(object):
 
 		return newValue
   
-	"""
-	Convert function based on code found here:
-	stackoverflow.com/questions/3222088/simulating-cs-sbyte-8-bit-signed-integer-casting-in-python
-	"""
 	def convert(self, value, bits):
+		'''
+		Convert function based on code found here:
+		stackoverflow.com/questions/3222088/simulating-cs-sbyte-8-bit-signed-integer-casting-in-python
+		'''
 		x = (2 ** bits) - 1
 		y = (2 ** bits) / 2
 		return ((x & value ^ y) - y)
@@ -321,10 +348,3 @@ class stpm3x(object):
 			return 0
 		else:
 			return -1
-
-		
-
-		
-		
-
-	
