@@ -181,7 +181,7 @@ class stpm3x(object):
 			else:
 				gain_param = STPM3X.GAIN1 if (i == 0) else STPM3X.GAIN2
 
-				status |= self.write(gain_param, g)
+				status |= self.write(gain_param, config[g])
 
 				if not status == 0:
 					error_msg = 'Error configuring SPI channel %d - writing GAIN parameter' % str(i)
