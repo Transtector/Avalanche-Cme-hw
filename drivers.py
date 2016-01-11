@@ -174,7 +174,7 @@ class stpm3x(object):
 		status = 0
 		for i, g in enumerate(['GAIN1', 'GAIN2']):
 			if not g in config:
-				error_msg = 'Error configuring SPI channel %d - missing GAIN parameter' % str(i)
+				error_msg = 'SPI channel %d error: missing %s configuration' % i, g
 				self.error = error_msg
 				print error_msg
 
@@ -184,7 +184,7 @@ class stpm3x(object):
 				status |= self.write(gain_param, config[g])
 
 				if not status == 0:
-					error_msg = 'Error configuring SPI channel %d - writing GAIN parameter' % str(i)
+					error_msg = 'SPI channel %d error: error writing %s to device' % i, g
 					self.error = error_msg
 					print error_msg
 				else:
