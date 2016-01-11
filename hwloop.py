@@ -40,12 +40,12 @@ dto_channels = []
 print("\nLoop starting...")
 while(1):
 
-	# Mark all DTO channels as stale.
+	# Mark all current DTO channels as stale.
 	# We'll freshen the ones we actually read
 	# the delete the stale ones in prep to grow
-	# and shrink channels as their added/removed
+	# and shrink channels as they are added/removed.
 	for ch in dto_channels:
-		ch._stale = True
+		ch.stale = True
 
 	# synchronize sensors - get timestamp for data points
 	timestamp = Avalanche.syncSensors()
@@ -61,19 +61,20 @@ while(1):
 		# the channel as configured with its sensors.  Currently
 		# we aren't able to add/remove channels dynamically, but we'll
 		# probably need to get there.
+		# Note that both of these unset the channel 'stale' attribute
 		if i <= (len(dto_channels) - 1): # yes - update it
 			ch = dto_channels[i] 
-			ch.updateSensors(timestamp, [ sensor.value for sensor in sensors ])
+			ch.updateSensors(timestamp, sensors)
 
 		else: # no - add it
 			ch = Channel(i, timestamp, sensors)
 			dto_channels.append(ch)
 
+		# update channel error state from its sensors' errors
 		ch['error'] = len([s for s in sensors if s.error]) != 0
-		ch._stale = False
 
-	# delete stale channels
-	dto_channels = [c for c in dto_channels if not c._stale]
+	# remove stale channels
+	dto_channels = [ch for ch in dto_channels if not ch.stale]
 
 	# update shared memory object
 	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))

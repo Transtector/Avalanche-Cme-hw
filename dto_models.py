@@ -1,15 +1,5 @@
-
-import os, errno, json
-
-APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
-LOGDIR = os.path.join(APPROOT, 'log') # /home/pi/Cme-hw/log
-
-# create the log directory if necessary
-try:
-	os.makedirs(LOGDIR)
-except OSError as e:
-	if e.errno != errno.EEXIST:
-		raise
+import config
+import json
 
 class Channel(dict):
 
@@ -17,8 +7,8 @@ class Channel(dict):
 		self['id'] = 'ch' + str(index)
 		self['error'] = False
 
-		self._stale = False
-		self._logfile = os.path.join(LOGDIR, 'ch' + str(index) + '.json') 
+		self.stale = False
+		self._logfile = os.path.join(conifg['LOGDIR'], 'ch' + str(index) + '.json') 
 
 		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
 
@@ -44,16 +34,16 @@ class Channel(dict):
 		return oldest_points
 
 
-	def updateSensors(self, timestamp, sensor_data):
+	def updateSensors(self, timestamp, hw_sensors):
 		''' Assumes sensors array characteristics have not changed since init '''
-		for i, s in enumerate(sensor_data):
-			self['sensors'][i]['data'][0] = [ timestamp, s ] # current measurement point
+		for i, s in enumerate(hw_sensors):
+			self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
 
 		# append to log file
 		with open(self._logfile, 'a') as f:
-			f.write(json.dumps([[ timestamp, s ] for s in sensor_data]) + '\n')
+			f.write(json.dumps([[ timestamp, s.value ] for s in hw_sensors]) + '\n')
 
-		self._stale = False
+		self.stale = False
 
 
 class Sensor(dict):
@@ -68,5 +58,3 @@ class Sensor(dict):
 		# [ [ timestamp_recent, value_recent ],
 		#   [ timestamp_oldest, value_oldest ] ]
 		self['data'] = initial_data_points 
-
-### END DTO MODELS

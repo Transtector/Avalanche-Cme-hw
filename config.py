@@ -1,7 +1,20 @@
+import os, errno
 from stpm3x import STPM3X
 
+APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
+LOGDIR = os.path.join(APPROOT, 'log') # /home/pi/Cme-hw/log TODO: look into external/removable location
+
+# create the log directory if necessary
+try:
+	os.makedirs(LOGDIR)
+except OSError as e:
+	if e.errno != errno.EEXIST:
+		raise
+
 system = {
-	'loop_freq': 1.0,
+
+	'loop_freq': 1.0, # sets the wait time in seconds between successive hw update loops
+
 	'sensors': [
 		{   #sensor0
 			'type': 'STPM34',
