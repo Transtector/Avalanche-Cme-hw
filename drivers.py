@@ -85,7 +85,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
-			device = stmp3x(spi, spi_config)
+			device = stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
 			# each channel has 2 sensors (Voltage and Current)
