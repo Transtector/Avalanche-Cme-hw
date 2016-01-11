@@ -8,7 +8,7 @@ class Channel(dict):
 		self['error'] = False
 
 		self.stale = False
-		self._logfile = os.path.join(config['LOGDIR'], 'ch' + str(index) + '.json') 
+		self._logfile = os.path.join(config.LOGDIR, 'ch' + str(index) + '.json') 
 
 		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
 
