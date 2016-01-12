@@ -312,7 +312,7 @@ class stpm3x(object):
 
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
-		#print ("Converted Value: " + str(value))
+		print ("Converted Value: " + str(value))
 		
 		return value
 
