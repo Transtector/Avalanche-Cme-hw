@@ -106,17 +106,21 @@ class Avalanche(object):
 				v_read_param = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
 				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
+				# TODO: Read scale factors from config
 				def v_read():
 					return device.read(v_read_param) * 0.035430
 
 				def c_read():
 					return device.gatedRead(c_read_param, 7) * 0.003333
 
-				# TODO: Read scale factors from config
+				print "    SPI Dev[%d]:Ch[%d] adding %d sensors:" % (spi_device_index, channel_index, len(sensors))
+
 				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
 				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read))
 
-				print "    SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
+				for j, s in sensors:
+					print "        SPI Dev[%d]:Ch[%d]:S[%d].value = %f %s" % (spi_device_index, channel_index, j, sensors[j].read(), sensors[j].unit)
+
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
@@ -134,7 +138,7 @@ class Avalanche(object):
 				# read channel sensors
 				for j, s in enumerate(ch.sensors):
 					s.value = s.read()
-					print "    SPI device<%s> ch[%d]:sensor[%d].value = %f" % (str(s.device), i, j, s.value)
+					print "    SPI device<%s> ch[%d]:sensor[%d].value = %f" % (str(s.device._spiHandle), i, j, s.value)
 
 		return self._Channels
 
