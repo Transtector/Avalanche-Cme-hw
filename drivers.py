@@ -103,12 +103,22 @@ class Avalanche(object):
 				sensors = []
 
 				# SPI read and gated read parameters depend on the channel index
-				v_read = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
-				c_read = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
+				v_read_param = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
+				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
+
+				def v_read:
+					voltage = device.read(v_read_param) * 0.035430
+					print "    voltage = %f Vrms" % voltage
+					return voltage
+
+				def c_read:
+					current = device.gatedRead(c_read_param, 7) * 0.003333
+					print "    current = %f Arms" % current
+					return current
 
 				# TODO: Read scale factors from config
-				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
-				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
+				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read)
+				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read)
 
 				print "    SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
 
