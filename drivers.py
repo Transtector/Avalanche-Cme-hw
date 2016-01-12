@@ -77,34 +77,34 @@ class Avalanche(object):
 		'''
 		Setup channels for each SPI device in config
 		'''
-		for i, spi_config in enumerate(config):
+
+
+		# for each SPI device (in config)
+		for spi_device_index, spi_config in enumerate(config):
 
 			# create a SpiDev for each sensor board
 			spi = spidev.SpiDev()
-			spi.open(0, i) # TODO: read from config
+			spi.open(0, spi_device_index) # TODO: read from config
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
 			device = stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
-			# each channel has 2 sensors (Voltage and Current)
-			sensors = []
-			for j in [0, 1]:
-
-				print "Ch[%d] adding sensor[%d]" % (i, j)
+			# for each channel in a SPI device
+			for channel_index in [0, 1]:
 
 				# SPI read and gated read parameters depend on the channel index
-				v_read = STPM3X.V2RMS if (j == 0) else STPM3X.V1RMS
-				c_read = STPM3X.C2RMS if (j == 0) else STPM3X.C1RMS
+				v_read = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
+				c_read = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
 				# TODO: Read scale factors from config
 				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
 				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
 
+				print "Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
 
-			print "Adding Ch[%d] with %d sensors" % (i, len(sensors))
-			self._Channels.append(self._Channel(device, device.error, sensors))
+				self._Channels.append(self._Channel(device, device.error, sensors))
 
 
 	def readSpiChannels(self):
