@@ -3,7 +3,6 @@ import RPi.GPIO as GPIO
 import spidev
 import struct
 import time
-from collections import namedtuple
 from stpm3x import STPM3X
 
 #GPIO assignments
@@ -20,10 +19,19 @@ AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 
 class Avalanche(object):
 
+	class _Sensor:
+		def __init__(self, device, sensor_type, unit, value, read):
+			self.device = device
+			self.type = sensor_type
+			self.unit = unit
+			self.value = value
+			self.read = read
 
-	_Sensor = namedtuple('Sensor', [ 'device', 'type', 'unit', 'value', 'read' ])
-
-	_Channel = namedtuple('Channel', [ 'device', 'error', 'sensors' ])
+	class _Channel:
+		def __init__(self, device, error, sensors):
+			self.device = device
+			self.error = error
+			self.sensors = sensors
 
 	_Channels = [] # list of _Channel
 
@@ -118,7 +126,8 @@ class Avalanche(object):
 			# and will never clear while running.  
 			if not ch.error:
 				# read channel sensors
-				ch = ch._replace(sensors=[s._replace(value=s.read()) for s in ch.sensors])
+				for s in ch.sensors:
+					s.value = s.read()
 
 		return self._Channels
 
