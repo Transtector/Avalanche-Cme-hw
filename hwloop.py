@@ -53,6 +53,8 @@ while(1):
 	# read channel data
 	channels = Avalanche.readSpiChannels()
 
+	print "channels read: %r" % channels
+
 	# process Avalanche channels into DTO status channels
 	for i, sensors in enumerate(channels):
 
