@@ -113,26 +113,30 @@ class Avalanche(object):
 		each SPI device has 2 channels worth of sensor data to read.
 		'''
 		data = []
-		for ch in self._Channels:
+
+		print "Reading %d channels..." % len(self._Channels)
+
+		for i, ch in enumerate(self._Channels):
 			# reset channel errors
 			ch = ch._replace(error='')
 			channel_data = []
 
 			# read channel sensors
+			print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
+
+			s_errors = ''
 			for s in ch.sensors:
 				# reset sensor error
 				# TODO: figure out how to update sensor errors during read
 				s = s._replace(error='', value=s.read()) 
 
 				# append sensor errors to channel error
-				if s.error:
-					ch = ch._replace(error=ch.error + ' ' + s.error)
+				s_errors = s_errors + ' ' + s.error
 				
-				else:
-					channel_data.append(s)
+				channel_data.append(s)
 
-			if not ch.error:
-				data.append(channel_data)
+			ch = ch._replace(error=s_errors)
+			data.append(channel_data)
 
 		return data
 
