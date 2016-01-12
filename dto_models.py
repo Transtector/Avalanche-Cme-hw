@@ -12,6 +12,8 @@ class Channel(dict):
 
 		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
 
+		print "Channel[%d] - %d sensors, %d oldest points" %(index, len(hw_sensors), len(oldestSensorPoints))
+
 		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestSensorPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
 
 	def _logInitialize(self, timestamp, hw_sensors):
