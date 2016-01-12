@@ -110,21 +110,27 @@ class Avalanche(object):
 		'''
 		data = []
 		for ch in self._Channels:
+			# reset channel errors
+			ch = ch._replace(error='')
 			channel_data = []
-			
-			if not ch.error: 
-				for s in ch.sensors:
-					s.error = '' # reset error
 
-					# TODO: update s.error when s.read
-					sensor_data = s.read() 
+			# read channel sensors
+			for s in ch.sensors:
+				# reset sensor error
+				s = s._replace(error='')
 
-					if s.error:
-						ch.error = ch.error + ' ' + s.error
-					else:
-						channel_data.append(sensor_data)
+				# TODO: update s.error when s.read
+				sensor_data = s.read() 
 
-			data.append(channel_data)
+				# append sensor errors to channel error
+				if s.error:
+					ch = ch._replace(error=ch.error + ' ' + s.error)
+				
+				else:
+					channel_data.append(sensor_data)
+
+			if not ch.error:
+				data.append(channel_data)
 
 		return data
 
@@ -169,13 +175,13 @@ class stpm3x(object):
 		self._spiHandle = spiHandle
 		self.error = '' # empty for no errors
 
-		print '\nConfiguring channel on %s ...' % str(spiHandle)
+		print '\nConfiguring channels on %s ...' % str(spiHandle)
 
 		status = 0
 		for i, g in enumerate(['GAIN1', 'GAIN2']):
 			if not g in config:
 				error_msg = 'SPI channel %d error: missing %s configuration' % (i, g)
-				self.error = error_msg
+				self.error = '    ' + error_msg
 				print error_msg
 
 			else:
@@ -186,7 +192,7 @@ class stpm3x(object):
 				if not status == 0:
 					error_msg = 'SPI channel %d error: error writing %s to device' % (i, g)
 					self.error = error_msg
-					print error_msg
+					print '    ' + error_msg
 				else:
 					print '    done'
 	
