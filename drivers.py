@@ -107,14 +107,10 @@ class Avalanche(object):
 				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
 				def v_read():
-					voltage = device.read(v_read_param) * 0.035430
-					print "    voltage = %f Vrms" % voltage
-					return voltage
+					return device.read(v_read_param) * 0.035430
 
 				def c_read():
-					current = device.gatedRead(c_read_param, 7) * 0.003333
-					print "    current = %f Arms" % current
-					return current
+					return device.gatedRead(c_read_param, 7) * 0.003333
 
 				# TODO: Read scale factors from config
 				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
@@ -319,7 +315,7 @@ class stpm3x(object):
 
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
-		#print ("Converted Value: " + str(value))
+		print ("Converted Value: " + str(value))
 		
 		return value
 
