@@ -103,7 +103,7 @@ class Avalanche(object):
 				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
 
 
-			print "Adding Ch[%d]" % i
+			print "Adding Ch[%d] with %d sensors" % (i, len(sensors))
 			self._Channels.append(self._Channel(device, device.error, sensors))
 
 
