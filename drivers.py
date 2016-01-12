@@ -117,13 +117,14 @@ class Avalanche(object):
 		print "Reading %d channels..." % len(self._Channels)
 
 		for i, ch in enumerate(self._Channels):
+
+			print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
+
 			# reset channel errors
 			ch = ch._replace(error='')
 			channel_data = []
 
 			# read channel sensors
-			print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
-
 			s_errors = ''
 			for s in ch.sensors:
 				# reset sensor error
