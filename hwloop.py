@@ -54,7 +54,7 @@ while(1):
 	channels = Avalanche.readSpiChannels()
 
 	# process Avalanche channels into DTO status channels
-	for i, sensors in enumerate(channels):
+	for i, channel in enumerate(channels):
 
 		# Do we have this channel in our status DTO?
 		# TODO: calculate a hash or some means to uniquely identify
@@ -62,16 +62,14 @@ while(1):
 		# we aren't able to add/remove channels dynamically, but we'll
 		# probably need to get there.
 		# Note that both of these unset the channel 'stale' attribute
+		# and set the channel 'error' string.
 		if i <= (len(dto_channels) - 1): # yes - update it
 			ch = dto_channels[i] 
-			ch.updateSensors(timestamp, sensors)
+			ch.updateSensors(channel.error, timestamp, channel.sensors)
 
 		else: # no - add it
-			ch = Channel(i, timestamp, sensors)
+			ch = Channel(i, channel.error, timestamp, channel.sensors)
 			dto_channels.append(ch)
-
-		# update channel error state from its sensors' errors
-		ch['error'] = len([s for s in sensors if s.error]) != 0
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]

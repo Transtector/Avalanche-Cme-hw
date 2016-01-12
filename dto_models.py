@@ -3,16 +3,17 @@ import config
 
 class Channel(dict):
 
-	def __init__(self, index, timestamp, hw_sensors): 
+	def __init__(self, index, error, timestamp, hw_sensors): 
+		
 		self['id'] = 'ch' + str(index)
-		self['error'] = False
-
+		self['error'] = error
 		self.stale = False
+
 		self._logfile = os.path.join(config.LOGDIR, 'ch' + str(index) + '.json') 
 
 		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
 
-		print "Channel[%d] - %d sensors, %d oldest points" %(index, len(hw_sensors), len(oldestSensorPoints))
+		#print "Channel[%d] - %d sensors, %d oldest points" %(index, len(hw_sensors), len(oldestSensorPoints))
 
 		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestSensorPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
 
@@ -36,14 +37,18 @@ class Channel(dict):
 		return oldest_points
 
 
-	def updateSensors(self, timestamp, hw_sensors):
+	def updateSensors(self, error, timestamp, hw_sensors):
 		''' Assumes sensors array characteristics have not changed since init '''
-		for i, s in enumerate(hw_sensors):
-			self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
+		self['error'] = error
+		
+		if not error:
 
-		# append to log file
-		with open(self._logfile, 'a') as f:
-			f.write(json.dumps([[ timestamp, s.value ] for s in hw_sensors]) + '\n')
+			for i, s in enumerate(hw_sensors):
+				self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
+
+			# append sensor data to log file
+			with open(self._logfile, 'a') as f:
+				f.write(json.dumps([[ timestamp, s.value ] for s in hw_sensors]) + '\n')
 
 		self.stale = False
 

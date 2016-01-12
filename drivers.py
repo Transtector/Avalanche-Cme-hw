@@ -21,7 +21,7 @@ AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 class Avalanche(object):
 
 
-	_Sensor = namedtuple('Sensor', [ 'device', 'error', 'type', 'unit', 'value', 'read' ])
+	_Sensor = namedtuple('Sensor', [ 'device', 'type', 'unit', 'value', 'read' ])
 
 	_Channel = namedtuple('Channel', [ 'device', 'error', 'sensors' ])
 
@@ -89,9 +89,9 @@ class Avalanche(object):
 			device = stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
-			# for each channel in a SPI device
 			for channel_index in [0, 1]:
 
+				# each SPI device channel has 2 sensors
 				sensors = []
 
 				# SPI read and gated read parameters depend on the channel index
@@ -99,47 +99,29 @@ class Avalanche(object):
 				c_read = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
 				# TODO: Read scale factors from config
-				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
-				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
+				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
+				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
 
-				print "SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
+				print "    SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
 
+				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
 
 
 	def readSpiChannels(self):
 		'''
-		Read all the SPI devices into channel data.  In Avalanche
-		each SPI device has 2 channels worth of sensor data to read.
+		Runs through each channel's sensors and reads updated values
 		'''
-		data = []
+		for ch in self._Channels:
 
-		#print "Reading %d channels..." % len(self._Channels)
-
-		for i, ch in enumerate(self._Channels):
-
-			#print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
-
-			# reset channel errors
-			ch = ch._replace(error='')
-			channel_data = []
-
-			# read channel sensors
-			s_errors = ''
-			for s in ch.sensors:
-				# reset sensor error
-				# TODO: figure out how to update sensor errors during read
-				s = s._replace(error='', value=s.read()) 
-
-				# append sensor errors to channel error
-				s_errors = s_errors + ' ' + s.error
-				
-				channel_data.append(s)
-
-			ch = ch._replace(error=s_errors)
-			data.append(channel_data)
-
-		return data
+			# Note: ch.error currently set on init (from SPI device)
+			# and will never clear while running.  
+			if not ch.error:
+				# read channel sensors
+				for s in ch.sensors:
+					s = s._replace(value=s.read()) 				
+					
+		return self._Channels
 
 	def relayControl(self, channel, state):
 		'''
