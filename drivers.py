@@ -106,20 +106,20 @@ class Avalanche(object):
 				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
 				# TODO: Read scale factors from config
-				def v_read(read_param, spiHandle, chIndex):
-					volts = device.read(read_param) * 0.035430 
-					print "    %s Ch[%d].VOLTS = %f" % (str(spiHandle), chIndex, volts)
+				def v_read(spiDev, read_param, chIndex):
+					volts = spiDev.read(read_param) * 0.035430 
+					print "    %s Ch[%d].VOLTS = %f" % (str(spiDev._spiHandle), chIndex, volts)
 					return volts
 
-				def c_read(read_param, spiHandle, chIndex):
-					amps = device.gatedRead(read_param, 7) * 0.003333
-					print "    %s Ch[%d].AMPS = %f" % (str(spiHandle), chIndex, amps)
+				def c_read(spiDev, read_param, chIndex):
+					amps = spiDev.gatedRead(read_param, 7) * 0.003333
+					print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 
 				print "    Ch[%d] adding 2 sensors:" % (channel_index)
 
-				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda: v_read(v_read_param, spi, channel_index)   ))
-				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda: c_read(c_read_param, spi, channel_index)   ))
+				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda: v_read(device, v_read_param, channel_index)   ))
+				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda: c_read(device, c_read_param, channel_index)   ))
 
 				for j, s in enumerate(sensors):
 					s.value = s.read()
