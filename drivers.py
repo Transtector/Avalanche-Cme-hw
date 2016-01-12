@@ -108,12 +108,12 @@ class Avalanche(object):
 				# TODO: Read scale factors from config
 				def v_read():
 					volts = device.read(v_read_param) * 0.035430 
-					print "        %s Ch[%d].VOLTS = %f" % (spi, channel_index, volts)
+					print "    %s Ch[%d].VOLTS = %f" % (spi, channel_index, volts)
 					return volts
 
 				def c_read():
 					amps = device.gatedRead(c_read_param, 7) * 0.003333
-					print "        %s Ch[%d].AMPS = %f" % (spi, channel_index, amps)
+					print "    %s Ch[%d].AMPS = %f" % (spi, channel_index, amps)
 					return amps
 
 				print "    Ch[%d] adding 2 sensors:" % (channel_index)
@@ -136,9 +136,12 @@ class Avalanche(object):
 		'''
 		for i, ch in enumerate(self._Channels):
 			# update sensor values
-			for j, s in enumerate(ch.sensors):
-				s.value = s.read()
-				print "    %s Ch[%d]:S[%d].value = %f %s" % (str(ch.device._spiHandle), i, j, s.value, s.unit)
+			if not ch.error:
+				for j, s in enumerate(ch.sensors):
+					s.value = s.read()
+					print "    %s Ch[%d]:S[%d].value = %f %s" % (str(ch.device._spiHandle), i, j, s.value, s.unit)
+			else:
+				print "    %s Ch[%d] --- ERROR ---" % (str(ch.device._spiHandle), i)
 
 		return self._Channels
 
