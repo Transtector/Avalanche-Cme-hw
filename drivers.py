@@ -118,8 +118,8 @@ class Avalanche(object):
 				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
 				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read))
 
-				for j, s in sensors:
-					print "        SPI Dev[%d]:Ch[%d]:S[%d].value = %f %s" % (spi_device_index, channel_index, j, sensors[j].read(), sensors[j].unit)
+				for j, s in enumerate(sensors):
+					print "        SPI Dev[%d]:Ch[%d]:S[%d].value = %f %s" % (spi_device_index, channel_index, j, s.read(), s.unit)
 
 
 				# save SPI device channels, their error state, and array of sensors
