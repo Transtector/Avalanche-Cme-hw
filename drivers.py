@@ -117,17 +117,15 @@ class Avalanche(object):
 			# read channel sensors
 			for s in ch.sensors:
 				# reset sensor error
-				s = s._replace(error='')
-
-				# TODO: update s.error when s.read
-				sensor_data = s.read() 
+				# TODO: figure out how to update sensor errors during read
+				s = s._replace(error='', value=s.read()) 
 
 				# append sensor errors to channel error
 				if s.error:
 					ch = ch._replace(error=ch.error + ' ' + s.error)
 				
 				else:
-					channel_data.append(sensor_data)
+					channel_data.append(s)
 
 			if not ch.error:
 				data.append(channel_data)
