@@ -118,8 +118,8 @@ class Avalanche(object):
 
 				print "    Ch[%d] adding 2 sensors:" % (channel_index)
 
-				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda: v_read(device, v_read_param, channel_index)   ))
-				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda: c_read(device, c_read_param, channel_index)   ))
+				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, p=v_read_param, i=channel_index: v_read(d, p, i)  ))
+				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, p=c_read_param, i=channel_index: c_read(d, p, i)  ))
 
 				for j, s in enumerate(sensors):
 					s.value = s.read()
