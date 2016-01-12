@@ -117,8 +117,8 @@ class Avalanche(object):
 					return current
 
 				# TODO: Read scale factors from config
-				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read)
-				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read)
+				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
+				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read))
 
 				print "    SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
 
