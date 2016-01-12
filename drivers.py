@@ -106,12 +106,12 @@ class Avalanche(object):
 				v_read_param = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
 				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
 
-				def v_read:
+				def v_read():
 					voltage = device.read(v_read_param) * 0.035430
 					print "    voltage = %f Vrms" % voltage
 					return voltage
 
-				def c_read:
+				def c_read():
 					current = device.gatedRead(c_read_param, 7) * 0.003333
 					print "    current = %f Arms" % current
 					return current
