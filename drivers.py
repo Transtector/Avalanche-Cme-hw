@@ -303,9 +303,6 @@ class stpm3x(object):
 
 	def read(self, register):
 
-		if self.error:
-			return 0
-
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
 									  
@@ -315,14 +312,11 @@ class stpm3x(object):
 
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
-		print ("Converted Value: " + str(value))
+		#print ("Converted Value: " + str(value))
 		
 		return value
 
 	def gatedRead(self, register, gateThreshold):
-
-		if self.error:
-			return 0
 
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
