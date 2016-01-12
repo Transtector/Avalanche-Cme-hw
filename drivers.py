@@ -101,30 +101,23 @@ class Avalanche(object):
 				# each SPI device channel has 2 sensors
 				sensors = []
 
-				# SPI read and gated read parameters depend on the channel index
-				v_read_param = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
-				c_read_param = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
-
 				# TODO: Read scale factors from config
-				def v_read(spiDev, read_param, chIndex):
-					volts = spiDev.read(read_param) * 0.035430 
+				def v_read(spiDev, chIndex):
+					v_read_param = STPM3X.V2RMS if (chIndex == 0) else STPM3X.V1RMS
+					volts = spiDev.read(v_read_param) * 0.035430 
 					print "    %s Ch[%d].VOLTS = %f" % (str(spiDev._spiHandle), chIndex, volts)
 					return volts
 
-				def c_read(spiDev, read_param, chIndex):
-					amps = spiDev.gatedRead(read_param, 7) * 0.003333
+				def c_read(spiDev, chIndex):
+					c_read_param = STPM3X.C2RMS if (chIndex == 0) else STPM3X.C1RMS
+					amps = spiDev.gatedRead(c_read_param, 7) * 0.003333
 					print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 
 				print "    Ch[%d] adding 2 sensors:" % (channel_index)
 
-				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, p=v_read_param, i=channel_index: v_read(d, p, i)  ))
-				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, p=c_read_param, i=channel_index: c_read(d, p, i)  ))
-
-				for j, s in enumerate(sensors):
-					s.value = s.read()
-					print "        Ch[%d]:S[%d].value = %f %s" % (channel_index, j, s.value, s.unit)
-					
+				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
+				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
@@ -137,11 +130,8 @@ class Avalanche(object):
 		for i, ch in enumerate(self._Channels):
 			# update sensor values
 			if not ch.error:
-				for j, s in enumerate(ch.sensors):
+				for s in ch.sensors:
 					s.value = s.read()
-					print "    %s Ch[%d]:S[%d].value = %f %s" % (str(ch.device._spiHandle), i, j, s.value, s.unit)
-			else:
-				print "    %s Ch[%d] --- ERROR ---" % (str(ch.device._spiHandle), i)
 
 		return self._Channels
 
