@@ -113,14 +113,13 @@ class Avalanche(object):
 				def c_read():
 					return device.gatedRead(c_read_param, 7) * 0.003333
 
-				print "    SPI Dev[%d]:Ch[%d] adding %d sensors:" % (spi_device_index, channel_index, len(sensors))
+				print "    %s Ch[%d] adding 2 sensors:" % (str(spi), channel_index)
 
 				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
 				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read))
 
 				for j, s in enumerate(sensors):
-					print "        SPI Dev[%d]:Ch[%d]:S[%d].value = %f %s" % (spi_device_index, channel_index, j, s.read(), s.unit)
-
+					print "        %s Ch[%d]:S[%d].value = %f %s" % (str(spi), channel_index, j, s.read(), s.unit)
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
@@ -138,7 +137,7 @@ class Avalanche(object):
 				# read channel sensors
 				for j, s in enumerate(ch.sensors):
 					s.value = s.read()
-					print "    SPI device<%s> ch[%d]:sensor[%d].value = %f" % (str(s.device._spiHandle), i, j, s.value)
+					print "    %s Ch[%d]:S[%d].value = %f %s" % (str(s.device._spiHandle), i, j, s.value, s.unit)
 
 		return self._Channels
 
@@ -316,7 +315,7 @@ class stpm3x(object):
 
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
-		print ("Converted Value: " + str(value))
+		#print ("Converted Value: " + str(value))
 		
 		return value
 
