@@ -94,6 +94,8 @@ class Avalanche(object):
 			# for each channel in a SPI device
 			for channel_index in [0, 1]:
 
+				sensors = []
+
 				# SPI read and gated read parameters depend on the channel index
 				v_read = STPM3X.V2RMS if (channel_index == 0) else STPM3X.V1RMS
 				c_read = STPM3X.C2RMS if (channel_index == 0) else STPM3X.C1RMS
