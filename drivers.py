@@ -20,8 +20,7 @@ AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 class Avalanche(object):
 
 	class _Sensor:
-		def __init__(self, device, sensor_type, unit, value, read):
-			self.device = device
+		def __init__(self, sensor_type, unit, value, read):
 			self.type = sensor_type
 			self.unit = unit
 			self.value = value
@@ -113,13 +112,14 @@ class Avalanche(object):
 				def c_read():
 					return device.gatedRead(c_read_param, 7) * 0.003333
 
-				print "    %s Ch[%d] adding 2 sensors:" % (str(spi), channel_index)
+				print "    Ch[%d] adding 2 sensors:" % (channel_index)
 
-				sensors.append(self._Sensor(device, 'AC_VOLTAGE', 'Vrms', 0, v_read))
-				sensors.append(self._Sensor(device, 'AC_CURRENT', 'Arms', 0, c_read))
+				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, v_read))
+				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, c_read))
 
 				for j, s in enumerate(sensors):
-					print "        %s Ch[%d]:S[%d].value = %f %s" % (str(spi), channel_index, j, s.read(), s.unit)
+					s.value = s.read()
+					print "        Ch[%d]:S[%d].value = %f %s" % (channel_index, j, s.value, s.unit)
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
@@ -130,14 +130,10 @@ class Avalanche(object):
 		Runs through each channel's sensors and reads updated values
 		'''
 		for i, ch in enumerate(self._Channels):
-
-			# Note: ch.error currently set on init (from SPI device)
-			# and will never clear while running.  
-			if not ch.error:
-				# read channel sensors
-				for j, s in enumerate(ch.sensors):
-					s.value = s.read()
-					print "    %s Ch[%d]:S[%d].value = %f %s" % (str(s.device._spiHandle), i, j, s.value, s.unit)
+			# update sensor values
+			for j, s in enumerate(ch.sensors):
+				s.value = s.read()
+				print "    %s Ch[%d]:S[%d].value = %f %s" % (str(ch.device._spiHandle), i, j, s.value, s.unit)
 
 		return self._Channels
 
