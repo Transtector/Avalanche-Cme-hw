@@ -77,8 +77,6 @@ class Avalanche(object):
 		'''
 		Setup channels for each SPI device in config
 		'''
-
-
 		# for each SPI device (in config)
 		for spi_device_index, spi_config in enumerate(config):
 
@@ -104,7 +102,7 @@ class Avalanche(object):
 				sensors.append(self._Sensor(device, device.error, 'AC_VOLTAGE', 'Vrms', 0, lambda: device.read(v_read) * 0.035430))
 				sensors.append(self._Sensor(device, device.error, 'AC_CURRENT', 'Arms', 0, lambda: device.gatedRead(c_read, 7) * 0.003333))
 
-				print "Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
+				print "SPI Device[%d]:Ch[%d] added %d sensors" % (spi_device_index, channel_index, len(sensors))
 
 				self._Channels.append(self._Channel(device, device.error, sensors))
 
@@ -116,11 +114,11 @@ class Avalanche(object):
 		'''
 		data = []
 
-		print "Reading %d channels..." % len(self._Channels)
+		#print "Reading %d channels..." % len(self._Channels)
 
 		for i, ch in enumerate(self._Channels):
 
-			print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
+			#print "Reading %d sensors on Ch[%d]" % (len(ch.sensors), i)
 
 			# reset channel errors
 			ch = ch._replace(error='')
