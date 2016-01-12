@@ -118,9 +118,8 @@ class Avalanche(object):
 			# and will never clear while running.  
 			if not ch.error:
 				# read channel sensors
-				for s in ch.sensors:
-					s = s._replace(value=s.read()) 				
-					
+				ch = ch._replace(sensors=[s._replace(value=s.read()) for s in ch.sensors])
+
 		return self._Channels
 
 	def relayControl(self, channel, state):
