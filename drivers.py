@@ -120,14 +120,15 @@ class Avalanche(object):
 		'''
 		Runs through each channel's sensors and reads updated values
 		'''
-		for ch in self._Channels:
+		for i, ch in enumerate(self._Channels):
 
 			# Note: ch.error currently set on init (from SPI device)
 			# and will never clear while running.  
 			if not ch.error:
 				# read channel sensors
-				for s in ch.sensors:
+				for j, s in enumerate(ch.sensors):
 					s.value = s.read()
+					print "    SPI device<%s> ch[%d]:sensor[%d].value = %f" % (str(s.device), i, j, s.value)
 
 		return self._Channels
 
