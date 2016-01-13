@@ -33,7 +33,7 @@ print("SPI bus 0: Enabled")
 Avalanche.spiBus0isolate(False)
 
 print("Setup SPI devices")
-Avalanche.setupSpiChannels(config.system['sensors'])
+Avalanche.setupSpiChannels(config.SPI_SENSORS)
 
 dto_channels = []
 
@@ -78,5 +78,5 @@ while(1):
 	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))
 	#print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
-	time.sleep(config.system['loop_freq'])
+	time.sleep(config.LOOP_PERIOD_s)
 
