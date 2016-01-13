@@ -131,9 +131,12 @@ class STPM3X:
 	
 
 # STPM3X sensor configuration
+# Override defaults by passing them at construction, e.g.:
+#   s = Config() # provides default configuration
+#   s = Config({ 'spi_device': 1 }) # overrides default 'spi_device' value
 class Config(dict):
 
-	def __init__(self):
+	def __init__(self, *args, **kwargs):
 		self['type'] = 'STPM34'
 		self['gpio_sync'] = 12
 	
@@ -196,3 +199,7 @@ class Config(dict):
 		self['current_swell_threshold'] = 1023
 		self['rms_upper_threshold'] = 4095
 		self['rms_lower_threshold'] = 4095
+
+		# set passed items
+		for k, v in dict(*args, **kwargs).items():
+			self[k] = v
