@@ -1,6 +1,29 @@
 import os, json
 import config
 
+from ChannelDataLog import ChannelDataLog
+
+
+# DTO Channel model handles logging channel data 
+# to file.  Each channel gets its own file in
+# the LOGDIR found in the application config file.
+# Channel data is logged as a single line per update
+# which holds sensor data for every sensor in the
+# channel (later we'll add channel control logging).
+#
+# For example, if the CME Channel 0 contains 2 sesors
+# (1 voltage and 1 current), then the log file for that
+# channel will look something like:
+#
+# ch0.json (filename shows that file data is json format compatible)
+#   [[ 123000.789,   0.0 ], [ 123000.789, 0.000 ]] <-- oldest point, beginning of file
+#   [[ 123100.789, 120.0 ], [ 123100.789, 0.500 ]]
+#    ...
+#   [[ 123100.789, 120.0 ], [ 123100.789, 0.500 ]] <-- newst point, end of file
+#
+# Data is appended to the channel file up to MAX_DATA_POINTS after
+# which the oldest record is discarded when new records are added.
+# This behavior works with the python queuelib ()
 class Channel(dict):
 
 	def __init__(self, index, error, timestamp, hw_sensors): 
@@ -9,32 +32,17 @@ class Channel(dict):
 		self['error'] = error
 		self.stale = False
 
-		self._logfile = os.path.join(config.LOGDIR, 'ch' + str(index) + '.json')
+		self._log = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_data.json'), max_size=config.LOG_MAX_SIZE)
 
-		oldestSensorPoints = self._logInitialize(timestamp, hw_sensors)
+		oldestPoints = self._log.peek()
+
+		if not oldestPoints:
+			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
 		#print "Channel[%d] - %d sensors, %d oldest points" %(index, len(hw_sensors), len(oldestSensorPoints))
 
 		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestSensorPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
 
-	def _logInitialize(self, timestamp, hw_sensors):
-		'''
-		Open/create the channel log file and read the oldest sensor data points.
-		If channel log file is created, the current sensor data points are
-		written and returned.
-		'''
-
-		# Check the channel log for existing data
-		if os.path.isfile(self._logfile) and os.path.getsize(self._logfile) > 0:
-			with open(self._logfile, 'r') as f:
-				oldest_points = json.loads(f.readline()) # first line of file
-
-		else:
-			oldest_points = [[ timestamp, sensor.value ] for sensor in hw_sensors]
-			with open(self._logfile, 'w') as f:
-				f.write(json.dumps(oldest_points) + '\n')
-
-		return oldest_points
 
 
 	def updateSensors(self, error, timestamp, hw_sensors):
@@ -47,8 +55,7 @@ class Channel(dict):
 				self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
 
 			# append sensor data to log file
-			with open(self._logfile, 'a') as f:
-				f.write(json.dumps([[ timestamp, s.value ] for s in hw_sensors]) + '\n')
+			self._log.push([[ timestamp, s.value ] for s in hw_sensors])
 
 		self.stale = False
 
