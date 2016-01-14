@@ -3,8 +3,8 @@
 import time, json
 import config, memcache
 
-from drivers import Avalanche
-from dto_models import Channel
+from Avalanche import Avalanche
+from Models import Channel
 
 #create shared memory object
 sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
