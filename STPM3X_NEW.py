@@ -88,7 +88,7 @@ def calcMask(width, position):
 	return ((2 ** width) - 1) << position
 
 
-class STPM3X:
+STPM3X = {
 	#RMS Voltages
 	V1RMS = {'address': DSPREG14_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
 	V2RMS = {'address': DSPREG15_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
@@ -133,7 +133,7 @@ class STPM3X:
 	REF_FREQ = {'address': DSPCR3_REGADDR, 'width': 1, 'position': 27, 'mask': calcMask(1,27)}
 	REF_FREQ_50HZ = 0b0
 	REF_FREQ_60HZ = 0b1
-	
+}
 
 # STPM3X sensor configuration
 # Override defaults by passing them at construction, e.g.:
@@ -210,7 +210,7 @@ class Config(dict):
 			self[k] = v
 
 
-class stpm3x(object):
+class Stpm3x(object):
 
 	_spiHandle = 0;
 	
