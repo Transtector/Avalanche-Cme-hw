@@ -1,5 +1,5 @@
 import os, errno
-import stpm3x
+import STPM3X
 
 APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
 LOGDIR = os.path.abspath(os.path.join(APPROOT, '../log')) # /home/pi/log TODO: look into external/removable location
@@ -32,9 +32,9 @@ LOOP_PERIOD_s = 1.0
 # spi bus sensor configurations
 SPI_SENSORS = [ 
 
-	stpm3x.Config(),
+	STPM3X.Config(),
 
-	stpm3x.Config({
+	STPM3X.Config({
 		'spi_device': 1
 	})
 ]
