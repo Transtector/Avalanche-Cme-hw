@@ -234,7 +234,7 @@ class Stpm3x(object):
 
 				if not status == 0:
 					error_msg = 'SPI channel %d error: error writing %s to device' % (i, g)
-					self.error += ', ' + error_msg
+					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					print '    ' + error_msg
 				else:
 					print '    done'
