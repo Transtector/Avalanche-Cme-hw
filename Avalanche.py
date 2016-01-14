@@ -91,7 +91,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
-			device = stpm3x(spi, spi_config)
+			device = Stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
 			for channel_index in [0, 1]:
