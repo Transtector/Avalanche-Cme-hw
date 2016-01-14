@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import spidev
 import time
-from STPM3X import Stpm3x
+from STPM3X import Stpm3x, STPM3X
 
 #GPIO assignments
 AVALANCHE_GPIO_SENSOR_POWER     = 5
