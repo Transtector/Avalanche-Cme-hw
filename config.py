@@ -2,7 +2,11 @@ import os, errno
 import stpm3x
 
 APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
-LOGDIR = os.path.join(APPROOT, 'log') # /home/pi/Cme-hw/log TODO: look into external/removable location
+LOGDIR = os.path.abspath(os.path.join(APPROOT, '../log')) # /home/pi/log TODO: look into external/removable location
+
+# create the log directory if necessary
+if not os.path.exists(LOGDIR):
+	os.makedirs(LOGDIR)
 
 # Channels keep arrays of their sensor and control data every time
 # the channel data is published.  The maximum channel record size
@@ -24,9 +28,6 @@ LOG_MAX_SIZE = 1024000
 # channel on the Cme.
 LOOP_PERIOD_s = 1.0 
 
-# create the log directory if necessary
-if not os.path.exists(LOGDIR):
-	os.makedirs(LOGDIR)
 
 # spi bus sensor configurations
 SPI_SENSORS = [ 
