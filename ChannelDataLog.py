@@ -29,6 +29,11 @@ class ChannelDataLog(object):
 		with open(self.path, 'r') as f:
 			return json.loads(f.readline())
 
+	def peekAll(self):
+		if self.size == 0:
+			return None
+		
+		return json.loads(self._readlines())			
 	
 	def push(self, data):
 
