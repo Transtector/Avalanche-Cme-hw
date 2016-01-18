@@ -25,7 +25,7 @@ from ChannelDataLog import ChannelDataLog
 # which the oldest record is discarded when new records are added.
 class Channel(dict):
 
-	def __init__(self, id, error, timestamp, hw_sensors, loadFullData=False): 
+	def __init__(self, id, error, timestamp, hw_sensors): 
 		
 		self['id'] = id
 		self['error'] = error
@@ -34,12 +34,7 @@ class Channel(dict):
 		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
 		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_controls.json'), max_size=config.LOG_MAX_SIZE)
 
-		oldestPoints = self._slog.peek()
-
-		if not oldestPoints:
-			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
-
-		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
+		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_sensors) ]
 		self['controls'] = []
 
 
@@ -52,24 +47,25 @@ class Channel(dict):
 			# append sensor data to log file (this may push oldest data points out)
 			self._slog.push([[ timestamp, s.value ] for s in hw_sensors])
 
-			oldestPoints = self._slog.peek()
+			if not loadFullData:
+				oldestPoints = self._slog.peek()
 
-			for i, s in enumerate(hw_sensors):
-				self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
-				self['sensors'][i]['data'][1] = oldestPoints[i] # oldest point
+				if not oldestPoints:
+					oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
+
+				for i, s in enumerate(hw_sensors):
+					self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
+					self['sensors'][i]['data'][1] = oldestPoints[i] # oldest point
+
+			else:
+				self['sensors'][i]['data'] = self._slog.peekAll()
 
 		self.stale = False
 
 
 class Sensor(dict):
-	def __init__(self, id, sensorType, unit, initial_data_points):
+	def __init__(self, id, sensorType, unit):
 		self['id'] = id
 		self['type'] = sensorType
 		self['unit'] = unit
-		
-		# initialize data as two points [ timestamp, value ] in the list:
-		#   data[0] => most recent sensor point
-		#   data[1] => oldest sensor point
-		# [ [ timestamp_recent, value_recent ],
-		#   [ timestamp_oldest, value_oldest ] ]
-		self['data'] = initial_data_points 
+		self['data'] = []

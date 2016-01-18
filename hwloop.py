@@ -68,14 +68,17 @@ while(1):
 		# probably need to get there.
 		# Note that both of these unset the channel 'stale' attribute
 		# and set the channel 'error' string.
-		if i <= (len(dto_channels) - 1): # yes - update it
-			ch = dto_channels[i] 
-			ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
-
-		else: # no - add it
+		if i > (len(dto_channels) - 1): # not found - create it
 			chId = 'ch' + str(i)
-			ch = Channel(chId, channel.error, timestamp, channel.sensors, chId in expanded_channels)
+			ch = Channel(chId, channel.error, timestamp, channel.sensors)
 			dto_channels.append(ch)
+
+		else: # channel already created - just get a ref
+			ch = dto_channels[i] 
+
+		# Update the channel with new values - this also logs the values to disk
+		ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
+
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]
