@@ -53,6 +53,11 @@ while(1):
 	# read channel data
 	channels = Avalanche.readSpiChannels()
 
+	# load a list of channel id's for which we want entire sensor/control
+	# data set loaded
+	expanded_channels = mc.get('expanded_channels')	
+	expanded_channels = json.loads(expanded_channels) if expanded_channels else []
+
 	# process Avalanche channels into DTO status channels
 	for i, channel in enumerate(channels):
 
@@ -65,10 +70,11 @@ while(1):
 		# and set the channel 'error' string.
 		if i <= (len(dto_channels) - 1): # yes - update it
 			ch = dto_channels[i] 
-			ch.updateSensors(channel.error, timestamp, channel.sensors)
+			ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
 
 		else: # no - add it
-			ch = Channel(i, channel.error, timestamp, channel.sensors)
+			chId = 'ch' + i
+			ch = Channel(chId, channel.error, timestamp, channel.sensors, chId in expanded_channels)
 			dto_channels.append(ch)
 
 	# remove stale channels
@@ -76,7 +82,5 @@ while(1):
 
 	# update shared memory object
 	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))
-	#print 'status: %s\n\n' % json.loads(sharedmem.get('status'))
 
 	time.sleep(config.LOOP_PERIOD_s)
-

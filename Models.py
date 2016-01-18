@@ -25,24 +25,22 @@ from ChannelDataLog import ChannelDataLog
 # which the oldest record is discarded when new records are added.
 class Channel(dict):
 
-	def __init__(self, index, error, timestamp, hw_sensors): 
+	def __init__(self, id, error, timestamp, hw_sensors, loadFullData=False): 
 		
-		self['id'] = 'ch' + str(index)
+		self['id'] = id
 		self['error'] = error
 		self.stale = False
 
-		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
-		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_controls.json'), max_size=config.LOG_MAX_SIZE)
+		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
+		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_controls.json'), max_size=config.LOG_MAX_SIZE)
 
 		oldestPoints = self._slog.peek()
 
 		if not oldestPoints:
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
-		#print "Channel[%d] - %d sensors, %d oldest points" %(index, len(hw_sensors), len(oldestSensorPoints))
-
-		self['sensors'] = [ Sensor(i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
-
+		self['sensors'] = [ Sensor('s' + i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
+		self['controls'] = []
 
 
 	def updateSensors(self, error, timestamp, hw_sensors):
@@ -64,8 +62,8 @@ class Channel(dict):
 
 
 class Sensor(dict):
-	def __init__(self, index, sensorType, unit, initial_data_points):
-		self['id'] = 's' + str(index)
+	def __init__(self, id, sensorType, unit, initial_data_points):
+		self['id'] = id
 		self['type'] = sensorType
 		self['unit'] = unit
 		
