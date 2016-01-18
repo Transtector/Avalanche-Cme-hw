@@ -55,7 +55,7 @@ while(1):
 
 	# load a list of channel id's for which we want entire sensor/control
 	# data set loaded
-	expanded_channels = mc.get('expanded_channels')	
+	expanded_channels = sharedmem.get('expanded_channels')	
 	expanded_channels = json.loads(expanded_channels) if expanded_channels else []
 
 	# process Avalanche channels into DTO status channels
