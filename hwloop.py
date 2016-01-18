@@ -73,7 +73,7 @@ while(1):
 			ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
 
 		else: # no - add it
-			chId = 'ch' + i
+			chId = 'ch' + str(i)
 			ch = Channel(chId, channel.error, timestamp, channel.sensors, chId in expanded_channels)
 			dto_channels.append(ch)
 
