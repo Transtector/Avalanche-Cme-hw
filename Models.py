@@ -39,11 +39,11 @@ class Channel(dict):
 		if not oldestPoints:
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
-		self['sensors'] = [ Sensor('s' + i, sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
+		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit, [ [ timestamp, sensor.value ], oldestPoints[i] ]) for i, sensor in enumerate(hw_sensors) ]
 		self['controls'] = []
 
 
-	def updateSensors(self, error, timestamp, hw_sensors):
+	def updateSensors(self, error, timestamp, hw_sensors, loadFullData=False):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 		
