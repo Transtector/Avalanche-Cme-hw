@@ -11,11 +11,11 @@ from ChannelDataLog import ChannelDataLog
 # which holds sensor data for every sensor in the
 # channel (later we'll add channel control logging).
 #
-# For example, if the CME Channel 0 contains 2 sesors
+# For example, if the CME Channel 0 contains 2 sensors
 # (1 voltage and 1 current), then the log file for that
 # channel will look something like:
 #
-# ch0.json (filename shows that file data is json format compatible)
+# ch0_sensors.json (filename shows that file data is json format compatible)
 #   [[ 123000.789,   0.0 ], [ 123000.789, 0.000 ]] <-- oldest point, beginning of file
 #   [[ 123100.789, 120.0 ], [ 123100.789, 0.500 ]]
 #    ...
@@ -23,7 +23,6 @@ from ChannelDataLog import ChannelDataLog
 #
 # Data is appended to the channel file up to MAX_DATA_POINTS after
 # which the oldest record is discarded when new records are added.
-# This behavior works with the python queuelib ()
 class Channel(dict):
 
 	def __init__(self, index, error, timestamp, hw_sensors): 
@@ -32,9 +31,10 @@ class Channel(dict):
 		self['error'] = error
 		self.stale = False
 
-		self._log = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_data.json'), max_size=config.LOG_MAX_SIZE)
+		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
+		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, 'ch' + str(index) + '_controls.json'), max_size=config.LOG_MAX_SIZE)
 
-		oldestPoints = self._log.peek()
+		oldestPoints = self._slog.peek()
 
 		if not oldestPoints:
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
@@ -51,11 +51,14 @@ class Channel(dict):
 		
 		if not error:
 
+			# append sensor data to log file (this may push oldest data points out)
+			self._slog.push([[ timestamp, s.value ] for s in hw_sensors])
+
+			oldestPoints = self._slog.peek()
+
 			for i, s in enumerate(hw_sensors):
 				self['sensors'][i]['data'][0] = [ timestamp, s.value ] # current measurement point
-
-			# append sensor data to log file
-			self._log.push([[ timestamp, s.value ] for s in hw_sensors])
+				self['sensors'][i]['data'][1] = oldestPoints[i] # oldest point
 
 		self.stale = False
 
