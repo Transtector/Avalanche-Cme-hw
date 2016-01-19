@@ -52,6 +52,7 @@ class Channel(dict):
 
 		# replace data with historic data if requested
 		if loadFullData:
+			print "Loading full data for channel: %s" % self['id']
 			data = self._slog.peekAll()
 			for i, s in enumerate(hw_sensors):
 				self['sensors'][i]['data'] = data[i]
