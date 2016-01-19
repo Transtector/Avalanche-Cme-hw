@@ -29,11 +29,17 @@ class ChannelDataLog(object):
 		with open(self.path, 'r') as f:
 			return json.loads(f.readline())
 
-	def peekAll(self):
-		if self.size == 0:
-			return None
-		
-		return json.loads(self._readlines())			
+	def peekAll(self):		
+		data = []
+
+		# return data = [ [ Sensor0 data points ], [ Sensor 1 data points ], ..., [ SensorN data points] ]
+		for line in self._readlines():
+			for i, s in enumerate(json.loads(line)):
+				if len(data) <= i:
+					data.append([])
+				data[i].append(s)
+
+		return data			
 	
 	def push(self, data):
 
