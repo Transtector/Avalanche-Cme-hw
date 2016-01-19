@@ -38,7 +38,7 @@ class Channel(dict):
 		self['controls'] = []
 
 
-	def updateSensors(self, error, timestamp, hw_sensors, loadFullData=False):
+	def updateSensors(self, error, timestamp, hw_sensors):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 
@@ -49,12 +49,6 @@ class Channel(dict):
 
 		for i, s in enumerate(hw_sensors):
 			self['sensors'][i]['data'] = [ [ timestamp, s.value ], oldestPoints[i] ] 
-
-		# replace data with historic data if requested
-		if loadFullData:
-			data = self._slog.peekAll()
-			for i, s in enumerate(hw_sensors):
-				self['sensors'][i]['data'] = data[i]
 		
 		if not error:
 			# append sensor data to log file (this may push oldest data points out)
