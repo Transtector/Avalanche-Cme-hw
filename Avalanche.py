@@ -15,6 +15,12 @@ AVALANCHE_GPIO_RELAY_CHANNEL2   = 29
 AVALANCHE_GPIO_RELAY_CHANNEL3   = 30
 AVALANCHE_GPIO_RELAY_CHANNEL4   = 31
 
+AVALANCHE_GPIO_LED1 = 32
+AVALANCHE_GPIO_LED2 = 33
+AVALANCHE_GPIO_LED3 = 34
+AVALANCHE_GPIO_LED4 = 35
+AVALANCHE_GPIO_LED5 = 36
+
 class Avalanche(object):
 
 	class _Sensor:
@@ -48,9 +54,15 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL4, GPIO.OUT, initial=GPIO.LOW)
 
 		#setup GPIO for STPM34 power and bus isolator
-		GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power  
+		GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power
 		GPIO.setup(AVALANCHE_GPIO_ISOLATE_SPI_BUS, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
 
+		#setup GPIO for LED Header
+		GPIO.setup(AVALANCHE_GPIO_LED1, GPIO.OUT, initial=GPIO.LOW)     #LED 1
+		GPIO.setup(AVALANCHE_GPIO_LED2, GPIO.OUT, initial=GPIO.LOW)     #LED 2
+		GPIO.setup(AVALANCHE_GPIO_LED3, GPIO.OUT, initial=GPIO.LOW)     #LED 3
+		GPIO.setup(AVALANCHE_GPIO_LED4, GPIO.OUT, initial=GPIO.LOW)     #LED 4
+		GPIO.setup(AVALANCHE_GPIO_LED5, GPIO.OUT, initial=GPIO.LOW)     #LED 5
 
 	def sensorPower(self, state):
 		'''
@@ -102,7 +114,7 @@ class Avalanche(object):
 				# TODO: Read scale factors from config
 				def v_read(spiDev, chIndex):
 					v_read_param = STPM3X.V2RMS if (chIndex == 0) else STPM3X.V1RMS
-					volts = spiDev.read(v_read_param) * 0.035430 
+					volts = spiDev.read(v_read_param) * 0.035430
 					#print "    %s Ch[%d].VOLTS = %f" % (str(spiDev._spiHandle), chIndex, volts)
 					return volts
 
@@ -133,6 +145,51 @@ class Avalanche(object):
 
 		return self._Channels
 
+	def ledToggle(self, led):
+		'''
+		LEDs are controlled through an N Channel MOSFET.
+		If GPIO output = low then LED = off,
+		If GPIO output = high then LED = on
+
+		'''
+		if led == 1:
+			ledState = not GPIO.input(AVALANCHE_GPIO_LED1)
+			GPIO.output(AVALANCHE_GPIO_LED1, ledState)
+		elif led == 2:
+			ledState = not GPIO.input(AVALANCHE_GPIO_LED2)
+			GPIO.output(AVALANCHE_GPIO_LED2, ledState)
+		elif led == 3:
+			ledState = not GPIO.input(AVALANCHE_GPIO_LED3)
+			GPIO.output(AVALANCHE_GPIO_LED3, ledState)
+		elif led == 4:
+			ledState = not GPIO.input(AVALANCHE_GPIO_LED4)
+			GPIO.output(AVALANCHE_GPIO_LED4, ledState)
+		elif led == 5:
+			ledState = not GPIO.input(AVALANCHE_GPIO_LED5)
+			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
+
+	def ledControl(self, led, state):
+		'''
+		LEDs are controlled through an N Channel MOSFET.
+		If GPIO output = low then LED = off,
+		If GPIO output = high then LED = on
+		'''
+		if state == True:
+			ledState = GPIO.HIGH
+		else:
+			ledState = GPIO.LOW
+
+		if led == 1:
+			GPIO.output(AVALANCHE_GPIO_LED1, ledState)
+		elif led == 2:
+			GPIO.output(AVALANCHE_GPIO_LED2, ledState)
+		elif led == 3:
+			GPIO.output(AVALANCHE_GPIO_LED3, ledState)
+		elif led == 4:
+			GPIO.output(AVALANCHE_GPIO_LED4, ledState)
+		elif led == 5:
+			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
+
 	def relayControl(self, channel, state):
 		'''
 		Relays are SPST. If the output is high, the relay will close its normally
@@ -141,7 +198,7 @@ class Avalanche(object):
 		if state == True:
 			relayState = GPIO.HIGH
 		else:
-			relayState = GPIO.LOW 
+			relayState = GPIO.LOW
 
 		if channel == 1:
 			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL1, relayState)
@@ -154,7 +211,7 @@ class Avalanche(object):
 
 	def syncSensors(self):
 		'''
-		STPM3X sensors can be sync'd by briefly pulling the sync line Low for 
+		STPM3X sensors can be sync'd by briefly pulling the sync line Low for
 		each sensor board.
 		'''
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)

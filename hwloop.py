@@ -39,6 +39,8 @@ dto_channels = []
 
 print("\nLoop starting...")
 while(1):
+	# Show Loop operation via Heartbeat LED
+	Avalanche.ledToggle(5)
 
 	# Mark all current DTO channels as stale.
 	# We'll freshen the ones we actually read
@@ -55,7 +57,7 @@ while(1):
 
 	# load a list of channel id's for which we want entire sensor/control
 	# data set loaded
-	expanded_channels = sharedmem.get('expanded_channels')	
+	expanded_channels = sharedmem.get('expanded_channels')
 	expanded_channels = json.loads(expanded_channels) if expanded_channels else []
 
 	# process Avalanche channels into DTO status channels
@@ -74,7 +76,7 @@ while(1):
 			dto_channels.append(ch)
 
 		else: # channel already created - just get a ref
-			ch = dto_channels[i] 
+			ch = dto_channels[i]
 
 		# Update the channel with new values - this also logs the values to disk
 		ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
