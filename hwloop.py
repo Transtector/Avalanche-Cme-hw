@@ -55,7 +55,7 @@ while(1):
 
 	# load a list of channel id's for which we want entire sensor/control
 	# data set loaded
-	expanded_channels = sharedmem.get('expanded_channels')	
+	expanded_channels = sharedmem.get('expanded_channels') # None, -1 (all channels), or list of channel id's to expand
 	expanded_channels = json.loads(expanded_channels) if expanded_channels else []
 
 	# process Avalanche channels into DTO status channels
@@ -77,7 +77,7 @@ while(1):
 			ch = dto_channels[i] 
 
 		# Update the channel with new values - this also logs the values to disk
-		ch.updateSensors(channel.error, timestamp, channel.sensors, ch['id'] in expanded_channels)
+		ch.updateSensors(channel.error, timestamp, channel.sensors, (expanded_channels == -1 or ch['id'] in expanded_channels))
 
 
 	# remove stale channels
