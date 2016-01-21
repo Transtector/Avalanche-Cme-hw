@@ -118,8 +118,8 @@ class STPM3X:
 	GAIN_X16 = 0b11
 
 	#Temperature Compensation Parameters
-	TC1 = {'address': DFECR1_REGADDR, 'width': 3, 'position': 6, 'mask': calcMask(3,6)}
-	TC2 = {'address': DFECR2_REGADDR, 'width': 3, 'position': 6, 'mask': calcMask(3,6)}
+	TC1 = {'address': DSPCR1_REGADDR, 'width': 3, 'position': 6, 'mask': calcMask(3,6)}
+	TC2 = {'address': DSPCR2_REGADDR, 'width': 3, 'position': 6, 'mask': calcMask(3,6)}
 	TEMP_COEF_NEG50  = 0b000
 	TEMP_COEF_NEG25  = 0b001
 	TEMP_COEF_ZERO   = 0b010
@@ -133,7 +133,13 @@ class STPM3X:
 	REF_FREQ = {'address': DSPCR3_REGADDR, 'width': 1, 'position': 27, 'mask': calcMask(1,27)}
 	REF_FREQ_50HZ = 0b0
 	REF_FREQ_60HZ = 0b1
-	
+
+	#Voltage Reference
+	ENVREF1 = {'address': DSPCR1_REGADDR, 'width': 1, 'position': 5, 'mask': calcMask(1,5)}
+	ENVREF2 = {'address': DSPCR2_REGADDR, 'width': 1, 'position': 5, 'mask': calcMask(1,5)}
+	ENVREF_DISABLED = 0b0
+	ENVREF_ENABLED  = 0b1
+
 
 # STPM3X sensor configuration
 # Override defaults by passing them at construction, e.g.:
@@ -144,61 +150,61 @@ class Config(dict):
 	def __init__(self, *args, **kwargs):
 		self['type'] = 'STPM34'
 		self['gpio_sync'] = 12
-	
+
 		# SPI Interface
 		self['spi_bus'] = 0
 		self['spi_device'] = 0
-		
+
 		# ZCR/CLK Pin
 		self['ZCR_SEL'] = 0
 		self['ZCR_EN'] = 0
-		
+
 		# Tamper
 		self['TMP_TOL'] = 0
 		self ['TMP_EN'] = 0
-		
+
 		# LED1 Settings
-		self['LED1OFF'] = True
+		self['LED1OFF'] = 1
 		self['LPW1'] = 0
 		self['LPS1'] = 0
 		self['LCS1'] = 0
-		
+
 		# LED2 Settings
-		self['LED2OFF'] = True
+		self['LED2OFF'] = 1
 		self['LPW2'] = 0
 		self['LPS2'] = 0
 		self['LCS2'] = 0
 
 		# System Settings
-		self['EN_CUM'] = False
+		self['EN_CUM'] = 0
 		self['REF_FREQ'] = STPM3X.REF_FREQ_60HZ
-		
+
 		# Primary Channel Settings
 		self['GAIN1'] = STPM3X.GAIN_X2
-		self['CLRSS1'] = False
-		self['ENVREF1'] = True
+		self['CLRSS1'] = 0
+		self['ENVREF1'] = 1
 		self['TC1'] = STPM3X.TEMP_COEF_ZERO
 		self['AEM1'] = STPM3X.AEM_APPARENT_RMS_POWER
 		self['APM1'] = STPM3X.APM_FUNDAMENTAL_POWER
-		self['BHPFV1'] = True
-		self['BHPFC1'] = True
-		self['ROC1'] = False
+		self['BHPFV1'] = 1
+		self['BHPFC1'] = 1
+		self['ROC1'] = 0
 		self['voltage_swell_threshold'] = 1023
 		self['voltage_sag_threshold'] = 0
 		self['current_swell_threshold'] = 1023
 		self['rms_upper_threshold'] = 4095
 		self['rms_lower_threshold'] = 4095
-		
-		# Secondary Channel Settings 
+
+		# Secondary Channel Settings
 		self['GAIN2'] = STPM3X.GAIN_X2
-		self['CLRSS2'] = False
-		self['ENVREF2'] = True
+		self['CLRSS2'] = 0
+		self['ENVREF2'] = 1
 		self['TC2'] = STPM3X.TEMP_COEF_ZERO
 		self['AEM2'] = STPM3X.AEM_APPARENT_RMS_POWER
 		self['APM2'] = STPM3X.APM_FUNDAMENTAL_POWER
-		self['BHPFV2'] = True
-		self['BHPFC2'] = True
-		self['ROC2'] = False
+		self['BHPFV2'] = 1
+		self['BHPFC2'] = 1
+		self['ROC2'] = 0
 		self['voltage_swell_threshold'] = 1023
 		self['voltage_sag_threshold'] = 0
 		self['current_swell_threshold'] = 1023
@@ -213,32 +219,50 @@ class Config(dict):
 class Stpm3x(object):
 
 	_spiHandle = 0;
-	
+
 	def __init__(self, spiHandle, config):
 		self._spiHandle = spiHandle
 		self.error = '' # empty for no errors
 
 		print '\nConfiguring channels on %s ...' % str(spiHandle)
 
-		status = 0
-		for i, g in enumerate(['GAIN1', 'GAIN2']):
-			if not g in config:
-				error_msg = 'SPI channel %d error: missing %s configuration' % (i, g)
+		#print config
+
+		for i, p in enumerate(['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ']):
+			status = 0
+			if not p in config:
+				error_msg = 'SPI channel %d error: missing %s configuration' % (config['spi_device'], p)
 				self.error = '    ' + error_msg
 				print error_msg
 
 			else:
-				gain_param = STPM3X.GAIN1 if (i == 0) else STPM3X.GAIN2
+				if (i == 0):
+					parameter = STPM3X.GAIN1
+				elif (i == 1):
+					parameter = STPM3X.GAIN2
+				elif (i == 2):
+					parameter = STPM3X.ENVREF1
+				elif (i == 3):
+					parameter = STPM3X.ENVREF2
+				elif (i == 4):
+					parameter = STPM3X.TC1
+				elif (i == 5):
+					parameter = STPM3X.TC2
+				elif (i == 6):
+					parameter = STPM3X.REF_FREQ
 
-				status |= self.write(gain_param, config[g])
+				status |= self.write(parameter, config[p])
 
 				if not status == 0:
-					error_msg = 'SPI channel %d error: error writing %s to device' % (i, g)
+					error_msg = 'SPI channel %d error: error writing %s to device' % (config['spi_device'], p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					print '    ' + error_msg
 				else:
-					print '    done'
-	
+					msg = 'SPI channel %d: parameter %s written to device' % (config['spi_device'], p)
+					print '    ' + msg
+
+		self.readConfigRegs()
+
 	def test(self):
 		print 'hello world'
 
@@ -247,7 +271,7 @@ class Stpm3x(object):
 		result += data_bytes[0]
 		result += data_bytes[1] << 8
 		result += data_bytes[2] << 16
-		result += data_bytes[3] << 24             
+		result += data_bytes[3] << 24
 		return result
 
 	def _bytes2int32(self,data_bytes):
@@ -255,7 +279,7 @@ class Stpm3x(object):
 		result += data_bytes[3]
 		result += data_bytes[2] << 8
 		result += data_bytes[1] << 16
-		result += data_bytes[0] << 24             
+		result += data_bytes[0] << 24
 		return result
 
 	def _crc8_calc(self,data):
@@ -266,48 +290,46 @@ class Stpm3x(object):
 
 	def _readRegister(self, addr):
 		self._spiHandle.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
-		readbytes = self._spiHandle.readbytes(5)
+		readbytes = self._spiHandle.xfer2([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+		#print readbytes
 		val = self._bytes2int32_rev(readbytes[0:4])
+		#self.printRegister(val)
 		return val
 
 	def _writeRegister(self, address, data):
 		upperMSB = (data >> 24) & 0xFF
-		#print '0x{:02x}'.format(upperMSB)
 		upperLSB = (data >> 16) & 0xFF
-		#print '0x{:02x}'.format(upperLSB)
 		lowerMSB = (data >> 8) & 0xFF
-		#print '0x{:02x}'.format(lowerMSB)
 		lowerLSB = data & 0xFF
+
+		#print '0x{:02x}'.format(upperMSB)
+		#print '0x{:02x}'.format(upperLSB)
+		#print '0x{:02x}'.format(lowerMSB)
 		#print '0x{:02x}'.format(lowerLSB)
-		
+
+		#Generate packet for upper portion of register
+		packet = self._bytes2int32([0x00, address+1, upperLSB, upperMSB])
+		crc = self._crc8_calc(packet)
+		self._spiHandle.xfer2([0x00, address+1, upperLSB, upperMSB, crc])
+
 		#Generate packet for lower portion of register
 		packet = self._bytes2int32([0x00, address, lowerLSB, lowerMSB])
 		crc = self._crc8_calc(packet)
 		self._spiHandle.xfer2([0x00, address, lowerLSB, lowerMSB, crc])
 
-		#Generate packet for uper portion of register
-		packet = self._bytes2int32([0x00, address+1, upperLSB, upperMSB])
-		#print '0x{:08x}'.format(packet)
-		crc = self._crc8_calc(packet)
-		#print '0x{:02x}'.format(crc) 
-		self._spiHandle.xfer2([0x00, address+1, upperLSB, upperMSB, crc])
-
 		#Read back register
-		readbytes = self._spiHandle.readbytes(5)
-		val = self._bytes2int32_rev(readbytes[0:4])
-		crc = readbytes[4]
-		return {'val':val, 'crc':crc}
+		return self._readRegister(address)
 
 	def printRegister(self, value):
 		print '0x{:08x}'.format(value)
 
 	def readConfigRegs(self):
 		#read configuration registers
-		print 'Configuration Registers'
+		print '    Configuration Registers:'
 		for row in xrange(0,21,1):
 			addr = row*2
-			regvalue = self.readReg(addr)       
-			print '{:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue)
+			regvalue = self._readRegister(addr)
+			print '        {:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue)
 		#end for
 
 	def softwareReset(self):
@@ -321,16 +343,17 @@ class Stpm3x(object):
 		nMask = ~mask
 		position = register['position']
 		shift = value << position
-		
+
 		#read current value
 		currentValue = self._readRegister(register['address'])
 		#self.printRegister(currentValue)
 
 		#modify value
 		newValue = (currentValue & nMask) | ((value << position) & mask)
+		#self.printRegister(newValue)
 
 		return newValue
-  
+
 	def convert(self, value, bits):
 		'''
 		Convert function based on code found here:
@@ -344,7 +367,7 @@ class Stpm3x(object):
 
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
-									  
+
 		#get value from register, mask and shift
 		maskedValue = (regValue & register['mask']) >> register['position']
 		#print("Masked Value:   " + hex(maskedValue))
@@ -352,14 +375,14 @@ class Stpm3x(object):
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
 		#print ("Converted Value: " + str(value))
-		
+
 		return value
 
 	def gatedRead(self, register, gateThreshold):
 
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
-									  
+
 		#get value from register, mask and shift
 		maskedValue = (regValue & register['mask']) >> register['position']
 		#print("Masked Value:   " + hex(maskedValue))
@@ -367,7 +390,7 @@ class Stpm3x(object):
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
 		#print ("Converted Value: " + str(value))
-		
+
 		if (value < gateThreshold):
 			gatedValue = 0
 		else:
@@ -377,6 +400,7 @@ class Stpm3x(object):
 
 	def write(self, register, value):
 		#read and modify register contents
+		#print '        write register: %d, mask: %d, position: %d, value: %d' % (register['address'], register['mask'], register['position'], value)
 		newValue = self._modify(register, value)
 		#self.printRegister(newValue)
 
@@ -385,6 +409,8 @@ class Stpm3x(object):
 
 		#read value from device and check if write was successful
 		currentValue = self._readRegister(register['address'])
+
+		#print 'Write end'
 		#self.printRegister(currentValue)
 
 		if (currentValue == newValue):

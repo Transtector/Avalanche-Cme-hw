@@ -103,6 +103,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
+			print "\nspi_device: %d" % (spi_device_index)
 			device = Stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
@@ -150,7 +151,6 @@ class Avalanche(object):
 		LEDs are controlled through an N Channel MOSFET.
 		If GPIO output = low then LED = off,
 		If GPIO output = high then LED = on
-
 		'''
 		if led == 1:
 			ledState = not GPIO.input(AVALANCHE_GPIO_LED1)
@@ -216,7 +216,7 @@ class Avalanche(object):
 		'''
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.LOW)
-		time.sleep(.001)
+		time.sleep(0.001)
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
 
