@@ -121,7 +121,7 @@ class Avalanche(object):
 
 				def c_read(spiDev, chIndex):
 					c_read_param = STPM3X.C2RMS if (chIndex == 0) else STPM3X.C1RMS
-					amps = spiDev.gatedRead(c_read_param, 7) * 0.003429594
+					amps = spiDev.gatedRead(c_read_param, 0) * 0.003429594
 					#print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 

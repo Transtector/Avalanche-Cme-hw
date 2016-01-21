@@ -12,8 +12,8 @@ if not os.path.exists(LOGDIR):
 # the channel data is published.  The maximum channel record size
 # can be calculated approximately* as:
 #
-# Channel_Record_Max_Bytes = 41 * Channel_Sensors + 1 
-# 
+# Channel_Record_Max_Bytes = 41 * Channel_Sensors + 1
+#
 # * This only consideres a sensor data point as [ <timestamp>, <double> ]
 # which may not be a valid assumption for future sensors.
 # * Also doesn't consider channel controls, which also log their states
@@ -26,15 +26,25 @@ LOG_MAX_SIZE = 1024000
 # Change this in conjunction with the LOG_MAX_SIZE above, as
 # every time through loop logs a record (line) for every (non-errored)
 # channel on the Cme.
-LOOP_PERIOD_s = 1.0 
+LOOP_PERIOD_s = 1.0
 
 
 # spi bus sensor configurations
-SPI_SENSORS = [ 
-
-	STPM3X.Config(),
+SPI_SENSORS = [
 
 	STPM3X.Config({
-		'spi_device': 1
+		'spi_device': 0,
+		'CHV1': 0x85C,
+		'CHV2': 0x7FF,
+		'CHC1': 0x800,
+		'CHC2': 0x800,
+	}),
+
+	STPM3X.Config({
+		'spi_device': 1,
+		'CHV1': 0x7ED,
+		'CHV2': 0x7E7,
+		'CHC1': 0x800,
+		'CHC2': 0x800,
 	})
 ]

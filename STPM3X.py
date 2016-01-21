@@ -140,6 +140,14 @@ class STPM3X:
 	ENVREF_DISABLED = 0b0
 	ENVREF_ENABLED  = 0b1
 
+	#Voltage Channel Calibration
+	CHV1 = {'address': DSPCR5_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
+	CHV2 = {'address': DSPCR7_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
+
+	#Current Channel Calibration
+	CHC1 = {'address': DSPCR6_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
+	CHC2 = {'address': DSPCR8_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
+
 
 # STPM3X sensor configuration
 # Override defaults by passing them at construction, e.g.:
@@ -211,6 +219,12 @@ class Config(dict):
 		self['rms_upper_threshold'] = 4095
 		self['rms_lower_threshold'] = 4095
 
+		# Calibrations
+		self['CHV1'] = 0x800
+		self['CHV2'] = 0x800
+		self['CHC1'] = 0x800
+		self['CHC2'] = 0x800
+
 		# set passed items
 		for k, v in dict(*args, **kwargs).items():
 			self[k] = v
@@ -228,7 +242,7 @@ class Stpm3x(object):
 
 		#print config
 
-		for i, p in enumerate(['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ']):
+		for i, p in enumerate(['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']):
 			status = 0
 			if not p in config:
 				error_msg = 'SPI channel %d error: missing %s configuration' % (config['spi_device'], p)
@@ -250,6 +264,15 @@ class Stpm3x(object):
 					parameter = STPM3X.TC2
 				elif (i == 6):
 					parameter = STPM3X.REF_FREQ
+				elif (i == 7):
+					parameter = STPM3X.CHV1
+				elif (i == 8):
+					parameter = STPM3X.CHV2
+				elif (i == 9):
+					parameter = STPM3X.CHC1
+				elif (i == 10):
+					parameter = STPM3X.CHC2
+
 
 				status |= self.write(parameter, config[p])
 
