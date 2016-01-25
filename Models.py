@@ -45,10 +45,11 @@ class Channel(dict):
 		oldestPoints = []
 		logdata = self._slog.peek() # [ timestamp, sensor0_data, ..., sensorN_data ]
 
-		for i in range(1, len(logdata)):
-			oldestPoints.append([ logdata[0], logdata[i] ]) # list of points: [ timestamp, sensor_data ], ...
+		if logdata:
+			for i in range(1, len(logdata)):
+				oldestPoints.append([ logdata[0], logdata[i] ]) # list of points: [ timestamp, sensor_data ], ...
 
-		if not oldestPoints: # use current sensor values for oldest points
+		else: # use current sensor values for oldest points
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
 		for i, s in enumerate(hw_sensors):
