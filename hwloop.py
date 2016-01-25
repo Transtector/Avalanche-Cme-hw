@@ -44,7 +44,7 @@ while(1):
 
 	# Mark all current DTO channels as stale.
 	# We'll freshen the ones we actually read
-	# the delete the stale ones in prep to grow
+	# then delete the stale ones in prep to grow
 	# and shrink channels as they are added/removed.
 	for ch in dto_channels:
 		ch.stale = True

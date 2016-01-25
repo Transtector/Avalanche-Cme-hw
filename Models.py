@@ -16,10 +16,10 @@ from ChannelDataLog import ChannelDataLog
 # channel will look something like:
 #
 # ch0_sensors.json (filename shows that file data is json format compatible)
-#   [[ 123000.789,   0.0 ], [ 123000.789, 0.000 ]] <-- oldest point, beginning of file
-#   [[ 123100.789, 120.0 ], [ 123100.789, 0.500 ]]
+#   [ 123000.789,   0.0, 0.000 ] <-- oldest points, beginning of file
+#   [ 123100.789, 120.0, 0.500 ]
 #    ...
-#   [[ 123100.789, 120.0 ], [ 123100.789, 0.500 ]] <-- newst point, end of file
+#   [ 123100.789, 120.0, 0.500 ] <-- newst points, end of file
 #
 # Data is appended to the channel file up to MAX_DATA_POINTS after
 # which the oldest record is discarded when new records are added.
@@ -42,9 +42,13 @@ class Channel(dict):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 
-		oldestPoints = self._slog.peek()
+		oldestPoints = []
+		logdata = self._slog.peek() # [ timestamp, sensor0_data, ..., sensorN_data ]
 
-		if not oldestPoints:
+		for i in range(1, len(logdata)):
+			oldestPoints.append([ logdata[0], logdata[i] ]) # list of points: [ timestamp, sensor_data ], ...
+
+		if not oldestPoints: # use current sensor values for oldest points
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
 		for i, s in enumerate(hw_sensors):
@@ -52,7 +56,9 @@ class Channel(dict):
 		
 		if not error:
 			# append sensor data to log file (this may push oldest data points out)
-			self._slog.push([[ timestamp, s.value ] for s in hw_sensors])
+			line = [s.value for s in hw_sensors]
+			line.insert(0, timestamp)
+			self._slog.push(line) # [ timestamp, sensor0_data, ..., sensorN_data ]
 
 		self.stale = False
 
