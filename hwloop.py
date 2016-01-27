@@ -1,6 +1,6 @@
 #!./cme_hw_venv/bin/python
 
-import time, json
+import sys, time, json
 import config, memcache
 
 from Avalanche import Avalanche
