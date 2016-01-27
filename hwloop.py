@@ -37,8 +37,14 @@ Avalanche.setupSpiChannels(config.SPI_SENSORS)
 
 dto_channels = []
 
-print("\nLoop starting...")
+spinners = "|/-\\"
+spinner_i = 0
 while(1):
+	# Console output for piece of mind
+	sys.stdout.write("Hardware looping %s\r" % (spinners[spinner_i]) )
+	sys.stdout.flush()
+	spinner_i = (spinner_i + 1) % len(spinners)
+
 	# Show Loop operation via Heartbeat LED
 	Avalanche.ledToggle(5)
 
@@ -64,7 +70,7 @@ while(1):
 		# we aren't able to add/remove channels dynamically, but we'll
 		# probably need to get there.
 		# Note that both of these unset the channel 'stale' attribute
-		# and set the channel 'error' string.
+		# and may set the channel 'error' string.
 		if i > (len(dto_channels) - 1): # not found - create it
 			chId = 'ch' + str(i)
 			ch = Channel(chId, channel.error, timestamp, channel.sensors)
@@ -75,7 +81,6 @@ while(1):
 
 		# Update the channel with new values - this also logs the values to disk
 		ch.updateSensors(channel.error, timestamp, channel.sensors)
-
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]

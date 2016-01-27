@@ -3,7 +3,6 @@ import config
 
 from ChannelDataLog import ChannelDataLog
 
-
 # DTO Channel model handles logging channel data 
 # to file.  Each channel gets its own file in
 # the LOGDIR found in the application config file.
@@ -53,7 +52,7 @@ class Channel(dict):
 			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
 
 		for i, s in enumerate(hw_sensors):
-			self['sensors'][i]['data'] = [ [ timestamp, s.value ], oldestPoints[i] ] 
+			self['sensors'][i]['data'] = [ oldestPoints[i], [ timestamp, s.value ] ] 
 		
 		if not error:
 			# append sensor data to log file (this may push oldest data points out)
