@@ -29,6 +29,57 @@ class ChannelDataLog(object):
 		with open(self.path, 'r') as f:
 			return json.loads(f.readline())	
 	
+	def peekAll(self, max_points):
+		if self.size == 0:
+			return None
+
+		lines = self._readlines()
+		decimate = len(lines) > max_points
+
+		if decimate:
+			bucket_size = (len(lines) - 2) // (max_points - 2) # floor quotient
+			data_size = max_points
+		else:
+			bucket_size = 1
+			data_size = len(lines)
+
+		data = []
+
+		# first points
+		points = json.loads(lines[0])
+		for i in range(1, len(points)):
+			data.append([ [ points[0], points[i] ] ])
+
+		# points in between may get decimated into bins of 'bucket_size' where max values are chosen
+		for i in range(1, data_size - 1):
+			r = (i - 1) * bucket_size + 1
+			bucket = []
+
+			for line in lines[r:r+bucket_size]:
+				points = json.loads(line)
+
+				#print("    Bucket {0} from lines[{1}:{2}] = {3}".format(i, r, r+bucket_size, points))
+
+				if len(bucket) == 0:
+					for j in range(1, len(points)):
+						bucket.append([ points[0], points[j] ])
+
+				if decimate:
+					for j in range(1, len(points)):
+						if bucket[j-1][1] < points[j]:
+							bucket[j-1] = [ points[0], points[j] ]
+
+			#print("    Bucket full: {0}".format(bucket))
+			for j, point in enumerate(bucket):
+				data[j].append(point)
+
+		# last points
+		points = json.loads(lines[-1])
+		for i in range(1, len(points)):
+			data[i-1].append([ points[0], points[i] ])
+
+		return data
+
 	def push(self, data):
 
 		line = json.dumps(data) + '\n'
