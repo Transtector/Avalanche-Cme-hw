@@ -42,25 +42,50 @@ class Channel(dict):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 
-		oldestPoints = []
-		logdata = self._slog.peek() # [ timestamp, sensor0_data, ..., sensorN_data ]
+		# clear log file takes precedence
+		if config.get('reset', None): 
+			self._slog.clear()
 
-		if logdata:
-			for i in range(1, len(logdata)):
-				oldestPoints.append([ logdata[0], logdata[i] ]) # list of points: [ timestamp, sensor_data ], ...
+		# retrieve decimated log data if expand=True
+		if config.get('expand', None):
+			logdata = self._slog.peekAll(max_points=201) # [ [ timestamp0, sensor0_data, ..., sensorN_data ], ... ]
 
-		else: # use current sensor values for oldest points
-			oldestPoints = [[ timestamp, sensor.value ] for sensor in hw_sensors]
+		# else just retrieve the oldest point (first line) of log data
+		else:
+			logdata = [ self._slog.peek() ] # [ [ timestamp0, sensor0_data, ..., sensorN_data ] ]
 
-		for i, s in enumerate(hw_sensors):
-			self['sensors'][i]['data'] = [ oldestPoints[i], [ timestamp, s.value ] ] 
-		
+		# if we haven't got any log data (yet) add the current sensor points
+		if not logdata:
+			logdata = [ [ s.value for s in hw_sensors ] ]
+			logdata[0].insert(0, timestamp)
+
+		# add the current sensor points (this will duplicate the first row if no log data yet)
+		logdata.append([ s.value for s in hw_sensors ])
+		logdata[-1].insert(0, timestamp)
+
+		# append new sensor data to log file (this may push oldest data points out)
 		if not error:
-			# append sensor data to log file (this may push oldest data points out)
-			line = [s.value for s in hw_sensors]
-			line.insert(0, timestamp)
-			self._slog.push(line) # [ timestamp, sensor0_data, ..., sensorN_data ]
+			self._slog.push(logdata[-1]) 
 
+ 		# clear existing sensor['data'] in prep for new data
+		for i in range(len(self['sensors'])):
+			self['sensors'][i]['data']=[]
+		
+		# At this point we have logdata as a 2D table of entries with at least two entries:
+		#
+		# logdata = [ 
+		#	[ timestamp0, s0_data0, ..., sN_data0 ], 
+		#		...,
+		#	[ timestampM, s0_dataM, ..., sN_dataM ] 
+		# ]
+		#
+		# However, sensors' 'data' are expecting a 2D array of data point pairs [timestamp, data], so
+		# we build the data arrays from logdata for each sensor in the log entries
+		for entry in logdata:
+			for i in range(1, len(entry)):
+				self['sensors'][i-1]['data'].append([ entry[0], entry[i] ])
+		
+		# channel is no longer considered 'stale'
 		self.stale = False
 
 
