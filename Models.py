@@ -27,6 +27,7 @@ class Channel(dict):
 	def __init__(self, id, error, timestamp, hw_sensors): 
 		
 		self['id'] = id
+		self.id = id
 		self['error'] = error
 		self.stale = False
 
@@ -37,7 +38,7 @@ class Channel(dict):
 		self['controls'] = []
 
 
-	def updateSensors(self, error, timestamp, hw_sensors):
+	def updateSensors(self, error, timestamp, hw_sensors, expand=False):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 
