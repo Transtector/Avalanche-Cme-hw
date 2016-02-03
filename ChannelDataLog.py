@@ -45,6 +45,9 @@ class ChannelDataLog(object):
 			lines.append(line)
 			self._writelines(lines)
 
+	def clear(self):
+		open(self.path, 'w').close()
+		self.size = 0
 
 	def pop(self):
 		if self.size == 0:
