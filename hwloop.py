@@ -61,6 +61,10 @@ while(1):
 	# read channel data
 	channels = Avalanche.readSpiChannels()
 
+	# array of channel id's for which to retrieve (decimated) log history
+	ec = sharedmem.get('expanded_channels')
+	expanded_channels = json.loads(ec) if ec else []
+
 	# process Avalanche channels into DTO status channels
 	for i, channel in enumerate(channels):
 
@@ -80,7 +84,7 @@ while(1):
 			ch = dto_channels[i]
 
 		# Update the channel with new values - this also logs the values to disk
-		ch.updateSensors(channel.error, timestamp, channel.sensors)
+		ch.updateSensors(channel.error, timestamp, channel.sensors, channel.id in expanded_channels)
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]
