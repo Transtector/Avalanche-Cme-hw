@@ -52,7 +52,8 @@ class Channel(dict):
 
 		# else just retrieve the oldest point (first line) of log data
 		else:
-			logdata = [ self._slog.peek() ] # [ [ timestamp0, sensor0_data, ..., sensorN_data ] ]
+			line = self._slog.peek()
+			logdata = [ line ] if line else [] # [ [ timestamp0, sensor0_data, ..., sensorN_data ] ]
 
 		# if we haven't got any log data (yet) add the current sensor points
 		if not logdata:
