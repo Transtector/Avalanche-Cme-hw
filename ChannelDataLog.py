@@ -46,37 +46,29 @@ class ChannelDataLog(object):
 		data = []
 
 		# first points
-		points = json.loads(lines[0])
-		for i in range(1, len(points)):
-			data.append([ [ points[0], points[i] ] ])
+		data.append(json.loads(lines[0]))
 
 		# points in between may get decimated into bins of 'bucket_size' where max values are chosen
 		for i in range(1, data_size - 1):
 			r = (i - 1) * bucket_size + 1
-			bucket = []
 
+			bucket=[]
 			for line in lines[r:r+bucket_size]:
-				points = json.loads(line)
-
-				#print("    Bucket {0} from lines[{1}:{2}] = {3}".format(i, r, r+bucket_size, points))
 
 				if len(bucket) == 0:
-					for j in range(1, len(points)):
-						bucket.append([ points[0], points[j] ])
+					bucket = json.loads(line)
 
-				if decimate:
-					for j in range(1, len(points)):
-						if bucket[j-1][1] < points[j]:
-							bucket[j-1] = [ points[0], points[j] ]
+				elif decimate:
+					newline = json.loads(line)
+					for j in range(1, len(bucket)):
+						if bucket[j] < newline[j]:
+							bucket[j] = newline[j]
 
-			#print("    Bucket full: {0}".format(bucket))
-			for j, point in enumerate(bucket):
-				data[j].append(point)
+
+			data.append(bucket)
 
 		# last points
-		points = json.loads(lines[-1])
-		for i in range(1, len(points)):
-			data[i-1].append([ points[0], points[i] ])
+		data.append(json.loads(lines[-1]))
 
 		return data
 
