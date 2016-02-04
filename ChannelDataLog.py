@@ -97,6 +97,8 @@ class ChannelDataLog(object):
 			self._writelines(lines)
 
 	def clear(self):
+		if self.size == 0: 
+			return
 		open(self.path, 'w').close()
 		self.size = 0
 
