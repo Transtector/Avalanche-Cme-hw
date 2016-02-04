@@ -41,10 +41,6 @@ spinners = "|/-\\"
 spinner_i = 0
 print("\n----\n")
 while(1):
-	# Console output for piece of mind
-	sys.stdout.write("Hardware looping %s\r" % (spinners[spinner_i]) )
-	sys.stdout.flush()
-	spinner_i = (spinner_i + 1) % len(spinners)
 
 	# Show Loop operation via Heartbeat LED
 	Avalanche.ledToggle(5)
@@ -67,8 +63,12 @@ while(1):
 	cc = sharedmem.get('channels_config')
 	channels_config = json.loads(cc) if cc else {}
 
-	if cc:
-		print "\nchannels_config: %s\n" % cc
+	# console output for peace of mind...
+	msg = "Hardware looping %s" % spinners[spinner_i]
+	spinner_i = (spinner_i + 1) % len(spinners)
+	msg += ("\tchannels_config: %s" % cc) if cc else ""
+	sys.stdout.write(msg + "\x1b[K\r") # "\x1b[k" is ANSII clear to end of line 
+	sys.stdout.flush()
 
 	# process Avalanche channels into DTO status channels
 	for i, channel in enumerate(channels):
@@ -89,7 +89,7 @@ while(1):
 			ch = dto_channels[i]
 
 		# Update the channel with new values - this also logs the values to disk
-		ch.updateSensors(channel.error, timestamp, channel.sensors, channels_config.get(ch.id, {}))
+		ch.updateSensors(channel.error, timestamp, channel.sensors, {}) # channels_config.get(ch.id, {}))
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]
