@@ -39,6 +39,7 @@ dto_channels = []
 
 spinners = "|/-\\"
 spinner_i = 0
+print("\n----\n")
 while(1):
 	# Console output for piece of mind
 	sys.stdout.write("Hardware looping %s\r" % (spinners[spinner_i]) )
@@ -65,6 +66,9 @@ while(1):
 	# { 'ch0': { 'reset': True, 'expand': True }, ...}
 	cc = sharedmem.get('channels_config')
 	channels_config = json.loads(cc) if cc else {}
+
+	if cc:
+		print "\nchannels_config: %s\n" % cc
 
 	# process Avalanche channels into DTO status channels
 	for i, channel in enumerate(channels):
