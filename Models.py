@@ -31,7 +31,16 @@ class Channel(dict):
 		self['error'] = error
 		self.stale = False
 
+ 		# cache expanded log data so we don't have to read from file each time
+		self._slogdata = None 
+		self._clogdata = None
+
+		self._max_size = config.LOG_MAX_SIZE # maximum number of data log entries
+		self._decimation_size = 201 # number of data points after log entries decimated
+
 		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
+
+		# TODO: support controls logging
 		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_controls.json'), max_size=config.LOG_MAX_SIZE)
 
 		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_sensors) ]
@@ -42,31 +51,47 @@ class Channel(dict):
 		''' Assumes sensors array characteristics have not changed since init '''
 		self['error'] = error
 
-		# clear log file takes precedence
+		# clear log takes precedence
 		if config.get('reset', None): 
+			self._slogdata = None
 			self._slog.clear()
 
-		# retrieve decimated log data if expand=True
-		if config.get('expand', None):
-			logdata = self._slog.peekAll(max_points=201) # [ [ timestamp0, sensor0_data, ..., sensorN_data ], ... ]
+		newdata = [ s.value for s in hw_sensors ]
+		newdata.insert(0, timestamp)
 
-		# else just retrieve the oldest point (first line) of log data
-		else:
+		# append new sensor data entry to log file (this may push oldest data points out)
+		if not error:
+			self._slog.push(newdata) 
+
+
+		if config.get('expand', None): # retrieve decimated log data if expand=True
+
+			if not self._slogdata:
+				self._slogdata = self._slog.peekAll() # [ [ timestamp0, sensor0_data, ..., sensorN_data ], ... ]
+
+			else:
+				self._slogdata.append(newdata) # add new point to cached data
+				if len(self._slogdata) > self._max_size:
+					self._slogdata = self._slogdata[1:] # trim if too big
+			
+			logdata = self._decimate(self._slogdata, self._decimation_size)
+
+
+		else: # else just retrieve the oldest point (first line) of log data
+
+			self._logdata = None
 			line = self._slog.peek()
 			logdata = [ line ] if line else [] # [ [ timestamp0, sensor0_data, ..., sensorN_data ] ]
 
+
 		# if we haven't got any log data (yet) add the current sensor points
 		if not logdata:
-			logdata = [ [ s.value for s in hw_sensors ] ]
-			logdata[0].insert(0, timestamp)
+			logdata = [ newdata ]
 
-		# add the current sensor points (this will duplicate the first row if no log data yet)
-		logdata.append([ s.value for s in hw_sensors ])
-		logdata[-1].insert(0, timestamp)
+		# finally append newest points (this will duplicate oldest points if we started with no log data)
+		if len(logdata) == 1:
+			logdata.append(newdata)
 
-		# append new sensor data to log file (this may push oldest data points out)
-		if not error:
-			self._slog.push(logdata[-1]) 
 
  		# clear existing sensor['data'] in prep for new data
 		for i in range(len(self['sensors'])):
@@ -88,6 +113,41 @@ class Channel(dict):
 		
 		# channel is no longer considered 'stale'
 		self.stale = False
+
+	def _decimate(self, lines, max_points):
+
+		if len(lines) <= max_points:
+			return lines
+
+		bucket_size = (len(lines) - 2) // (max_points - 2) # floor quotient
+		data = []
+
+		# first entry
+		data.append(lines[0])
+
+		# entries in between may get decimated into bins of 'bucket_size' where max values are chosen
+		for i in range(1, max_points - 1):
+			r = (i - 1) * bucket_size + 1
+
+			bucket=[]
+			for line in lines[r:r+bucket_size]:
+
+				if len(bucket) == 0:
+					bucket = line
+
+				else:
+					for j in range(1, len(bucket)):
+						if bucket[j] < line[j]:
+							bucket[j] = line[j]
+
+			data.append(bucket)
+
+		# last entry
+		data.append(lines[-1])
+
+		return data
+
+
 
 
 class Sensor(dict):

@@ -39,6 +39,7 @@ dto_channels = []
 
 spinners = "|/-\\"
 spinner_i = 0
+loop_time = time.time()
 print("\n----\n")
 while(1):
 
@@ -63,13 +64,6 @@ while(1):
 	cc = sharedmem.get('channels_config')
 	channels_config = json.loads(cc) if cc else {}
 
-	# console output for peace of mind...
-	msg = "Hardware looping %s" % spinners[spinner_i]
-	spinner_i = (spinner_i + 1) % len(spinners)
-	msg += ("\tchannels_config: %s" % cc) if cc else ""
-	sys.stdout.write(msg + "\x1b[K\r") # "\x1b[k" is ANSII clear to end of line 
-	sys.stdout.flush()
-
 	# process Avalanche channels into DTO status channels
 	for i, channel in enumerate(channels):
 
@@ -89,7 +83,7 @@ while(1):
 			ch = dto_channels[i]
 
 		# Update the channel with new values - this also logs the values to disk
-		ch.updateSensors(channel.error, timestamp, channel.sensors, {}) # channels_config.get(ch.id, {}))
+		ch.updateSensors(channel.error, timestamp, channel.sensors, channels_config.get(ch.id, {}))
 
 	# remove stale channels
 	dto_channels = [ch for ch in dto_channels if not ch.stale]
@@ -97,4 +91,12 @@ while(1):
 	# update shared memory object
 	sharedmem.set('status', json.dumps({ 'channels': dto_channels }))
 
+	# console output for peace of mind...
+	msg = "Hardware looping %s [%.1f s]" % (spinners[spinner_i], time.time() - loop_time)
+	spinner_i = (spinner_i + 1) % len(spinners)
+	msg += ("\tchannels_config: %s" % cc) if cc else ""
+	sys.stdout.write(msg + "\x1b[K\r") # "\x1b[k" is ANSII clear to end of line 
+	sys.stdout.flush()
+
+	loop_time = time.time()
 	time.sleep(config.LOOP_PERIOD_s)
