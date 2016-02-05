@@ -29,49 +29,14 @@ class ChannelDataLog(object):
 		with open(self.path, 'r') as f:
 			return json.loads(f.readline())	
 	
-	def peekAll(self, max_points):
+	def peekAll(self):
 		if self.size == 0:
 			return None
-
-		lines = self._readlines()
-		decimate = len(lines) > max_points
-
-		if decimate:
-			bucket_size = (len(lines) - 2) // (max_points - 2) # floor quotient
-			data_size = max_points
-		else:
-			bucket_size = 1
-			data_size = len(lines)
-
-		data = []
-
-		# first points
-		data.append(json.loads(lines[0]))
-
-		# points in between may get decimated into bins of 'bucket_size' where max values are chosen
-		for i in range(1, data_size - 1):
-			r = (i - 1) * bucket_size + 1
-
-			bucket=[]
-			for line in lines[r:r+bucket_size]:
-
-				if len(bucket) == 0:
-					bucket = json.loads(line)
-
-				elif decimate:
-					newline = json.loads(line)
-					for j in range(1, len(bucket)):
-						if bucket[j] < newline[j]:
-							bucket[j] = newline[j]
-
-
-			data.append(bucket)
-
-		# last points
-		data.append(json.loads(lines[-1]))
-
-		return data
-
+		result = []
+		for line in self._readlines():
+			result.append(json.loads(line))
+		return result
+	
 	def push(self, data):
 
 		line = json.dumps(data) + '\n'
