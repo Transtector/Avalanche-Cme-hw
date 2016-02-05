@@ -311,10 +311,22 @@ class Stpm3x(object):
 		crc = crc8_func(hex_bytestring)
 		return crc
 
+	def _check_crc(self,data):
+		packet = self._bytes2int32(data[0:4])
+		crc = self._crc8_calc(packet)
+		if (crc == data[4]):
+			return True
+		else:
+			return False
+
 	def _readRegister(self, addr):
-		self._spiHandle.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
-		readbytes = self._spiHandle.xfer2([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
-		#print readbytes
+		validData = False
+		while(validData == False):
+			self._spiHandle.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
+			readbytes = self._spiHandle.xfer2([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+			#print readbytes
+			validData = self._check_crc(readbytes)
+			#print validData
 		val = self._bytes2int32_rev(readbytes[0:4])
 		#self.printRegister(val)
 		return val
