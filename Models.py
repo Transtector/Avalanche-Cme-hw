@@ -1,154 +1,110 @@
-import os, json
+import os, json, threading
 import config
 
 from ChannelDataLog import ChannelDataLog
 
-# DTO Channel model handles logging channel data 
-# to file.  Each channel gets its own file in
-# the LOGDIR found in the application config file.
-# Channel data is logged as a single line per update
-# which holds sensor data for every sensor in the
-# channel (later we'll add channel control logging).
-#
-# For example, if the CME Channel 0 contains 2 sensors
-# (1 voltage and 1 current), then the log file for that
-# channel will look something like:
-#
-# ch0_sensors.json (filename shows that file data is json format compatible)
-#   [ 123000.789,   0.0, 0.000 ] <-- oldest points, beginning of file
-#   [ 123100.789, 120.0, 0.500 ]
-#    ...
-#   [ 123100.789, 120.0, 0.500 ] <-- newst points, end of file
-#
-# Data is appended to the channel file up to MAX_DATA_POINTS after
-# which the oldest record is discarded when new records are added.
-class Channel(dict):
+class Dto_Channel(dict):
 
-	def __init__(self, id, error, timestamp, hw_sensors): 
+	def __init__(self, id, hw_ch):
 		
-		self['id'] = id
+		# class attributes don't show up in the serialization
+		# but get used for manipulations (finding, filtering, etc)
 		self.id = id
-		self['error'] = error
+		self.hw_ch = hw_ch
 		self.stale = False
+		self.busy = False
 
- 		# cache expanded log data so we don't have to read from file each time
-		self._slogdata = None 
-		self._clogdata = None
+		# log data and internal caches
+		self.slog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
+		#self.clog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_controls.json'), max_size=config.LOG_MAX_SIZE)
 
-		self._max_size = config.LOG_MAX_SIZE # maximum number of data log entries
-		self._decimation_size = 201 # number of data points after log entries decimated
-
-		self._slog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_sensors.json'), max_size=config.LOG_MAX_SIZE)
-
-		# TODO: support controls logging
-		#self._clog = ChannelDataLog(os.path.join(config.LOGDIR, id + '_controls.json'), max_size=config.LOG_MAX_SIZE)
-
-		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_sensors) ]
+		# dict keys that will get serialized for data transfers
+		self['id'] = id
+		self['error'] = hw_ch.error
+		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_ch.sensors) ]
 		self['controls'] = []
 
+	def logSensors(self, timestamp):
+		self['error'] = self.hw_ch.error
 
-	def updateSensors(self, error, timestamp, hw_sensors, config={}):
-		''' Assumes sensors array characteristics have not changed since init '''
-		self['error'] = error
+		self.newdata = [ s.value for s in self.hw_ch.sensors ]
+		self.newdata.insert(0, timestamp)
+
+		# append new sensor data entry to log file 
+		# (this may push oldest data points out)
+		if not self.hw_ch.error:
+			self.slog.push(self.newdata)
+
+		# read old sensor points from file as the
+		# earliest point may have been dropped due
+		# to log file size restrictions
+		self.olddata = self.slog.peek() or self.newdata
+
+	def publish(self, memcache_client):
+		if not memcache_client or self.busy:
+			return
+
+		t = threading.Thread(target=self._publish, args=(memcache_client,))
+		t.setDaemon(True)
+		t.start()
+
+	def _publish(self, memcache_client):
+
+		self.busy = True
+		
+		# read a publishing config for this channel
+		pub = json.loads(memcache_client.get(self.id + '_pub') or '{}')
 
 		# clear log takes precedence
-		if config.get('reset', None): 
-			self._slogdata = None
-			self._slog.clear()
+		if pub.get('reset', None): 
+			# clear cache
+			for s in self['sensors']:
+				s['data'] = []
+			self.slog.clear()
 
-		newdata = [ s.value for s in hw_sensors ]
-		newdata.insert(0, timestamp)
+		# load history
+		if pub.get('expand', None):
 
-		# append new sensor data entry to log file (this may push oldest data points out)
-		if not error:
-			self._slog.push(newdata) 
+			# load entire file if cache is not bigger than the normal two points
+			if not len(self['sensors'][0]['data']) > 2:
 
+				# clear cache
+				for s in self['sensors']:
+					s['data'] = []
 
-		if config.get('expand', None): # retrieve decimated log data if expand=True
-
-			if not self._slogdata:
-				self._slogdata = self._slog.peekAll() # [ [ timestamp0, sensor0_data, ..., sensorN_data ], ... ]
-
-			else:
-				self._slogdata.append(newdata) # add new point to cached data
-				if len(self._slogdata) > self._max_size:
-					self._slogdata = self._slogdata[1:] # trim if too big
+				for entry in self.slog.peekAll(): # [ [ timestamp0, sensor0_data, ..., sensorN_data ], ... ]
+					for i in range(1, len(entry)):
+						self['sensors'][i-1]['data'].append([ entry[0], entry[i] ])
 			
-			logdata = self._decimate(self._slogdata, self._decimation_size)
+			else:
 
+				for i in range(1, len(self['sensors'])):
+					self['sensors'][i-1]['data'].append([ self.newdata[0], self.newdata[i] ])
+					if len(self['sensors'][i-1]['data']) > config.LOG_MAX_SIZE:
+						self['sensors'][i-1]['data'] = self['sensors'][i-1]['data'][1:]
 
-		else: # else just retrieve the oldest point (first line) of log data
+		# load oldest/newest data points only
+		else: 			
+			# fill the sensors' data arrays with the
+			# oldest and newest data points.
+			for i in range(1, len(self.newdata)):
+				self['sensors'][i-1]['data'] = [
+					[ self.olddata[0], self.olddata[i] ],
+					[ self.newdata[0], self.newdata[i] ]
+				]
 
-			self._logdata = None
-			line = self._slog.peek()
-			logdata = [ line ] if line else [] # [ [ timestamp0, sensor0_data, ..., sensorN_data ] ]
+		# publish this channel under 'chX' key
+		memcache_client.set(self.id, json.dumps(self))
 
+		# if necessary, update the channels list with
+		# this channel id
+		channels = json.loads(memcache_client.get('channels') or '[]')
 
-		# if we haven't got any log data (yet) add the current sensor points
-		if not logdata:
-			logdata = [ newdata ]
+		if not self.id in channels:
+			channels.append(self.id)
+			memcache_client.set('channels', json.dumps(channels))
 
-		# finally append newest points (this will duplicate oldest points if we started with no log data)
-		if len(logdata) == 1:
-			logdata.append(newdata)
-
-
- 		# clear existing sensor['data'] in prep for new data
-		for i in range(len(self['sensors'])):
-			self['sensors'][i]['data']=[]
-		
-		# At this point we have logdata as a 2D table of entries with at least two entries:
-		#
-		# logdata = [ 
-		#	[ timestamp0, s0_data0, ..., sN_data0 ], 
-		#		...,
-		#	[ timestampM, s0_dataM, ..., sN_dataM ] 
-		# ]
-		#
-		# However, sensors' 'data' are expecting a 2D array of data point pairs [timestamp, data], so
-		# we build the data arrays from logdata for each sensor in the log entries
-		for entry in logdata:
-			for i in range(1, len(entry)):
-				self['sensors'][i-1]['data'].append([ entry[0], entry[i] ])
-		
-		# channel is no longer considered 'stale'
-		self.stale = False
-
-	def _decimate(self, lines, max_points):
-
-		if len(lines) <= max_points:
-			return lines
-
-		bucket_size = (len(lines) - 2) // (max_points - 2) # floor quotient
-		data = []
-
-		# first entry
-		data.append(lines[0])
-
-		# entries in between may get decimated into bins of 'bucket_size' where max values are chosen
-		for i in range(1, max_points - 1):
-			r = (i - 1) * bucket_size + 1
-
-			bucket=[]
-			for line in lines[r:r+bucket_size]:
-
-				if len(bucket) == 0:
-					bucket = line
-
-				else:
-					for j in range(1, len(bucket)):
-						if bucket[j] < line[j]:
-							bucket[j] = line[j]
-
-			data.append(bucket)
-
-		# last entry
-		data.append(lines[-1])
-
-		return data
-
-
-
+		self.busy = False
 
 class Sensor(dict):
 	def __init__(self, id, sensorType, unit):
