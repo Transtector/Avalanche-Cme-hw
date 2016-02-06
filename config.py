@@ -9,25 +9,42 @@ if not os.path.exists(LOGDIR):
 	os.makedirs(LOGDIR)
 
 # Channels keep arrays of their sensor and control data every time
-# the channel data is published.  The maximum channel record size
-# can be calculated approximately* as:
+# the channel data is published.  Entries in the channel sensor log
+# files follow this pattern:
 #
-# Channel_Record_Max_Bytes = 41 * Channel_Sensors + 1
+# [ <timestamp>, <sensor_0_value>, ..., <sensor_N_value> ]
 #
-# * This only consideres a sensor data point as [ <timestamp>, <double> ]
-# which may not be a valid assumption for future sensors.
-# * Also doesn't consider channel controls, which also log their states
-LOG_MAX_SIZE = 1024000
+# New entries are appended lines in the file, so the newest recorded
+# point is at the end of the file.  These files can grow up to a
+# maximum number of entries before dropping the earliest point each
+# time a new point is appended.
+#
+# Each entry in the log file can be a length (for a channel with N sensors):
+#
+# 	brackets				 2
+# 	timestamp				17
+# 	comma-space				 2
+# 	N sensor values			13 * N
+# 	N-1 comma-space			 2 * (N-1)
+# 	-------------------------=-----------
+# 	Total            21 + N*13 + (N-1)*2 (= 49 for 2 sensors)
+#
+# So, for our baseline 2 sensors per channel we're logging 49 bytes
+# per hardware loop.  The memcache server has an entry size limit as
+# well (default is 1MB, but we increase it to 10MB) over which the
+# entire log file should be able to be transferred.
 
-# 1024000 channel records gives log file sizes around 80 MB per channel
-# 1024000 records at 1 record per second gives just under 12 days of history
+LOG_MAX_SIZE = 200000 # gives log file sizes somewhere under 10 MB 
 
 # Sensor read/publish/log loop repeats this number of seconds.
 # Change this in conjunction with the LOG_MAX_SIZE above, as
 # every time through loop logs a record (line) for every (non-errored)
 # channel on the Cme.
+
 LOOP_PERIOD_s = 1.0
 
+# Data log history length is approximately 
+# ( LOG_MAX_SIZE * LOOP_PERIOD_s ) / ( 3600 * 24) days
 
 # spi bus sensor configurations
 SPI_SENSORS = [
