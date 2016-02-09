@@ -321,12 +321,15 @@ class Stpm3x(object):
 
 	def _readRegister(self, addr):
 		validData = False
-		while(validData == False):
+		attempts = 0
+		while((validData == False) and (attempts < 5)):
 			self._spiHandle.xfer2([addr, 0xFF, 0xFF, 0xFF, 0xFF])
 			readbytes = self._spiHandle.xfer2([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
 			#print readbytes
 			validData = self._check_crc(readbytes)
 			#print validData
+			attempts += 1
+
 		val = self._bytes2int32_rev(readbytes[0:4])
 		#self.printRegister(val)
 		return val
