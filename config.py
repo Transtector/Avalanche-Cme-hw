@@ -1,8 +1,17 @@
-import os, errno
+# Hardware Loop (hwloop.py) configuration
+
+import os
 import STPM3X
 
-APPROOT = os.path.abspath(os.getcwd()) # /home/pi/Cme-hw
-LOGDIR = os.path.abspath(os.path.join(APPROOT, '../log')) # /home/pi/log TODO: look into external/removable location
+APPROOT = os.path.abspath(os.getcwd()) # /root/Cme-hw/
+
+# logging to files in parent foldr
+USERDATA = os.path.abspath('/data') # Cme user data is stored here
+
+# Note - if USERDATA set properly, this will match the same location
+# that the Cme uses for logging.
+LOGDIR = os.path.abspath(os.path.join(USERDATA, 'log')) # /data/log 
+
 
 # create the log directory if necessary
 if not os.path.exists(LOGDIR):
