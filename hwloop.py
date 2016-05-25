@@ -8,7 +8,7 @@ from Avalanche import Avalanche
 from Models import Dto_Channel
 
 # create shared memory object
-sharedmem = memcache.Client(['127.0.0.1:11211'], debug=0)
+sharedmem = memcache.Client([config.MEMCACHE], debug=0)
 
 # setup GPIO
 Avalanche = Avalanche()

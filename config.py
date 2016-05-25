@@ -17,6 +17,13 @@ LOGDIR = os.path.abspath(os.path.join(USERDATA, 'log')) # /data/log
 if not os.path.exists(LOGDIR):
 	os.makedirs(LOGDIR)
 
+# Memcache server is generally the same machine (localhost or 127.0.0.1)
+# but if you comment out the appropriate line in /etc/memcached.conf,
+# then external machines (e.g., Cme running on another machine) can
+# connect and use the Cme-hw running here.
+MEMCACHE = '127.0.0.1:11211'
+
+
 # Channels keep arrays of their sensor and control data every time
 # the channel data is published.  Entries in the channel sensor log
 # files follow this pattern:
