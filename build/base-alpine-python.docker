@@ -1,0 +1,31 @@
+# An Alpine Linux based image which includes bash and
+# python 2.7 along with the pip and virtualenv packages.
+
+# Uses base-alpine-python.bashrc file to present a nice looking bash
+# prompt as the default CMD.
+
+# A tiny bare-bones Alpine Linux (v3.2)
+FROM hypriot/rpi-alpine-scratch
+
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
+# Use v3.4 apk branch
+RUN echo -e "http://nl.alpinelinux.org/alpine/v3.4/main\n" > /etc/apk/repositories
+
+RUN apk update \
+	&& apk add bash \
+	&& apk add python \
+	&& apk add py-pip \
+	&& pip install virtualenv \
+	&& rm /var/cache/apk/*
+
+# Adds .bashrc for nice prompt and aliases
+COPY ref.bashrc /root/.bashrc
+
+# Setup the Python application virtual environment
+RUN virtualenv /appenv
+
+# Not strictly required, but lets this container
+# be run interactively so you can check things out.
+CMD /bin/bash
+

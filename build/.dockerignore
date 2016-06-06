@@ -1,0 +1,7 @@
+cme_hw_venv
+build
+__pycache__
+*.egg-info
+*.pyc
+.git
+.gitignore
