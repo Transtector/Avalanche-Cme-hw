@@ -1,6 +1,7 @@
 
-import config
+import sys
 import logging, logging.handlers
+import config
 import memcache
 from Avalanche import Avalanche
 
