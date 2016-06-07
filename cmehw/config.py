@@ -3,6 +3,8 @@
 import os
 import STPM3X
 
+DEBUG = True
+
 APPROOT = os.path.abspath(os.getcwd()) # /root/Cme-hw/
 
 # logging to files in parent foldr
@@ -11,7 +13,9 @@ USERDATA = os.path.abspath('/data') # Cme user data is stored here
 # Note - if USERDATA set properly, this will match the same location
 # that the Cme uses for logging.
 LOGDIR = os.path.abspath(os.path.join(USERDATA, 'log')) # /data/log 
-
+APPLOG = os.path.join(LOGDIR, 'cme-hw.log')
+LOGBYTES = 1024 * 10
+LOGCOUNT = 5
 
 # create the log directory if necessary
 if not os.path.exists(LOGDIR):
@@ -21,7 +25,7 @@ if not os.path.exists(LOGDIR):
 # but if you comment out the appropriate line in /etc/memcached.conf,
 # then external machines (e.g., Cme running on another machine) can
 # connect and use the Cme-hw running here.
-MEMCACHE = '127.0.0.1:11211'
+MEMCACHE = 'cme-memcached:11211'
 
 
 # Channels keep arrays of their sensor and control data every time

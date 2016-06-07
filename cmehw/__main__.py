@@ -2,9 +2,37 @@
 import sys, time, json
 import memcache
 import config
+import logging
+
 
 from Avalanche import Avalanche
 from Models import Dto_Channel
+
+
+# configure app logging default logs to screen only if DEBUG set in config
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s [%(name)s] %(message)s',
+							   datefmt='%Y-%m-%d %H:%M:%S')
+
+# set format in default Flask logging StreamHandler for console (DEBUG) output
+for h in logger.handlers:
+	h.setFormatter(formatter)
+
+# always send app log to file
+fh = logging.handlers.RotatingFileHandler(config.APPLOG,
+										  maxBytes=config.LOGBYTES,
+										  backupCount=config.LOGCOUNT)
+# increase level if DEBUG set
+if config.DEBUG:
+	fh.setLevel(logging.DEBUG)
+else:
+	fh.setLevel(logging.INFO)
+
+# use same formatting for file
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+logger.info("Avalanche ({0}) is rumbling...".format(__name__))
 
 def main(args=None):
 	'''Main hardware loop'''
@@ -12,21 +40,23 @@ def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
 
+
 	# create shared memory object
 	sharedmem = memcache.Client([config.MEMCACHE], debug=0)
+	logger.info("Memcache {0} connected".format(config.MEMCACHE))
 
 	# setup GPIO
 	avalanche = Avalanche()
 
 	# setup relay GPIO
-	print("Initialize Relays")
+	logger.info("Initializing relays...")
 	avalanche.relayControl(1, True)
 	avalanche.relayControl(2, True)
 	avalanche.relayControl(3, True)
 	avalanche.relayControl(4, True)
 
-	print("Sensor boards: Off")
-	print("SPI bus 0: Disabled")
+	logger.info("Sensor boards: Off")
+	logger.info("SPI bus 0: Disabled")
 
 	print("Discharging sensor caps - wait 10 seconds...")
 	time.sleep(10);
@@ -101,7 +131,7 @@ def main(args=None):
 					sharedmem.delete(ch.id) # remove channel
 					sharedmem.delete(ch.id + "_pub") # remove channel publish config
 		
-			sharedmem.set('channels', json.dumps(status_channels))
+		sharedmem.set('channels', json.dumps(status_channels))
 
 		# drop stale channels
 		dto_channels = [ch for ch in dto_channels if not ch.stale]
