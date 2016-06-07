@@ -43,7 +43,7 @@ class Avalanche(object):
 
 	def __init__(self, config):
 
-		_logger.info("Setting up GPIO")
+		self._logger.info("Setting up GPIO")
 
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
@@ -70,27 +70,27 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_LED5, GPIO.OUT, initial=GPIO.LOW)     #LED 5
 
 		# setup relay GPIO
-		_logger.info("Initializing relay control")
+		self._logger.info("Initializing relay control")
 		
 		self.relayControl(1, True)
 		self.relayControl(2, True)
 		self.relayControl(3, True)
 		self.relayControl(4, True)
 
-		_logger.info("Sensor boards: Off")
-		_logger.info("SPI bus 0: Disabled")
+		self._logger.info("Sensor boards: Off")
+		self._logger.info("SPI bus 0: Disabled")
 
-		_logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_s))
+		self._logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_s))
 		time.sleep(config.SENSOR_CAPS_DISCHARGE_WAIT_s);
 
-		_logger.info("Sensor boards: On")
+		self._logger.info("Sensor boards: On")
 		self.sensorPower(True)
 		time.sleep(1);
 
-		_logger.info("SPI bus 0: Enabled")
+		self._logger.info("SPI bus 0: Enabled")
 		self.spiBus0isolate(False)
 
-		_logger.info("Setup SPI devices")
+		self._logger.info("Setup SPI devices")
 		self.setupSpiChannels(config.SPI_SENSORS)
 
 
@@ -133,7 +133,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
-			_logger.info("\nspi_device: %d" % (spi_device_index))
+			self._logger.info("\nspi_device: %d" % (spi_device_index))
 			device = Stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
@@ -155,7 +155,7 @@ class Avalanche(object):
 					#print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 
-				_logger.info("    Ch[%d] adding 2 sensors:" % (channel_index))
+				self._logger.info("    Ch[%d] adding 2 sensors:" % (channel_index))
 
 				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
 				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))

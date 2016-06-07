@@ -1,5 +1,5 @@
 
-
+import logging
 import crcmod.predefined
 import struct
 
@@ -232,13 +232,15 @@ class Config(dict):
 
 class Stpm3x(object):
 
-	_spiHandle = 0;
+	_spiHandle = 0
+	_logger = None
 
 	def __init__(self, spiHandle, config):
 		self._spiHandle = spiHandle
 		self.error = '' # empty for no errors
 
-		print '\nConfiguring channels on %s ...' % str(spiHandle)
+		self._logger = logging.getLogger('cmehw')
+		self._logger.info('\nConfiguring channels on %s ...' % str(spiHandle))
 
 		#print config
 
@@ -247,7 +249,7 @@ class Stpm3x(object):
 			if not p in config:
 				error_msg = 'SPI channel %d error: missing %s configuration' % (config['spi_device'], p)
 				self.error = '    ' + error_msg
-				print error_msg
+				self._logger.error(error_msg)
 
 			else:
 				if (i == 0):
@@ -279,15 +281,15 @@ class Stpm3x(object):
 				if not status == 0:
 					error_msg = 'SPI channel %d error: error writing %s to device' % (config['spi_device'], p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
-					print '    ' + error_msg
+					self._logger.info('    ' + error_msg)
 				else:
 					msg = 'SPI channel %d: parameter %s written to device' % (config['spi_device'], p)
-					print '    ' + msg
+					self._logger.info('    ' + msg)
 
 		self.readConfigRegs()
 
 	def test(self):
-		print 'hello world'
+		self._logger.info('hello world')
 
 	def _bytes2int32_rev(self,data_bytes):
 		result = 0
@@ -363,11 +365,11 @@ class Stpm3x(object):
 
 	def readConfigRegs(self):
 		#read configuration registers
-		print '    Configuration Registers:'
+		self._logger.info('    Configuration Registers:')
 		for row in xrange(0,21,1):
 			addr = row*2
 			regvalue = self._readRegister(addr)
-			print '        {:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue)
+			self._logger.info('        {:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue))
 		#end for
 
 	def softwareReset(self):
