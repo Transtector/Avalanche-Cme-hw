@@ -8,7 +8,7 @@ import memcache
 from Avalanche import Avalanche
 from Models import Dto_Channel
 
-logger = logging.getLogging('cmehw')
+logger = logging.getLogger('cmehw')
 
 def main(args=None):
 	'''Main hardware loop'''

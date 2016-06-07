@@ -25,4 +25,10 @@ else:
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
+# Log to console too if DEBUG set
+if config.DEBUG:
+	h = logging.StreamHandler()
+	h.setFormatter(logging.Formatter('%(message)s'))
+	logger.addHandler(h)
+
 logger.info("Avalanche ({0}) is rumbling...".format(__name__))
