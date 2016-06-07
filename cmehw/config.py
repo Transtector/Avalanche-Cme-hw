@@ -66,6 +66,12 @@ LOOP_PERIOD_s = 1.0
 # Data log history length is approximately 
 # ( LOG_MAX_SIZE * LOOP_PERIOD_s ) / ( 3600 * 24) days
 
+
+# Discharge sensors for this long before enabling SPI bus
+SENSOR_CAPS_DISCHARGE_WAIT_SECONDS = 10
+
+
+
 # spi bus sensor configurations
 SPI_SENSORS = [
 

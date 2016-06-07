@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import spidev
 import time
+import logging
 from STPM3X import Stpm3x, STPM3X
 
 #GPIO assignments
@@ -39,7 +40,12 @@ class Avalanche(object):
 	_Channels = [] # list of _Channel
 
 
-	def __init__(self):
+	def __init__(self, config):
+
+		logger = logging.getLogger("cmehw")
+
+		logger.info("Setting up GPIO")
+
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
 
@@ -63,6 +69,31 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_LED3, GPIO.OUT, initial=GPIO.LOW)     #LED 3
 		GPIO.setup(AVALANCHE_GPIO_LED4, GPIO.OUT, initial=GPIO.LOW)     #LED 4
 		GPIO.setup(AVALANCHE_GPIO_LED5, GPIO.OUT, initial=GPIO.LOW)     #LED 5
+
+		# setup relay GPIO
+		logger.info("Initializing relay control")
+		
+		self.relayControl(1, True)
+		self.relayControl(2, True)
+		self.relayControl(3, True)
+		self.relayControl(4, True)
+
+		logger.info("Sensor boards: Off")
+		logger.info("SPI bus 0: Disabled")
+
+		logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_SECONDS))
+		time.sleep(config.SENSOR_CAP_DISCHARGE_WAIT_SECONDS);
+
+		logger.info("Sensor boards: On")
+		self.sensorPower(True)
+		time.sleep(1);
+
+		logger.info("SPI bus 0: Enabled")
+		self.spiBus0isolate(False)
+
+		logger.info("Setup SPI devices")
+		self.setupSpiChannels(config.SPI_SENSORS)
+
 
 	def sensorPower(self, state):
 		'''

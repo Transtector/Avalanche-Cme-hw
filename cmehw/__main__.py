@@ -1,52 +1,15 @@
 # main entry point for command line calling
 import sys, time, json, logging
 
-import config
+from . import logger, config, mc, avalanche
 
-import memcache
-
-from Avalanche import Avalanche
 from Models import Dto_Channel
-
-logger = logging.getLogger('cmehw')
 
 def main(args=None):
 	'''Main hardware loop'''
 
 	if args is None:
 		args = sys.argv[1:]
-
-
-	# create shared memory object
-	sharedmem = memcache.Client([config.MEMCACHE], debug=0)
-	logger.info("Memcache {0} connected".format(config.MEMCACHE))
-
-
-	# setup GPIO
-	avalanche = Avalanche()
-
-	# setup relay GPIO
-	logger.info("Initializing relays...")
-	avalanche.relayControl(1, True)
-	avalanche.relayControl(2, True)
-	avalanche.relayControl(3, True)
-	avalanche.relayControl(4, True)
-
-	logger.info("Sensor boards: Off")
-	logger.info("SPI bus 0: Disabled")
-
-	print("Discharging sensor caps - wait 10 seconds...")
-	time.sleep(10);
-
-	print("Sensor boards: On")
-	avalanche.sensorPower(True)
-	time.sleep(1);
-
-	print("SPI bus 0: Enabled")
-	avalanche.spiBus0isolate(False)
-
-	print("Setup SPI devices")
-	avalanche.setupSpiChannels(config.SPI_SENSORS)
 
 	spinners = "|/-\\"
 	spinner_i = 0
@@ -85,17 +48,17 @@ def main(args=None):
 					found = True
 					dto_ch.stale = False
 					dto_ch.logSensors(timestamp)
-					#dto_ch.setControls(timestamp, sharedmem)
+					#dto_ch.setControls(timestamp, mc)
 
 			# if not found add as a new dto_channel
 			if not found:
 				dto_ch = Dto_Channel('ch' + str(i), hw_ch)
 				dto_ch.logSensors(timestamp)
-				#dto_ch.setControls(timestamp, sharedmem)
+				#dto_ch.setControls(timestamp, mc)
 				dto_channels.append(dto_ch)
 
 		# list of channels publishing data
-		status_channels = json.loads(sharedmem.get('channels') or '[]')
+		status_channels = json.loads(mc.get('channels') or '[]')
 
 		# remove stale channels from published data
 		if any(ch for ch in dto_channels if ch.stale):
@@ -105,17 +68,17 @@ def main(args=None):
 						status_channels.remove(ch.id) # remove from channels list
 					except:
 						pass
-					sharedmem.delete(ch.id) # remove channel
-					sharedmem.delete(ch.id + "_pub") # remove channel publish config
+					mc.delete(ch.id) # remove channel
+					mc.delete(ch.id + "_pub") # remove channel publish config
 		
-		sharedmem.set('channels', json.dumps(status_channels))
+		mc.set('channels', json.dumps(status_channels))
 
 		# drop stale channels
 		dto_channels = [ch for ch in dto_channels if not ch.stale]
 
 		# dto_channels now have new data which can be published
 		for dto_ch in dto_channels:
-			dto_ch.publish(sharedmem)
+			dto_ch.publish(mc)
 
 		# how long to finish loop?
 		process_time = time.time() - timestamp
@@ -126,7 +89,7 @@ def main(args=None):
 			delay_time = config.LOOP_PERIOD_s - process_time
 
 		# read chX_pub's to display them in the console
-		cc = ", ".join([ '%s:%s' % (ch, json.loads(sharedmem.get(ch + '_pub') or '{}')) for ch in status_channels ])
+		cc = ", ".join([ '%s:%s' % (ch, json.loads(mc.get(ch + '_pub') or '{}')) for ch in status_channels ])
 
 		# console output for peace of mind...
 		msg = "Hardware looping [%.3f s, %.3f s] %s" % (process_time, delay_time, spinners[spinner_i])
