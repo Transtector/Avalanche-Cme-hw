@@ -240,7 +240,7 @@ class Stpm3x(object):
 		self.error = '' # empty for no errors
 
 		self._logger = logging.getLogger('cmehw')
-		self._logger.info('\nConfiguring channels on %s ...' % str(spiHandle))
+		self._logger.info('Configuring %s channels' % str(spiHandle))
 
 		#print config
 
@@ -361,15 +361,15 @@ class Stpm3x(object):
 		return self._readRegister(address)
 
 	def printRegister(self, value):
-		print '0x{:08x}'.format(value)
+		self._logger.info('0x{:08x}'.format(value))
 
 	def readConfigRegs(self):
 		#read configuration registers
-		self._logger.info('    Configuration Registers:')
+		self._logger.info('\tConfiguration Registers:')
 		for row in xrange(0,21,1):
 			addr = row*2
 			regvalue = self._readRegister(addr)
-			self._logger.info('        {:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue))
+			self._logger.info('\t\t{:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue))
 		#end for
 
 	def softwareReset(self):
