@@ -1,4 +1,4 @@
-# Hardware Loop (hwloop.py) configuration
+# Cme-hw configuration
 
 import os
 import STPM3X
