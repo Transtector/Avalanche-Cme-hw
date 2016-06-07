@@ -39,11 +39,9 @@ class Avalanche(object):
 
 	_Channels = [] # list of _Channel
 
-	_logger # setup logging
+	_logger = logging.getLogger("cmehw") # get main logger
 
 	def __init__(self, config):
-
-		_logger = logging.getLogger("cmehw")
 
 		_logger.info("Setting up GPIO")
 
