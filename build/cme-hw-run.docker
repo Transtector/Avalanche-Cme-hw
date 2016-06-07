@@ -21,9 +21,6 @@
 # Uses bare-bones Alpine Linux and Python
 FROM base-alpine-python
 
-# Requires memcached for API application comms
-RUN apk add --update memcached
-
 # Application wheels should be built into
 # adjacent wheelhouse/ folder
 ADD wheelhouse /wheelhouse

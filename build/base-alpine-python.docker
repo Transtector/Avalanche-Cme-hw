@@ -12,12 +12,9 @@ MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 # Use v3.4 apk branch
 RUN echo -e "http://nl.alpinelinux.org/alpine/v3.4/main\n" > /etc/apk/repositories
 
-RUN apk update \
-	&& apk add bash \
-	&& apk add python \
-	&& apk add py-pip \
-	&& pip install virtualenv \
-	&& rm /var/cache/apk/*
+RUN apk --update add bash python py-pip && \
+	pip install virtualenv \
+	rm /var/cache/apk/*
 
 # Adds .bashrc for nice prompt and aliases
 COPY ref.bashrc /root/.bashrc
@@ -25,7 +22,6 @@ COPY ref.bashrc /root/.bashrc
 # Setup the Python application virtual environment
 RUN virtualenv /appenv
 
-# Not strictly required, but lets this container
-# be run interactively so you can check things out.
-CMD /bin/bash
+# bash prompt for default command
+CMD ["/bin/bash"]
 
