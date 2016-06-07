@@ -7,6 +7,10 @@ from Avalanche import Avalanche
 
 # configure app logging default logs to screen only if DEBUG set in config
 logger = logging.getLogger(__name__)
+
+# logger shouldn't filter any log levels - leave that up to the handlers
+logger.setLevel(logging.DEBUG)
+
 formatter = logging.Formatter('%(asctime)s %(levelname)-8s [%(name)s] %(message)s',
 							   datefmt='%Y-%m-%d %H:%M:%S')
 
