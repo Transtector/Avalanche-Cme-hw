@@ -61,15 +61,15 @@ LOG_MAX_SIZE = 200000 # gives log file sizes somewhere under 10 MB
 # every time through loop logs a record (line) for every (non-errored)
 # channel on the Cme.
 
-LOOP_PERIOD_s = 1.0
+
+
 
 # Data log history length is approximately 
 # ( LOG_MAX_SIZE * LOOP_PERIOD_s ) / ( 3600 * 24) days
-
+LOOP_PERIOD_s = 1.0
 
 # Discharge sensors for this long before enabling SPI bus
-SENSOR_CAPS_DISCHARGE_WAIT_SECONDS = 10
-
+SENSOR_CAPS_DISCHARGE_WAIT_s = 10
 
 
 # spi bus sensor configurations

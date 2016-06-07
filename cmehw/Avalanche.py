@@ -81,8 +81,8 @@ class Avalanche(object):
 		logger.info("Sensor boards: Off")
 		logger.info("SPI bus 0: Disabled")
 
-		logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_SECONDS))
-		time.sleep(config.SENSOR_CAP_DISCHARGE_WAIT_SECONDS);
+		logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_s))
+		time.sleep(config.SENSOR_CAPS_DISCHARGE_WAIT_s);
 
 		logger.info("Sensor boards: On")
 		self.sensorPower(True)
