@@ -29,20 +29,22 @@ if config.DEBUG:
 	h.setFormatter(logging.Formatter('%(message)s'))
 	logger.addHandler(h)
 
+
 logger.info("Avalanche ({0}) is rumbling...".format(__name__))
 
-
-# create shared memory object
+# create shared memory object - terminate on failure
 mc = memcache.Client([config.MEMCACHE], debug=0)
+
 TEST_CONNECT = 'this_is_a_test'
 mc.set('TEST', TEST_CONNECT)
 if not mc.get('TEST') == TEST_CONNECT:
 	logger.error("Memcache connection failure ({0})".format(config.MEMCACHE))
+	sys.exit(1)
+
 mc.delete('TEST')
 logger.info("Memcache {0} connected".format(config.MEMCACHE))
 
 
 # initialize the Avalanche main board and sensor buses
 avalanche = Avalanche(config)
-
 
