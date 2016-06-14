@@ -1,7 +1,8 @@
 import RPi.GPIO as GPIO
 import spidev
 import time
-import logging
+
+from Logging import Logger
 from STPM3X import Stpm3x, STPM3X
 
 #GPIO assignments
@@ -39,10 +40,10 @@ class Avalanche(object):
 
 	_Channels = [] # list of _Channel
 
-	_logger = logging.getLogger("cmehw") # get main logger
-
 	def __init__(self, config):
 
+		self._logger = Logger # get main logger
+		self._logger.info("Avalanche ({0}) is rumbling...".format(__name__))
 		self._logger.info("Setting up GPIO")
 
 		GPIO.setwarnings(False)
@@ -168,6 +169,9 @@ class Avalanche(object):
 		'''
 		Runs through each channel's sensors and reads updated values
 		'''
+		
+		self.syncSensors()
+
 		for i, ch in enumerate(self._Channels):
 			# update sensor values
 			if not ch.error:
