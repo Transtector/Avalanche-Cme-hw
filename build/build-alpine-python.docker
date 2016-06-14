@@ -18,11 +18,13 @@
 # Start with clean base image
 FROM base-alpine-python
 
+
 # Add build tools, headers, and Python dev tools
-RUN apk update \
-	&& apk add build-base \
-	&& apk add linux-headers \
-	&& apk add python-dev
+RUN apk add --update \
+	build-base \
+	linux-headers \
+	rrdtool-dev \
+	python-dev 
 
 
 # Set up the built wheels location for pip
