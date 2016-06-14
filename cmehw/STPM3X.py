@@ -2,8 +2,6 @@
 import crcmod.predefined
 import struct
 
-from Logging import Logger
-
 DSPCR1_REGADDR  = 0x00
 DSPCR2_REGADDR  = 0x02
 DSPCR3_REGADDR  = 0x04
@@ -239,6 +237,8 @@ class Stpm3x(object):
 	def __init__(self, spiHandle, config):
 		self._spiHandle = spiHandle
 		self.error = '' # empty for no errors
+
+		from Logging import Logger
 
 		self._logger = Logger
 		self._logger.info('Configuring %s channels' % str(spiHandle))

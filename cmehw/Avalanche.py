@@ -2,7 +2,6 @@ import RPi.GPIO as GPIO
 import spidev
 import time
 
-from Logging import Logger
 from STPM3X import Stpm3x, STPM3X
 
 #GPIO assignments
@@ -41,6 +40,7 @@ class Avalanche(object):
 	_Channels = [] # list of _Channel
 
 	def __init__(self, config):
+		from Logging import Logger
 
 		self._logger = Logger # get main logger
 		self._logger.info("Avalanche ({0}) is rumbling...".format(__name__))
