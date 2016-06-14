@@ -6,7 +6,7 @@ setup (
 	description 		= "CME hardware interface",
 	packages		= ['cmehw'],
 	install_requires	= ["crcmod",
-					"python-memcached",
+					"rrdtool",
 					"RPi.GPIO",
 					"spidev" ],
 	entry_points		= {'console_scripts':

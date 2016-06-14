@@ -1,5 +1,5 @@
+cmehw==0.1
 crcmod==1.7
-python-memcached==1.58
 RPi.GPIO==0.6.2
-six==1.10.0
+rrdtool==0.1.4
 spidev==3.2
