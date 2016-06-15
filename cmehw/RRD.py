@@ -13,22 +13,23 @@ class RRD():
 
 		rrdtool.create(TESTRRD,
 			"-d", config.RRDCACHED_ADDRESS,
-			"--start", str(int(start_time)),
+			"--start", str(int(start_time - 1)),
 			"--step", "1", 
-			"DS:random:GAUGE:2:0:100",
-			"RRA:AVERAGE:0.5:1:10")
+			"DS:index:GAUGE:300:0:100",
+			"DS:random:GAUGE:300:0:100",
+			"RRA:LAST:0.5:1:10")
 
 		t = 0
 		while (t < 10):
 			rrdtool.update(TESTRRD,
 				"-d", config.RRDCACHED_ADDRESS,
-				"{0}:{1}".format(int(time.time()), random.randint(0, 100)) )
+				"N:{0}:{1}".format(t, random.randint(0,100)))
 			t = t + 1
 			time.sleep(1)
 
-		rrdtool.fetch(TESTRRD,
+		self.test = rrdtool.fetch(TESTRRD,
 			"-d", config.RRDCACHED_ADDRESS,
-			"AVERAGE",
+			"LAST",
 			"--start", str(int(start_time)),
 			"--end", str(int(time.time())))
 
