@@ -10,20 +10,15 @@ class Channel(dict):
 		# but get used for manipulations (finding, filtering, etc)
 		self.id = id
 		self.hw_ch = hw_ch
+		self.error = hw_ch.error
 		self.stale = False
-		self.busy = False
 
 		# dict keys that will get serialized for data transfers
 		self['id'] = id
-		self['stale'] = self.stale
 		self['error'] = hw_ch.error
+		self['stale'] = self.stale
 		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_ch.sensors) ]
 		self['controls'] = []
-
-
-	def publish(self):
-		self['error'] = self.hw_ch.error
-
 
 	def debugPrint(self):
 		if self['error']:

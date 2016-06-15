@@ -5,6 +5,7 @@ import config
 
 from Avalanche import Avalanche
 from Models import Channel
+from RRD import RRD
 
 def main(args=None):
 	'''Main hardware loop'''
@@ -18,6 +19,8 @@ def main(args=None):
 	avalanche = Avalanche() # CME transducer bus initialization
 
 	channels = [] # transducer channels 
+
+	rrd = RRD()
 
 	print("\n----")
 	while(1):
@@ -50,7 +53,8 @@ def main(args=None):
 				ch = Channel('ch' + str(i), hw_ch)
 				channels.append(ch)
 
-			ch.publish()
+		for ch in channels:
+			rrd.publish(ch)
 
 		# how long to finish loop?
 		process_time = time.time() - start_time
