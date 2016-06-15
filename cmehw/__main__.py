@@ -1,6 +1,8 @@
 # main entry point for command line calling
 import sys, time, json
 
+import config
+
 from Avalanche import Avalanche
 from Models import Channel
 
@@ -62,8 +64,7 @@ def main(args=None):
 		cc = ", ".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
 
 		# console output for peace of mind...
-		msg = "Hardware looping [{0:.3f} s, {1:.3f} s] {2}".format(process_time, delay_time, spinners[spinner_i])
-		msg += "\t{0}".format(cc)
+		msg = "Hardware looping [{0:.3f} s, {1:.3f} s]\t{2}\t{3}".format(process_time, delay_time, spinners[spinner_i], cc)
 	
 		sys.stdout.write(msg + "\x1b[K\r") # "\x1b[k" is ANSII clear to end of line 
 		sys.stdout.flush()
