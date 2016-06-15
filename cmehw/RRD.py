@@ -2,11 +2,9 @@ import time, random
 import config
 import rrdtool
 
-# verify connection to rrdcached on init
+TESTRRD = "test.rrd"
 
 class RRD():
-
-	TESTRRD = "test.rrd"
 
 	def __init__(self):
 		''' Verify connection to rrdcached on init
