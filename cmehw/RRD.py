@@ -42,12 +42,44 @@ class RRD():
 
 		self._logger.info("RRD setup finished")
 
-
 	def publish(self, channel):
 		''' Publish channel data to an RRD.  Each sensor in the channel is assigned a DS (data source)
 			in the RRD.
 		'''
+		# just return if channel is in error or stale
+		if channel.error or channel.stale:
+			return
+
 		# use channel name to see if there's an existing RRD
+		ch_rrd = channel['id'] + '.rrd'
 
+		try:
+			ch_rrd_info = rrdtool.info(ch_rrd, "-d", config.RRDCACHED_ADDRESS)
+		except:
+			ch_rrd_info = None
 
-		pass
+		if not ch_rrd_info:
+			# Channel RRD not found - create one.  One DS for every sensor in the channel.
+
+			DS = []
+			for s in channel['sensors']:
+				# TODO: get the min/max sensor values from the sensor
+				# and replace the "U" (unknowns) in the DS definition.
+				DS.append("DS:" + s.id + ":GAUGE:300:U:U")
+
+			# Add RRA's
+			RRA = [ "RRA:LAST:0.5:1:{0}".format( 4 * 3600 ),	# every 1 second sample for 4 hours
+				"RRA:AVERAGE:0.5:5m:{0}".format( 2 * 24 * 12 ),	# 5 minute min, max, and average for 2 days
+				"RRA:MIN:0.5:5m:{0}".format( 2 * 24 * 12 ),
+				"RRA:MAX:0.5:5m:{0}".format( 2 * 24 * 12 ),
+				"RRA:AVERAGE:0.5:6h:{0}".format( 4 * 365 ) ]	# 6 hour average (4/day) for 1 year 
+
+			rrdtool.create(ch_rrd, "-d", config.RRDCACHED_ADDRESS,
+				"--step", "1", *(DS + RRA) )
+
+			self._logger.info("RRD created for {0}".format(ch_rrd))
+
+		# Update the channel's RRD
+		DATA_UPDATE = "N:" + ":".join([ str(s.value) for s in channel['sensors'] ])
+		rrdtool.update(ch_rrd, "-d", config.RRDCACHED_ADDRESS, DATA_UPDATE)
+

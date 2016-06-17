@@ -14,7 +14,7 @@ def main(args=None):
 	if args is None:
 		args = sys.argv[1:]
 
-	Logger.info("Avalanche ({0}) is rumbling...".format(__name__))
+	Logger.info("Avalanche (Cme-hw) is rumbling...")
 
 	spinners = "|/-\\"
 	spinner_i = 0

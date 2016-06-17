@@ -159,6 +159,11 @@ class Avalanche(object):
 
 				self._logger.info("    Ch[%d] adding 2 sensors:" % (channel_index))
 
+				# TODO: A _Sensor takes a type (e.g., 'AC_VOLTAGE') a unit ('Vrms'), an initial value
+				# and a function that gets called when the sensor value is read.  We should probably
+				# flesh out the class with further refinements for ranges, calibrations, etc., and it
+				# would probably be useful to have enumerations (or some such) used as the sensor
+				# types and/or units.
 				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
 				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
 
