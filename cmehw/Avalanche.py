@@ -45,7 +45,6 @@ class Avalanche(object):
 		from Logging import Logger
 
 		self._logger = Logger # get main logger
-		self._logger.info("Avalanche ({0}) is rumbling...".format(__name__))
 		self._logger.info("Setting up GPIO")
 
 		GPIO.setwarnings(False)
