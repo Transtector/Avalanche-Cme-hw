@@ -18,7 +18,6 @@ class RRD():
 
 		rrdtool.create(TESTRRD,
 			"-d", config.RRDCACHED_ADDRESS,
-			"--start", str(int(start_time - 1)),
 			"--step", "1", 
 			"DS:index:GAUGE:300:0:100",
 			"DS:random:GAUGE:300:0:100",
@@ -49,6 +48,6 @@ class RRD():
 			in the RRD.
 		'''
 		# use channel name to see if there's an existing RRD
-		
+
 
 		pass
