@@ -35,13 +35,13 @@ class Channel(dict):
 class Sensor(dict):
 	def __init__(self, id, hw_sensor):
 		self['id'] = self.id = id
-		self['type'] = hw_sensor.type
-		self['unit'] = hw_sensor.unit
-		self['value'] = hw_sensor.value
+		self['type'] = self.type = hw_sensor.type
+		self['unit'] = self.unit = hw_sensor.unit
+		self['value'] = self.value = hw_sensor.value
 
 
 class Control(dict):
 	def __init__(self, id, hw_control):
 		self['id'] = self.id = id
-		self['type'] = hw_control.type
-		self['state'] = {}
+		self['type'] = self.type = hw_control.type
+		self['state'] = self.state = hw_control.state
