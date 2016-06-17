@@ -17,7 +17,7 @@ class Channel(dict):
 		self['id'] = id
 		self['error'] = hw_ch.error
 		self['stale'] = self.stale
-		self['sensors'] = [ Sensor('s' + str(i), sensor.type, sensor.unit) for i, sensor in enumerate(hw_ch.sensors) ]
+		self['sensors'] = [ Sensor('s' + str(i), sensor) for i, sensor in enumerate(hw_ch.sensors) ]
 		self['controls'] = []
 
 	def debugPrint(self):
@@ -33,15 +33,15 @@ class Channel(dict):
 
 
 class Sensor(dict):
-	def __init__(self, id, sensorType, unit):
-		self['id'] = id
-		self['type'] = sensorType
-		self['unit'] = unit
-		self['data'] = []
+	def __init__(self, id, hw_sensor):
+		self['id'] = self.id = id
+		self['type'] = hw_sensor.type
+		self['unit'] = hw_sensor.unit
+		self['value'] = hw_sensor.value
 
 
 class Control(dict):
-	def __init__(self, id, controlType):
-		self['id'] = id
-		self['type'] = controlType
-		self['data'] = []
+	def __init__(self, id, hw_control):
+		self['id'] = self.id = id
+		self['type'] = hw_control.type
+		self['state'] = {}
