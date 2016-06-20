@@ -26,7 +26,7 @@ def main(args=None):
 	channels = [] # transducer channels 
 
 	print("\n----")
-	while(1):
+	while(True):
 		start_time = time.time() # start of loop
 
 		# Show Loop operation via Heartbeat LED
@@ -67,12 +67,13 @@ def main(args=None):
 			delay_time = config.LOOP_PERIOD_s - process_time
 
 		# read channels for display in the console (eye candy only)
-		cc = ", ".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
+		cc = "\n".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
 
 		# console output for peace of mind...
-		msg = "Hardware looping [{0:.3f} s, {1:.3f} s]\t{2}\t{3}".format(process_time, delay_time, spinners[spinner_i], cc)
+		# "\x1b[K" is ANSII clear to end of line
+		msg = "{0}\n\n\tHardware looping [{1:.3f} s, {2:.3f} s]\t{3}\x1b[K\r".format(cc, process_time, delay_time, spinners[spinner_i])
 	
-		sys.stdout.write(msg + "\x1b[K\r") # "\x1b[K" is ANSII clear to end of line 
+		sys.stdout.write(msg) 
 		sys.stdout.flush()
 		spinner_i = (spinner_i + 1) % len(spinners)
 

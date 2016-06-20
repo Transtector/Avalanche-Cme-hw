@@ -24,12 +24,12 @@ class Channel(dict):
 		if self['error']:
 			msg = "ERROR"
 		else:
-			msg = ", ".join([ "[ {0}, {1} :: {2} ]".format(s['id'], s['unit'], self.hw_ch.sensors[i].value ) for i, s in  enumerate(self['sensors']) ])
+			msg = ", ".join([ "{0} = {1} {2}".format(s.id, s.value, s.unit ) for i, s in  enumerate(self['sensors']) ])
 
 			if self['stale']:
 				msg += " (STALE)"
 
-		return "{{{0}: {1}}}".format(self.id, msg)
+		return "{{ {0}: {1} }}".format(self.id, msg)
 
 
 class Sensor(dict):
