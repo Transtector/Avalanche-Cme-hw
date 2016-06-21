@@ -67,12 +67,30 @@ class RRD():
 				# and replace the "U" (unknowns) in the DS definition.
 				DS.append("DS:" + s.id + ":GAUGE:300:U:U")
 
-			# Add RRA's
-			RRA = [ "RRA:LAST:0.5:1:{0}".format( 4 * 3600 ),	# every 1 second sample for 4 hours
-				"RRA:AVERAGE:0.5:5m:{0}".format( 2 * 24 * 12 ),	# 5 minute min, max, and average for 2 days
-				"RRA:MIN:0.5:5m:{0}".format( 2 * 24 * 12 ),
-				"RRA:MAX:0.5:5m:{0}".format( 2 * 24 * 12 ),
-				"RRA:AVERAGE:0.5:6h:{0}".format( 4 * 365 ) ]	# 6 hour average (4/day) for 1 year 
+			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
+			RRA = [ 
+				# real-time - every point for 2 hours
+				"RRA:LAST:0.5:1:{:d}".format( 2 * 3600 ),
+
+				# daily - 5 minute stats for a day
+				"RRA:AVERAGE:0.5:5m:{:d}".format( 12 * 24 ),
+				"RRA:MIN:0.5:5m:{:d}".format( 12 * 24 ),
+				"RRA:MAX:0.5:5m:{:d}".format( 12 * 24 ),
+
+				# weekly - 30 minute stats for 7 days
+				"RRA:AVERAGE:0.5:30m:{:d}".format( 48 * 7 ),
+				"RRA:MIN:0.5:30m:{:d}".format( 48 * 7 ),
+				"RRA:MAX:0.5:30m:{:d}".format( 48 * 7 ),
+ 
+				# monthly - 2 hour stats for 31 days
+				"RRA:AVERAGE:0.5:2h:{:d}".format( 12 * 31 ),
+				"RRA:MIN:0.5:2h:{:d}".format( 12 * 31 ),
+				"RRA:MAX:0.5:2h:{:d}".format( 12 * 31 ),
+
+				# yearly - 1 day stats for 365 days
+				"RRA:AVERAGE:0.5:1d:{:d}".format( 1 * 365 ),
+				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
+				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 ) ]
 
 			rrdtool.create(ch_rrd, "-d", config.RRDCACHED_ADDRESS,
 				"--step", "1", *(DS + RRA) )
