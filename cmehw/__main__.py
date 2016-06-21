@@ -25,7 +25,7 @@ def main(args=None):
 
 	channels = [] # transducer channels 
 
-	print("\n----")
+	print("\n ---")
 
 	while(True):
 		start_time = time.time() # start of loop
@@ -56,7 +56,7 @@ def main(args=None):
 				ch = Channel('ch' + str(i), hw_ch)
 				channels.append(ch)
 
-			rrd.publish(ch) # ch is current hw_ch - publish it's values
+			rrd.publish(ch) # ch is current hw_ch - publish its values
 
 
 		# how long to finish loop?
@@ -71,9 +71,9 @@ def main(args=None):
 		cc = "\n".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
 
 		# console output for peace of mind...
-		# "\x1b[K" is ANSII clear to end of line
-		Logger.debug(cc)		
+		#Logger.debug(cc)		
 			
+		# "\x1b[K" is ANSII clear to end of line
 		sys.stdout.write("\n\n --- Hardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
 		sys.stdout.flush()
 		spinner_i = (spinner_i + 1) % len(spinners)

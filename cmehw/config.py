@@ -22,6 +22,7 @@ LOGCOUNT = 5
 RRDCACHED_ADDRESS = "cme-mc" # the name of the docker container running rrdcached, default port 42217 is used
 
 
+# Main hardware polling loop speed
 LOOP_PERIOD_s = 1.0
 
 
