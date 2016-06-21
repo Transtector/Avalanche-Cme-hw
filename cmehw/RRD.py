@@ -69,20 +69,20 @@ class RRD():
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
-				# real-time - every point for 2 hours
+				# real-time - every point for 2 hours (3600 points/hour)
 				"RRA:LAST:0.5:1:{:d}".format( 2 * 3600 ),
 
-				# daily - 5 minute stats for a day
+				# daily - 5 minute stats for a day (12 5m blocks per hour)
 				"RRA:AVERAGE:0.5:5m:{:d}".format( 12 * 24 ),
 				"RRA:MIN:0.5:5m:{:d}".format( 12 * 24 ),
 				"RRA:MAX:0.5:5m:{:d}".format( 12 * 24 ),
 
-				# weekly - 30 minute stats for 7 days
+				# weekly - 30 minute stats for 7 days (48 30m blocks per day)
 				"RRA:AVERAGE:0.5:30m:{:d}".format( 48 * 7 ),
 				"RRA:MIN:0.5:30m:{:d}".format( 48 * 7 ),
 				"RRA:MAX:0.5:30m:{:d}".format( 48 * 7 ),
  
-				# monthly - 2 hour stats for 31 days
+				# monthly - 2 hour stats for 31 days (12 2h blocks per day)
 				"RRA:AVERAGE:0.5:2h:{:d}".format( 12 * 31 ),
 				"RRA:MIN:0.5:2h:{:d}".format( 12 * 31 ),
 				"RRA:MAX:0.5:2h:{:d}".format( 12 * 31 ),

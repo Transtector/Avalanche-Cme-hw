@@ -67,14 +67,12 @@ def main(args=None):
 		if process_time < config.LOOP_PERIOD_s:
 			delay_time = config.LOOP_PERIOD_s - process_time
 
-		# read channels for display in the console (eye candy only)
-		cc = "\n".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
-
-		# console output for peace of mind...
+		# debug/print channel values
+		#cc = "\n".join([ "{0}".format(ch.debugPrint()) for ch in channels ])
 		#Logger.debug(cc)		
 			
 		# "\x1b[K" is ANSII clear to end of line
-		sys.stdout.write("\n\n --- Hardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
+		sys.stdout.write("\tHardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
 		sys.stdout.flush()
 		spinner_i = (spinner_i + 1) % len(spinners)
 
