@@ -26,17 +26,22 @@ AVALANCHE_GPIO_LED5 = 36
 class Avalanche(object):
 
 	class _Sensor:
-		def __init__(self, sensor_type, unit, value, read):
+		def __init__(self, sensor_type, unit, value, read_function):
 			self.type = sensor_type
 			self.unit = unit
 			self.value = value
-			self.read = read
+			self._read = read_function
+
+		def read(self):
+			self.value = self._read()
+
 
 	class _Channel:
 		def __init__(self, device, error, sensors):
 			self.device = device
 			self.error = error
 			self.sensors = sensors
+
 
 	_Channels = [] # list of _Channel
 
@@ -157,7 +162,7 @@ class Avalanche(object):
 					#print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 
-				self._logger.info("    Ch[%d] adding 2 sensors:" % (channel_index))
+				self._logger.info("Ch[%d] adding 2 sensors:" % (channel_index))
 
 				# TODO: A _Sensor takes a type (e.g., 'AC_VOLTAGE') a unit ('Vrms'), an initial value
 				# and a function that gets called when the sensor value is read.  We should probably
@@ -171,18 +176,18 @@ class Avalanche(object):
 				self._Channels.append(self._Channel(device, device.error, sensors))
 
 
-	def readSpiChannels(self):
+	def updateSpiChannels(self):
 		'''
-		Runs through each channel's sensors and reads updated values
+		Runs through each channel's sensors and updates values
 		'''
 		
 		self.syncSensors()
 
-		for i, ch in enumerate(self._Channels):
+		for ch in self._Channels:
 			# update sensor values
 			if not ch.error:
 				for s in ch.sensors:
-					s.value = s.read()
+					s.read()
 
 		return self._Channels
 

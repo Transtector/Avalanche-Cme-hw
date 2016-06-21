@@ -1,4 +1,4 @@
-import time, random
+import sys, time, random
 import config
 import rrdtool
 
@@ -51,7 +51,7 @@ class RRD():
 			return
 
 		# use channel name to see if there's an existing RRD
-		ch_rrd = channel['id'] + '.rrd'
+		ch_rrd = channel.id + '.rrd'
 
 		try:
 			ch_rrd_info = rrdtool.info(ch_rrd, "-d", config.RRDCACHED_ADDRESS)
@@ -62,7 +62,7 @@ class RRD():
 			# Channel RRD not found - create one.  One DS for every sensor in the channel.
 
 			DS = []
-			for s in channel['sensors']:
+			for s in channel.sensors:
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
 				DS.append("DS:" + s.id + ":GAUGE:300:U:U")
@@ -80,6 +80,14 @@ class RRD():
 			self._logger.info("RRD created for {0}".format(ch_rrd))
 
 		# Update the channel's RRD
-		DATA_UPDATE = "N:" + ":".join([ str(s.value) for s in channel['sensors'] ])
-		rrdtool.update(ch_rrd, "-d", config.RRDCACHED_ADDRESS, DATA_UPDATE)
+		DATA_UPDATE = "N:" + ":".join([ "{:f}".format(s.value) for s in channel.sensors ])
 
+		#self._logger.debug("RRD update: " + DATA_UPDATE) 
+
+		# try/catch to watch out for updates that occur too often.  Here we just
+		# log then ignore the exception (for now)
+		try:
+			rrdtool.update(ch_rrd, "-d", config.RRDCACHED_ADDRESS, DATA_UPDATE)
+
+		except:
+			self._logger.error(sys.exc_info()[1])

@@ -26,6 +26,7 @@ def main(args=None):
 	channels = [] # transducer channels 
 
 	print("\n----")
+
 	while(True):
 		start_time = time.time() # start of loop
 
@@ -36,7 +37,7 @@ def main(args=None):
 		for ch in channels:
 			ch.stale = True
 
-		for i, hw_ch in enumerate(avalanche.readSpiChannels()):
+		for i, hw_ch in enumerate(avalanche.updateSpiChannels()):
 			# create or update a channel for each hardware channel found
 			found = False
 
@@ -71,9 +72,9 @@ def main(args=None):
 
 		# console output for peace of mind...
 		# "\x1b[K" is ANSII clear to end of line
-		msg = "{0}\n\n\tHardware looping [{1:.3f} s, {2:.3f} s]\t{3}\x1b[K\r".format(cc, process_time, delay_time, spinners[spinner_i])
-	
-		sys.stdout.write(msg) 
+		Logger.debug(cc)		
+			
+		sys.stdout.write("\n\n --- Hardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
 		sys.stdout.flush()
 		spinner_i = (spinner_i + 1) % len(spinners)
 

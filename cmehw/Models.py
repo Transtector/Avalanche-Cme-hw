@@ -2,7 +2,7 @@ import sys, os, json, threading
 import config
 
 
-class Channel(dict):
+class Channel():
 
 	def __init__(self, id, hw_ch):
 		
@@ -13,35 +13,38 @@ class Channel(dict):
 		self.error = hw_ch.error
 		self.stale = False
 
-		# dict keys that will get serialized for data transfers
-		self['id'] = id
-		self['error'] = hw_ch.error
-		self['stale'] = self.stale
-		self['sensors'] = [ Sensor('s' + str(i), sensor) for i, sensor in enumerate(hw_ch.sensors) ]
-		self['controls'] = []
+		self.sensors = [ Sensor('s' + str(i), s) for i, s in enumerate(hw_ch.sensors) ]
+		self.controls = []
 
 	def debugPrint(self):
-		if self['error']:
+		if self.error:
 			msg = "ERROR"
 		else:
-			msg = ", ".join([ "{0} = {1} {2}".format(s.id, s.value, s.unit ) for i, s in  enumerate(self['sensors']) ])
+			msg = ", ".join([ "{0} = {1} {2}".format(s.id, s.value, s.unit) for s in self.sensors ])
 
-			if self['stale']:
+			if self.stale:
 				msg += " (STALE)"
 
 		return "{{ {0}: {1} }}".format(self.id, msg)
 
 
-class Sensor(dict):
+class Sensor():
 	def __init__(self, id, hw_sensor):
-		self['id'] = self.id = id
-		self['type'] = self.type = hw_sensor.type
-		self['unit'] = self.unit = hw_sensor.unit
-		self['value'] = self.value = hw_sensor.value
+		self._hw = hw_sensor
+
+		self.id = id
+		self.type = self._hw.type
+		self.unit = self._hw.unit
+
+	@property
+	def value(self):
+		return self._hw.value
 
 
 class Control(dict):
 	def __init__(self, id, hw_control):
-		self['id'] = self.id = id
-		self['type'] = self.type = hw_control.type
-		self['state'] = self.state = hw_control.state
+		self._hw = hw_control
+
+		self.id = id
+		self.type = self._hw.type
+		self.state = self._hw.state

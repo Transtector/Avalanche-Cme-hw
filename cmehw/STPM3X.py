@@ -248,8 +248,8 @@ class Stpm3x(object):
 		for i, p in enumerate(['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']):
 			status = 0
 			if not p in config:
-				error_msg = 'SPI channel %d error: missing %s configuration' % (config['spi_device'], p)
-				self.error = '    ' + error_msg
+				error_msg = '\tSPI channel %d error: missing %s configuration' % (config['spi_device'], p)
+				self.error = error_msg
 				self._logger.error(error_msg)
 
 			else:
@@ -280,12 +280,12 @@ class Stpm3x(object):
 				status |= self.write(parameter, config[p])
 
 				if not status == 0:
-					error_msg = 'SPI channel %d error: error writing %s to device' % (config['spi_device'], p)
+					error_msg = '\tSPI channel %d error: error writing %s to device' % (config['spi_device'], p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
-					self._logger.info('    ' + error_msg)
+					self._logger.info(error_msg)
 				else:
-					msg = 'SPI channel %d: parameter %s written to device' % (config['spi_device'], p)
-					self._logger.info('    ' + msg)
+					msg = '\tSPI channel %d: parameter %s written to device' % (config['spi_device'], p)
+					self._logger.info(msg)
 
 		self.readConfigRegs()
 
@@ -366,11 +366,15 @@ class Stpm3x(object):
 
 	def readConfigRegs(self):
 		#read configuration registers
-		self._logger.info('\tConfiguration Registers:')
-		for row in xrange(0,21,1):
-			addr = row*2
-			regvalue = self._readRegister(addr)
-			self._logger.info('\t\t{:02d} 0x{:02x} 0x{:08x}'.format(row, addr, regvalue))
+		self._logger.info('Configuration Registers:')
+		for row in range(0, 21, 3):
+			regvalue_0 = self._readRegister(row * 2)
+			regvalue_1 = self._readRegister((row + 1) * 2)
+			regvalue_2 = self._readRegister((row + 2) * 2)
+			self._logger.info('\t{:02d} 0x{:02x} 0x{:08x}\t{:02d} 0x{:02x} 0x{:08x}\t{:02d} 0x{:02x} 0x{:08x}'.format(
+				row, row * 2, regvalue_0, 
+				row + 1, (row + 1) * 2, regvalue_1,
+				row + 2, (row + 2) * 2, regvalue_2 ))
 		#end for
 
 	def softwareReset(self):
