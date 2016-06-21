@@ -19,8 +19,8 @@ class RRD():
 		rrdtool.create(TESTRRD,
 			"-d", config.RRDCACHED_ADDRESS,
 			"--step", "1", 
-			"DS:index:GAUGE:300:0:100",
-			"DS:random:GAUGE:300:0:100",
+			"DS:index:GAUGE:10:0:100",
+			"DS:random:GAUGE:10:0:100",
 			"RRA:LAST:0.5:1:10")
 
 		t = 0
@@ -65,7 +65,7 @@ class RRD():
 			for s in channel.sensors:
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
-				DS.append("DS:" + s.id + ":GAUGE:300:U:U")
+				DS.append("DS:" + s.id + ":GAUGE:10:U:U")
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
