@@ -1,4 +1,4 @@
-# main entry point for command line calling
+# cmehw package main entry
 import sys, time, json
 
 import config
