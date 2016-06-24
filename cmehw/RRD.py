@@ -72,7 +72,7 @@ class RRD():
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
 				
-				ds_name = ".".join([s.id, s.type. s.unit])
+				ds_name = ".".join([ s.id, s.type, s.unit ])
 				
 				DS.append("DS:" + ds_name + ":GAUGE:10:U:U")
 
