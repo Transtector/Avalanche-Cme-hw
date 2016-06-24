@@ -1,6 +1,4 @@
 import sys, os, json, threading
-import config
-
 
 class Channel():
 

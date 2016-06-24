@@ -1,6 +1,8 @@
 import os, sys, time, random
-import config
+
 import rrdtool
+
+import Config
 
 TESTRRD = "test.rrd"
 
@@ -17,7 +19,7 @@ class RRD():
 		start_time = time.time()
 
 		rrdtool.create(TESTRRD,
-			"-d", config.RRDCACHED_ADDRESS,
+			"-d", Config.RRDCACHED_ADDRESS,
 			"--step", "1", 
 			"DS:index:GAUGE:10:0:100",
 			"DS:random:GAUGE:10:0:100",
@@ -26,7 +28,7 @@ class RRD():
 		t = 0
 		while (t < 10):
 			rrdtool.update(TESTRRD,
-				"-d", config.RRDCACHED_ADDRESS,
+				"-d", Config.RRDCACHED_ADDRESS,
 				"N:{0}:{1}".format(t, random.randint(0, 100)))
 			t = t + 1
 			time.sleep(1)
@@ -35,7 +37,7 @@ class RRD():
 		# init properly, then there's no point to continue (I think),
 		# so we'd fire an exception and terminate the cmehw main program.
 		self._test = rrdtool.fetch(TESTRRD,
-			"-d", config.RRDCACHED_ADDRESS,
+			"-d", Config.RRDCACHED_ADDRESS,
 			"LAST",
 			"--start", str(int(start_time)),
 			"--end", str(int(time.time())))
@@ -56,12 +58,12 @@ class RRD():
 
 		try:
 			# use "-F" because we only want rrd header information - no flush necessary
-			ch_rrd_exists = rrdtool.info(ch_rrd, "-d", config.RRDCACHED_ADDRESS, "-F")
+			ch_rrd_exists = rrdtool.info(ch_rrd, "-d", Config.RRDCACHED_ADDRESS, "-F")
 		except:
 			ch_rrd_exists = None
 
 		# check for presence of "chX.rrd.reset" file
-		ch_rrd_reset = os.path.isfile(os.path.join(config.LOGDIR, ch_rrd + '.reset'))
+		ch_rrd_reset = os.path.isfile(os.path.join(Config.LOGDIR, ch_rrd + '.reset'))
 
 		if not ch_rrd_exists or ch_rrd_reset:
 			# Channel RRD not found or reset requested - (re)create it.
@@ -73,7 +75,6 @@ class RRD():
 				# and replace the "U" (unknowns) in the DS definition.
 				
 				ds_name = ".".join([ s.id, s.type, s.unit ])
-				
 				DS.append("DS:" + ds_name + ":GAUGE:10:U:U")
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
@@ -101,13 +102,13 @@ class RRD():
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 ) ]
 
-			rrdtool.create(ch_rrd, "-d", config.RRDCACHED_ADDRESS,
+			rrdtool.create(ch_rrd, "-d", Config.RRDCACHED_ADDRESS,
 				"--step", "1", *(DS + RRA) )
 
 			self._logger.info("RRD created for {0}".format(channel.id))
 
 			if ch_rrd_reset:
-				os.remove(os.path.join(config.LOGDIR, ch_rrd + '.reset'))
+				os.remove(os.path.join(Config.LOGDIR, ch_rrd + '.reset'))
 				if ch_rrd_exists:
 					self._logger.info("RRD reset for {0}".format(channel.id))
 
@@ -120,7 +121,7 @@ class RRD():
 		# try/catch to watch out for updates that occur too often.  Here we just
 		# log then ignore the exception (for now)
 		try:
-			rrdtool.update(ch_rrd, "-d", config.RRDCACHED_ADDRESS, DATA_UPDATE)
+			rrdtool.update(ch_rrd, "-d", Config.RRDCACHED_ADDRESS, DATA_UPDATE)
 
 		except:
 			self._logger.error(sys.exc_info()[1])

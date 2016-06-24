@@ -1,7 +1,9 @@
+import time
+
 import RPi.GPIO as GPIO
 import spidev
-import time
-import config
+
+import Config
 
 from STPM3X import Stpm3x, STPM3X
 
@@ -87,8 +89,8 @@ class Avalanche(object):
 		self._logger.info("Sensor boards: Off")
 		self._logger.info("SPI bus 0: Disabled")
 
-		self._logger.info("Discharging sensor caps - wait {0} seconds...".format(config.SENSOR_CAPS_DISCHARGE_WAIT_s))
-		time.sleep(config.SENSOR_CAPS_DISCHARGE_WAIT_s);
+		self._logger.info("Discharging sensor caps - wait {0} seconds...".format(Config.SENSOR_CAPS_DISCHARGE_WAIT_s))
+		time.sleep(Config.SENSOR_CAPS_DISCHARGE_WAIT_s);
 
 		self._logger.info("Sensor boards: On")
 		self.sensorPower(True)
@@ -98,7 +100,7 @@ class Avalanche(object):
 		self.spiBus0isolate(False)
 
 		self._logger.info("Setup SPI devices")
-		self.setupSpiChannels(config.SPI_SENSORS)
+		self.setupSpiChannels(Config.SPI_SENSORS)
 
 
 	def sensorPower(self, state):

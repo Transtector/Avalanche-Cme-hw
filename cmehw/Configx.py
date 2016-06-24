@@ -1,6 +1,6 @@
 # Cme-hw configuration
-
 import os
+
 import STPM3X
 
 DEBUG = True
