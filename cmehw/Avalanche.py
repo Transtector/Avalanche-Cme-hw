@@ -166,7 +166,7 @@ class Avalanche(object):
 
 				self._logger.info("Ch[%d] adding 2 sensors:" % (channel_index))
 
-				# TODO: A _Sensor takes a type (e.g., 'ACVOLTAGE') a unit ('Vrms'), an initial value
+				# TODO: A _Sensor takes a type (e.g., 'VAC') a unit ('Vrms'), an initial value
 				# and a function that gets called when the sensor value is read.  We should probably
 				# flesh out the class with further refinements for ranges, calibrations, etc., and it
 				# would probably be useful to have enumerations (or some such) used as the sensor
@@ -180,12 +180,11 @@ class Avalanche(object):
 				#	sxy_TYPE_UNIT
 				#
 				# Where sxy is s0 .. s99 (sensor id)
-				#	TYPE is 9 character (max) string denoting sensor type (e.g., "ACVOLTAGE", "ACCURRENT", ...)
-				#	UNIT is a 5 character (max) string denoting sensor units (e.g., "Vrms", "Arms", ...)
 				#	Empty strings for TYPE and UNIT are acceptable.
+				#	Combined length for TYPE and UNIT strings is 14 characters.
 				#
-				sensors.append(self._Sensor('ACVOLTAGE', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
-				sensors.append(self._Sensor('ACCURRENT', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
+				sensors.append(self._Sensor('VAC', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
+				sensors.append(self._Sensor('CAC', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
