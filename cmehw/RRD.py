@@ -75,7 +75,7 @@ class RRD():
 			ch_rrd_exists = True
 		else:
 			# embed first publish time in the RRD filename
-			ch_rrd = channel.id + '_' + int(time.time()) + '.rrd'
+			ch_rrd = channel.id + '_' + str(int(time.time())) + '.rrd'
 			ch_rrd_exists = False
 
 		# check for presence of "chX.rrd.reset" file
