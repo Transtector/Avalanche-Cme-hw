@@ -1,5 +1,6 @@
 # cmehw package main entry
-import sys, time, json
+
+import sys, time
 
 import config
 

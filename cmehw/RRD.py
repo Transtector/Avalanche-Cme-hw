@@ -1,4 +1,4 @@
-import sys, time, random
+import os, sys, time, random
 import config
 import rrdtool
 
@@ -42,6 +42,7 @@ class RRD():
 
 		self._logger.info("RRD setup finished")
 
+
 	def publish(self, channel):
 		''' Publish channel data to an RRD.  Each sensor in the channel is assigned a DS (data source)
 			in the RRD.
@@ -54,18 +55,26 @@ class RRD():
 		ch_rrd = channel.id + '.rrd'
 
 		try:
-			ch_rrd_info = rrdtool.info(ch_rrd, "-d", config.RRDCACHED_ADDRESS)
+			# use "-F" because we only want rrd header information - no flush necessary
+			ch_rrd_exists = rrdtool.info(ch_rrd, "-d", config.RRDCACHED_ADDRESS, "-F")
 		except:
-			ch_rrd_info = None
+			ch_rrd_exists = None
 
-		if not ch_rrd_info:
-			# Channel RRD not found - create one.  One DS for every sensor in the channel.
+		# check for presence of "chX.rrd.reset" file
+		ch_rrd_reset = os.path.isfile(os.path.join(config.LOGDIR, ch_rrd + '.reset'))
+
+		if not ch_rrd_exists or ch_rrd_reset:
+			# Channel RRD not found or reset requested - (re)create it.
+			# One DS for every sensor in the channel.
 
 			DS = []
 			for s in channel.sensors:
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
-				DS.append("DS:" + s.id + ":GAUGE:10:U:U")
+				
+				ds_name = ".".join([s.id, s.type. s.unit])
+				
+				DS.append("DS:" + ds_name + ":GAUGE:10:U:U")
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
@@ -95,7 +104,13 @@ class RRD():
 			rrdtool.create(ch_rrd, "-d", config.RRDCACHED_ADDRESS,
 				"--step", "1", *(DS + RRA) )
 
-			self._logger.info("RRD created for {0}".format(ch_rrd))
+			self._logger.info("RRD created for {0}".format(channel.id))
+
+			if ch_rrd_reset:
+				os.remove(os.path.join(config.LOGDIR, ch_rrd + '.reset'))
+				if ch_rrd_exists:
+					self._logger.info("RRD reset for {0}".format(channel.id))
+
 
 		# Update the channel's RRD
 		DATA_UPDATE = "N:" + ":".join([ "{:f}".format(s.value) for s in channel.sensors ])
