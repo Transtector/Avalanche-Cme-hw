@@ -74,7 +74,12 @@ class RRD():
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
 				
-				ds_name = ".".join([ s.id, s.type, s.unit ])
+				# NOTE: from rrdtool.org that ds_name must be from 1 to
+				# 19 characters long in the characters [a-zA-Z0-9_].
+				ds_name = "_".join([ s.id, s.type, s.unit ])
+
+				self._logger.info("RRD adding DS {0}".format(ds_name))
+				
 				DS.append("DS:" + ds_name + ":GAUGE:10:U:U")
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
