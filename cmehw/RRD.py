@@ -1,4 +1,4 @@
-import os, sys, time, random
+import os, glob, sys, time, random
 
 import rrdtool
 
@@ -48,22 +48,38 @@ class RRD():
 	def publish(self, channel):
 		''' Publish channel data to an RRD.  Each sensor in the channel is assigned a DS (data source)
 			in the RRD.
+
+			Channel RRD's are created if necessary using the filename convention:
+
+				chx(y)_<timestamp>.rrd
+
+			where y is used if more than channels 0..9 and timestamp is from int(time.time()).
+
+			Publish will recreate an (fresh/empty) RRD if the following 'reset' file found:
+
+				chx(y).rrd.reset
+
+			and the reset file will be deleted after new RRD created.
 		'''
-		# just return if channel is in error or stale
+
+		# Just return if channel is in error or stale (means no RRD's are created if the 
+		# channel starts out in error condition).
 		if channel.error or channel.stale:
 			return
 
-		# use channel name to see if there's an existing RRD
-		ch_rrd = channel.id + '.rrd'
+		# Use glob to find existing RRD for chX
+		ch_rrd = glob.glob(os.path.join(Config.LOGDIR, channel.id + '_*.rrd'))
 
-		try:
-			# use "-F" because we only want rrd header information - no flush necessary
-			ch_rrd_exists = rrdtool.info(ch_rrd, "-d", Config.RRDCACHED_ADDRESS, "-F")
-		except:
-			ch_rrd_exists = None
+		if ch_rrd:
+			ch_rrd = ch_rrd[0]
+			ch_rrd_exists = True
+		else:
+			# embed first publish time in the RRD filename
+			ch_rrd = channel.id + '_' + int(time.time()) + '.rrd'
+			ch_rrd_exists = False
 
 		# check for presence of "chX.rrd.reset" file
-		ch_rrd_reset = os.path.isfile(os.path.join(Config.LOGDIR, ch_rrd + '.reset'))
+		ch_rrd_reset = os.path.isfile(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
 
 		if not ch_rrd_exists or ch_rrd_reset:
 			# Channel RRD not found or reset requested - (re)create it.
