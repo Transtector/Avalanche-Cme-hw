@@ -71,7 +71,7 @@ class RRD():
 		ch_rrd = glob.glob(os.path.join(Config.LOGDIR, channel.id + '_*.rrd'))
 
 		if ch_rrd:
-			ch_rrd = ch_rrd[0]
+			ch_rrd = os.path.basename(ch_rrd[0])
 			ch_rrd_exists = True
 		else:
 			# embed first publish time in the RRD filename
