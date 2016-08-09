@@ -67,23 +67,33 @@ class RRD():
 		if channel.error or channel.stale:
 			return
 
-		# Use glob to find existing RRD for chX
+		# Use glob to find existing RRD for chX (this might result in None)
 		ch_rrd = glob.glob(os.path.join(Config.LOGDIR, channel.id + '_*.rrd'))
 
 		if ch_rrd:
-			ch_rrd = os.path.basename(ch_rrd[0])
-			ch_rrd_exists = True
-		else:
-			# embed first publish time in the RRD filename
-			ch_rrd = channel.id + '_' + str(int(time.time())) + '.rrd'
-			ch_rrd_exists = False
+			ch_rrd = ch_rrd[0] # full path to first match
+
 
 		# check for presence of "chX.rrd.reset" file
 		ch_rrd_reset = os.path.isfile(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
 
-		if not ch_rrd_exists or ch_rrd_reset:
-			# Channel RRD not found or reset requested - (re)create it.
+		if ch_rrd_reset:
+			# remove ch_rrd if it is present
+			if ch_rrd:
+				os.remove(ch_rrd)
+				self._logger.info("RRD {0} removed to reset".format(os.path.basename(ch_rrd)))
+				ch_rrd = None
+
+			# remove the ch reset file			
+			os.remove(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
+
+
+		if not ch_rrd:
+			# Channel RRD not found or was reset create it.
 			# One DS for every sensor in the channel.
+
+			# embed first publish time in the RRD filename
+			ch_rrd = channel.id + '_' + str(int(time.time())) + '.rrd'
 
 			DS = []
 			for s in channel.sensors:
@@ -127,11 +137,6 @@ class RRD():
 				"--step", "1", *(DS + RRA) )
 
 			self._logger.info("RRD created for {0}".format(channel.id))
-
-			if ch_rrd_reset:
-				os.remove(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
-				if ch_rrd_exists:
-					self._logger.info("RRD reset for {0}".format(channel.id))
 
 
 		# Update the channel's RRD
