@@ -138,6 +138,9 @@ class RRD():
 
 			self._logger.info("RRD created for {0}".format(channel.id))
 
+		else:
+			# ensure ch_rrd is filename only at this point
+			ch_rrd = os.path.basename(ch_rrd)
 
 		# Update the channel's RRD
 		DATA_UPDATE = "N:" + ":".join([ "{:f}".format(s.value) for s in channel.sensors ])
