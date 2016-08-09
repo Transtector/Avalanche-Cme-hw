@@ -129,7 +129,7 @@ class RRD():
 			self._logger.info("RRD created for {0}".format(channel.id))
 
 			if ch_rrd_reset:
-				os.remove(os.path.join(Config.LOGDIR, ch_rrd + '.reset'))
+				os.remove(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
 				if ch_rrd_exists:
 					self._logger.info("RRD reset for {0}".format(channel.id))
 
