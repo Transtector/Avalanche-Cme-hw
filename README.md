@@ -72,13 +72,13 @@ The basic process for building the docker container image is:
 
 1. Create a basic Alpine Linux-based container with Python 2, pip, virtualenv, rrdtool, and bash installed.
 
-   See `build/base-alpine-python.docker`.
+    See `build/base-alpine-python.docker`.
 
 2. Create another container image based on the one created above which will be used to build the Python Cme-hw application.  This will add all the necessary build chain tools and libraries to link up the Cme-hw dependencies.  Once the image is built, run it using the Cme-hw project source files as input and it will generate Python wheels for use in the Cme-hw runtime container.
 
-   See `build/build-alpine-python.docker`.
+    See `build/build-alpine-python.docker`.
 
 3. Create a final container image also based on the first one created above which will be used for running the built Cme-hw application.  It will be built using the Python wheels generated from the builder image in step 2, above, and when it runs it launches the Cme-hw application.
 
-   See `build/cme-hw-run.docker`.
+    See `build/cme-hw-run.docker`.
 
