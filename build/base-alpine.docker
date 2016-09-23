@@ -1,0 +1,25 @@
+# An Alpine Linux v3.2 OS distro for the Raspberry Pi
+#
+#    - adds bash command shell
+#    - adds .bashrc for prompt formatting and terminal colors
+#    - sets apk to update packages from v3.4 branch
+
+# Use Hypriot's slim Alpine for RPi image
+FROM hypriot/rpi-alpine-scratch
+
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
+# Use v3.4 apk branch for package updates, add bash, and clear the
+# package cache to keep image size small.
+RUN echo -e "http://nl.alpinelinux.org/alpine/v3.4/main\n" > /etc/apk/repositories && \
+	apk --update add bash && \
+	rm /var/cache/apk/*
+
+# Work from /root
+WORKDIR /root
+
+# Adds a reference .bashrc for nice prompt and terminal colors
+COPY ref.bashrc .bashrc
+
+# bash prompt for default command
+CMD ["/bin/bash"]

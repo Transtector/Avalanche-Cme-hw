@@ -1,27 +1,22 @@
-# An Alpine Linux based image which includes bash and
-# python 2.7 along with the pip and virtualenv packages.
+# An Alpine Linux v3.2 OS distro for the Raspberry Pi
+# with Python 2.7, pip, and virtualenv installed.
+#
+#    - uses alpine-base to start
+#    - adds python (2.7) from Alpine package repo (3.4 branch)
+#    - adds py-pip from Alpine package repo
+#    - uses pip to install virtualenv
 
-# Uses base-alpine-python.bashrc file to present a nice looking bash
-# prompt as the default CMD.
-
-# A tiny bare-bones Alpine Linux (v3.2)
-FROM hypriot/rpi-alpine-scratch
+# Start from small Alpine Linux
+FROM base-alpine
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 
-# Use v3.4 apk branch
-RUN echo -e "http://nl.alpinelinux.org/alpine/v3.4/main\n" > /etc/apk/repositories
-
-RUN apk --update add bash rrdtool python py-pip && \
+# Get python, pip from Alpine package repo 
+# and use pip to install virtualenv.  Clear the
+# package cache to keep image small.
+RUN apk --update add python py-pip && \
 	pip install virtualenv && \
 	rm /var/cache/apk/*
 
-# Adds .bashrc for nice prompt and aliases
-COPY ref.bashrc /root/.bashrc
-
-# Setup the Python application virtual environment
-RUN virtualenv /appenv
-
 # bash prompt for default command
 CMD ["/bin/bash"]
-

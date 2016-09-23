@@ -1,0 +1,44 @@
+# This docker is used to build the cmehw application bundle.
+#
+# Adds Python libraries, external toolsets, and headers
+# required to build the cmehw application.  Pip wheel is then
+# used to make a set of wheels which can be bundled into a
+# clean docker image used to run the cmehw application.
+#
+# Running this image builds the application.  Map volumes
+# for the application source files as well as the wheels
+# that will be built.
+#
+#	$ docker run --rm \
+#		-v "$(pwd)":/application \
+#		-v "$(pwd)"/wheelhouse:/wheelhouse \
+#		cmehw-build
+
+# Uses the base-alpine-python (2.7) image
+FROM base-alpine-python
+
+# Create a Python virtual environment
+RUN  virtualenv /appenv
+
+# Add build tools, headers, and Python dev tools
+RUN apk add --update \
+	build-base \
+	linux-headers \
+	rrdtool-dev \
+	python-dev 
+
+# Set up the environment for pip to built wheels location
+ENV WHEELHOUSE=/wheelhouse
+ENV PIP_WHEEL_DIR=/wheelhouse
+ENV PIP_FIND_LINKS=/wheelhouse
+
+# Wheels will build to wheelhouse volume and
+# application source files are in /application
+VOLUME /wheelhouse
+VOLUME /application
+
+# Activate the virtual environment, move into the
+# application folder and build the wheels.
+ENTRYPOINT source /appenv/bin/activate; \
+	cd /application; \
+	pip wheel .
