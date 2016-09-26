@@ -13,7 +13,7 @@
 #		--device=/dev/mem:/dev/mem \
 #		-v /data:/data \
 #		--privileged -ti --name cme-hw \
-#		cme-hw
+#		cmehw-run
 
 # Uses our base bare-bones Alpine Linux and Python 2.7
 FROM base-alpine-python
@@ -25,8 +25,8 @@ RUN apk --update add rrdtool && \
 # Create a Python virtual environment
 RUN virtualenv /appenv
 
-# Application wheels should be built into /wheelhouse folder
-COPY wheelhouse /wheelhouse
+# Application wheels should be built into wheelhouse folder
+COPY wheelhouse wheelhouse/
 
 # Activate the app's virtual environment and
 # install it using pip and built wheels
