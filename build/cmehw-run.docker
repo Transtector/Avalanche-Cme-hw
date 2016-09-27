@@ -1,7 +1,7 @@
 # This docker is used to run the cmehw application.
 #
 # Requires the cmehw binary Python wheels are built into
-# /wheelhouse folder in the dockerfile context.
+# wheelhouse/ folder in the dockerfile context.
 #
 # The Cme-hw application requires root access to hardware, memory
 # and a shared /data location on the docker host.  To provide them,
@@ -22,17 +22,11 @@ FROM base-alpine-python
 RUN apk --update add rrdtool && \
 	rm /var/cache/apk/*
 
-# Create a Python virtual environment
-RUN virtualenv /appenv
-
 # Application wheels should be built into wheelhouse folder
 COPY wheelhouse wheelhouse/
 
-# Activate the app's virtual environment and
-# install it using pip and built wheels
-RUN source /appenv/bin/activate; \
-	pip install --no-index -f wheelhouse cmehw
+# Install the app using pip and built wheels
+RUN pip install --no-index -f wheelhouse cmehw
 
-# Run the Cme-hw application under the virtual environment
-ENTRYPOINT source /appenv/bin/activate; \
-	cmehw
+# Run the Cme-hw application
+ENTRYPOINT cmehw

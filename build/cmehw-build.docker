@@ -17,9 +17,6 @@
 # Uses the base-alpine-python (2.7) image
 FROM base-alpine-python
 
-# Create a Python virtual environment
-RUN  virtualenv /appenv
-
 # Add build tools, headers, and Python dev tools
 RUN apk add --update \
 	build-base \
@@ -37,8 +34,6 @@ ENV PIP_FIND_LINKS=/wheelhouse
 VOLUME /wheelhouse
 VOLUME /application
 
-# Activate the virtual environment, move into the
-# application folder and build the wheels.
-ENTRYPOINT source /appenv/bin/activate; \
-	cd /application; \
-	pip wheel .
+# Move into the application folder
+# and build the wheels.
+ENTRYPOINT cd /application; pip wheel .

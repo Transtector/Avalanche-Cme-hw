@@ -4,7 +4,6 @@
 #    - uses alpine-base to start
 #    - adds python (2.7) from Alpine package repo (3.4 branch)
 #    - adds py-pip from Alpine package repo
-#    - uses pip to install virtualenv
 
 # Start from small Alpine Linux
 FROM base-alpine
@@ -15,7 +14,6 @@ MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 # and use pip to install virtualenv.  Clear the
 # package cache to keep image small.
 RUN apk --update add python py-pip && \
-	pip install virtualenv && \
 	rm /var/cache/apk/*
 
 # bash prompt for default command
