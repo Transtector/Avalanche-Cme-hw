@@ -18,6 +18,8 @@
 # Uses our base bare-bones Alpine Linux and Python 2.7
 FROM base-alpine-python
 
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
 # cme-hw also requires rrdtool be installed
 RUN apk --update add rrdtool && \
 	rm /var/cache/apk/*

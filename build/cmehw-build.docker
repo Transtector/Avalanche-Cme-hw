@@ -17,6 +17,8 @@
 # Uses the base-alpine-python (2.7) image
 FROM base-alpine-python
 
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
 # Add build tools, headers, and Python dev tools
 RUN apk add --update \
 	build-base \
