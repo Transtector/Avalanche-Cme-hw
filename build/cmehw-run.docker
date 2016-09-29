@@ -4,16 +4,19 @@
 # wheelhouse/ folder in the dockerfile context.
 #
 # The Cme-hw application requires root access to hardware, memory
-# and a shared /data location on the docker host.  To provide them,
-# run the container with the following command:
+# and a shared /data location on the docker host as well as a link
+# to the cme-mc (running) container.  To provide them,
+# run this docker image with the following command:
 #
 #	$ docker run --rm \
 #		--device=/dev/spidev0.0:/dev/spidev0.0 \
 #		--device=/dev/spidev0.1:/dev/spidev0.1 \
 #		--device=/dev/mem:/dev/mem \
+#       --link cme-mc:cme-mc \
+#		--privileged \
+		--name cme-hw \
 #		-v /data:/data \
-#		--privileged -ti --name cme-hw \
-#		cmehw-run
+#		cme-hw
 
 # Uses our base bare-bones Alpine Linux and Python 2.7
 FROM base-alpine-python
