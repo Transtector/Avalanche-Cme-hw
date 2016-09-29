@@ -34,4 +34,4 @@ COPY wheelhouse wheelhouse/
 RUN pip install --no-index -f wheelhouse cmehw
 
 # Run the Cme-hw application
-ENTRYPOINT cmehw
+ENTRYPOINT ["cmehw"]
