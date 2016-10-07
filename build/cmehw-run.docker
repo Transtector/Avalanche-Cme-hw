@@ -14,7 +14,7 @@
 #		--device=/dev/mem:/dev/mem \
 #       --link cme-mc:cme-mc \
 #		--privileged \
-		--name cme-hw \
+#		--name cme-hw \
 #		-v /data:/data \
 #		cme-hw
 
