@@ -12,7 +12,7 @@
 #		--device=/dev/spidev0.0:/dev/spidev0.0 \
 #		--device=/dev/spidev0.1:/dev/spidev0.1 \
 #		--device=/dev/mem:/dev/mem \
-#       --link cme-mc:cme-mc \
+#		--link cme-mc:cme-mc \
 #		--privileged \
 #		--name cme-hw \
 #		-v /data:/data \
