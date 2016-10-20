@@ -15,8 +15,8 @@ RUN apk add --update \
 	rrdtool-dev \
 	python-dev 
 
-# Add the source code folder (will sit in /root)
-VOLUME Cme-hw
+# Add the source code folder
+VOLUME /root/Cme-hw
 
 
 
