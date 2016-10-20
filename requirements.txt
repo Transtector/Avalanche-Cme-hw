@@ -1,4 +1,4 @@
-crcmod==1.7
-RPi.GPIO==0.6.2
-rrdtool==0.1.4
-spidev==3.2
+crcmod>=1.7
+RPi.GPIO>=0.6.2
+rrdtool>=0.1.6
+spidev>=3.2
