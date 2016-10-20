@@ -1,10 +1,6 @@
-import time
-
 import RPi.GPIO as GPIO
 import spidev
-
-import Config
-
+import time
 from STPM3X import Stpm3x, STPM3X
 
 #GPIO assignments
@@ -28,15 +24,11 @@ AVALANCHE_GPIO_LED5 = 36
 class Avalanche(object):
 
 	class _Sensor:
-		def __init__(self, sensor_type, unit, value, read_function):
+		def __init__(self, sensor_type, unit, value, read):
 			self.type = sensor_type
 			self.unit = unit
 			self.value = value
-			self._read = read_function
-
-		def read(self):
-			self.value = self._read()
-
+			self.read = read
 
 	class _Channel:
 		def __init__(self, device, error, sensors):
@@ -44,16 +36,10 @@ class Avalanche(object):
 			self.error = error
 			self.sensors = sensors
 
-
 	_Channels = [] # list of _Channel
 
+
 	def __init__(self):
-
-		from Logging import Logger
-
-		self._logger = Logger # get main logger
-		self._logger.info("Setting up GPIO")
-
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
 
@@ -77,31 +63,6 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_LED3, GPIO.OUT, initial=GPIO.LOW)     #LED 3
 		GPIO.setup(AVALANCHE_GPIO_LED4, GPIO.OUT, initial=GPIO.LOW)     #LED 4
 		GPIO.setup(AVALANCHE_GPIO_LED5, GPIO.OUT, initial=GPIO.LOW)     #LED 5
-
-		# setup relay GPIO
-		self._logger.info("Initializing relay control")
-		
-		self.relayControl(1, True)
-		self.relayControl(2, True)
-		self.relayControl(3, True)
-		self.relayControl(4, True)
-
-		self._logger.info("Sensor boards: Off")
-		self._logger.info("SPI bus 0: Disabled")
-
-		self._logger.info("Discharging sensor caps - wait {0} seconds...".format(Config.SENSOR_CAPS_DISCHARGE_WAIT_s))
-		time.sleep(Config.SENSOR_CAPS_DISCHARGE_WAIT_s);
-
-		self._logger.info("Sensor boards: On")
-		self.sensorPower(True)
-		time.sleep(1);
-
-		self._logger.info("SPI bus 0: Enabled")
-		self.spiBus0isolate(False)
-
-		self._logger.info("Setup SPI devices")
-		self.setupSpiChannels(Config.SPI_SENSORS)
-
 
 	def sensorPower(self, state):
 		'''
@@ -142,7 +103,7 @@ class Avalanche(object):
 			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# init stmp3x SPI device
-			self._logger.info("SPI device %d" % (spi_device_index))
+			print "\nspi_device: %d" % (spi_device_index)
 			device = Stpm3x(spi, spi_config)
 
 			# add two channels for each stmp3x SPI device
@@ -154,7 +115,13 @@ class Avalanche(object):
 				# TODO: Read scale factors from config
 				def v_read(spiDev, chIndex):
 					v_read_param = STPM3X.V2RMS if (chIndex == 0) else STPM3X.V1RMS
-					volts = spiDev.read(v_read_param) * 0.035484044
+					
+					#scale factor for raw EVALSTPM34 board
+					#volts = spiDev.read(v_read_param) * 0.035484044 
+					
+					#scale factor for Optimus Demo carrier board w/ additional resistors in voltage divider circuit
+					volts = spiDev.read(v_read_param) * 0.056499432
+
 					#print "    %s Ch[%d].VOLTS = %f" % (str(spiDev._spiHandle), chIndex, volts)
 					return volts
 
@@ -164,44 +131,24 @@ class Avalanche(object):
 					#print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
 					return amps
 
-				self._logger.info("Ch[%d] adding 2 sensors:" % (channel_index))
+				print "    Ch[%d] adding 2 sensors:" % (channel_index)
 
-				# TODO: A _Sensor takes a type (e.g., 'VAC') a unit ('Vrms'), an initial value
-				# and a function that gets called when the sensor value is read.  We should probably
-				# flesh out the class with further refinements for ranges, calibrations, etc., and it
-				# would probably be useful to have enumerations (or some such) used as the sensor
-				# types and/or units.  Because the type and unit strings are used in the creation
-				# of RRD DS's (data sources) names by using an underscore as a delimiter, and DS
-				# names can only contain alphanumeric values plus the underscore, use only complete
-				# names here with NO additional symbols (i.e., type and unit can only be strings 
-				# made up of [a-zA-Z]).  Additionally, there is a 19 character limit on the DS
-				# names, meaning the convention here is to name sensors as:
-				#
-				#	sxy_TYPE_UNIT
-				#
-				# Where sxy is s0 .. s99 (sensor id)
-				#	Empty strings for TYPE and UNIT are acceptable.
-				#	Combined length for TYPE and UNIT strings is 14 characters.
-				#
-				sensors.append(self._Sensor('VAC', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
-				sensors.append(self._Sensor('CAC', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
+				sensors.append(self._Sensor('AC_VOLTAGE', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
+				sensors.append(self._Sensor('AC_CURRENT', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
 
 				# save SPI device channels, their error state, and array of sensors
 				self._Channels.append(self._Channel(device, device.error, sensors))
 
 
-	def updateSpiChannels(self):
+	def readSpiChannels(self):
 		'''
-		Runs through each channel's sensors and updates values
+		Runs through each channel's sensors and reads updated values
 		'''
-		
-		self.syncSensors()
-
-		for ch in self._Channels:
+		for i, ch in enumerate(self._Channels):
 			# update sensor values
 			if not ch.error:
 				for s in ch.sensors:
-					s.read()
+					s.value = s.read()
 
 		return self._Channels
 
