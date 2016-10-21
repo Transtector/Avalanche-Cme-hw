@@ -18,8 +18,7 @@ class RRD():
 
 		start_time = time.time()
 
-		rrdtool.create(TESTRRD,
-			"-d", Config.RRDCACHED_ADDRESS,
+		rrdtool.create('/data/log/' + TESTRRD,
 			"--step", "1", 
 			"DS:index:GAUGE:10:0:100",
 			"DS:random:GAUGE:10:0:100",
@@ -27,8 +26,7 @@ class RRD():
 
 		t = 0
 		while (t < 10):
-			rrdtool.update(TESTRRD,
-				"-d", Config.RRDCACHED_ADDRESS,
+			rrdtool.update('/data/log/' + TESTRRD,
 				"N:{0}:{1}".format(t, random.randint(0, 100)))
 			t = t + 1
 			time.sleep(1)
@@ -36,8 +34,7 @@ class RRD():
 		# TODO: check the results (somehow).  If the RRD doesn't
 		# init properly, then there's no point to continue (I think),
 		# so we'd fire an exception and terminate the cmehw main program.
-		self._test = rrdtool.fetch(TESTRRD,
-			"-d", Config.RRDCACHED_ADDRESS,
+		self._test = rrdtool.fetch('/data/log/' + TESTRRD,
 			"LAST",
 			"--start", str(int(start_time)),
 			"--end", str(int(time.time())))
@@ -133,7 +130,7 @@ class RRD():
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 ) ]
 
-			rrdtool.create(ch_rrd, "-d", Config.RRDCACHED_ADDRESS,
+			rrdtool.create('/data/log/' + ch_rrd,
 				"--step", "1", *(DS + RRA) )
 
 			self._logger.info("RRD created for {0}".format(channel.id))
@@ -150,7 +147,7 @@ class RRD():
 		# try/catch to watch out for updates that occur too often.  Here we just
 		# log then ignore the exception (for now)
 		try:
-			rrdtool.update(ch_rrd, "-d", Config.RRDCACHED_ADDRESS, DATA_UPDATE)
+			rrdtool.update('/data/log/' + ch_rrd, DATA_UPDATE)
 
 		except:
 			self._logger.error(sys.exc_info()[1])
