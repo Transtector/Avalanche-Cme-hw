@@ -38,7 +38,7 @@ def main(args=None):
 		for ch in channels:
 			ch.stale = True
 
-		for i, hw_ch in enumerate(avalanche.updateSpiChannels()):
+		for i, hw_ch in enumerate(avalanche.readSpiChannels()):
 			# create or update a channel for each hardware channel found
 			found = False
 
