@@ -17,6 +17,10 @@ APPLOG = os.path.join(LOGDIR, 'cme-hw.log')
 LOGBYTES = 1024 * 10
 LOGCOUNT = 5
 
+# Create LOGDIR if not already there
+if not os.path.exists(LOGDIR):
+		os.makedirs(LOGDIR)
+
 
 # RRD (Round-Robin Database) Configuration
 RRDCACHED_ADDRESS = "cme-mc" # the name of the docker container running rrdcached, default port 42217 is used
