@@ -4,9 +4,9 @@ import sys, time
 
 from .common import Config
 
-from Logging import Logger
-from Avalanche import Avalanche
-from RRD import RRD
+from .Logging import Logger
+from .Avalanche import Avalanche
+from .RRD import RRD
 
 def main(args=None):
 	'''Main hardware loop'''
@@ -31,7 +31,7 @@ def main(args=None):
 		start_time = time.time() # start of loop
 
 		# Show Loop operation via Heartbeat LED
-		avalanche.ledToggle(5)
+		#avalanche.ledToggle(5)
 
 		# start polling update by marking all channels stale
 		for ch in channels:

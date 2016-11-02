@@ -6,7 +6,7 @@ import spidev
 from .common import Config
 
 # load the STPM3X module and import Stpm3x class
-from STPM3X import Stpm3x
+from .STPM3X import Stpm3x
 
 
 # GPIO assignments
@@ -14,7 +14,6 @@ AVALANCHE_GPIO_SENSOR_POWER     = 5
 AVALANCHE_GPIO_ISOLATE_SPI_BUS  = 6
 
 AVALANCHE_GPIO_SYNC_SENSOR0     = 12
-AVALANCHE_GPIO_SYNC_SENSOR1     = 13
 
 AVALANCHE_GPIO_RELAY_CHANNEL1   = 28
 AVALANCHE_GPIO_RELAY_CHANNEL2   = 29
@@ -27,6 +26,18 @@ AVALANCHE_GPIO_LED3 = 34
 AVALANCHE_GPIO_LED4 = 35
 AVALANCHE_GPIO_LED5 = 36
 
+AVALANCHE_GPIO_STPM34_ENABLE	= 21
+
+AVALANCHE_GPIO_SPI_CE0		    = 8
+AVALANCHE_GPIO_SPI_CE1		    = 7
+
+AVALANCHE_GPIO_MUX_S0   		= 13
+AVALANCHE_GPIO_MUX_S1   		= 14
+
+AVALANCHE_GPIO_U3_MISO_EN		= 20
+AVALANCHE_GPIO_U7_MISO_EN		= 26
+
+AVALANCHE_GPIO_MUX_PUPD_CNTL    = 19
 
 # Discharge sensors for this long before enabling SPI bus
 SPI_BUS_DISCHARGE_WAIT_s = 10
@@ -65,7 +76,7 @@ class Avalanche(object):
 
 	def __init__(self):
 
-		from Logging import Logger
+		from .Logging import Logger
 
 		self._logger = Logger # get main logger
 		self._logger.info("Setting up GPIO")
@@ -73,47 +84,26 @@ class Avalanche(object):
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
 
-		# initialize sensor sync pins
+		#initialize sensor sync pins
 		GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
-		GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
 
-		# initialize relays
-		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL1, GPIO.OUT, initial=GPIO.LOW)
-		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL2, GPIO.OUT, initial=GPIO.LOW)
-		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL3, GPIO.OUT, initial=GPIO.LOW)
-		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL4, GPIO.OUT, initial=GPIO.LOW)
-
-		# setup GPIO for STPM34 power and bus isolator
-		GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power
-		GPIO.setup(AVALANCHE_GPIO_ISOLATE_SPI_BUS, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
-
-		# setup GPIO for LED Header
-		GPIO.setup(AVALANCHE_GPIO_LED1, GPIO.OUT, initial=GPIO.LOW)     #LED 1
-		GPIO.setup(AVALANCHE_GPIO_LED2, GPIO.OUT, initial=GPIO.LOW)     #LED 2
-		GPIO.setup(AVALANCHE_GPIO_LED3, GPIO.OUT, initial=GPIO.LOW)     #LED 3
-		GPIO.setup(AVALANCHE_GPIO_LED4, GPIO.OUT, initial=GPIO.LOW)     #LED 4
-		GPIO.setup(AVALANCHE_GPIO_LED5, GPIO.OUT, initial=GPIO.LOW)     #LED 5
-
-		# setup relay GPIO
-		self._logger.info("Initializing relay control")
+		#initialize chip enables
+		GPIO.setup(AVALANCHE_GPIO_SPI_CE0, GPIO.OUT, initial=GPIO.LOW)
+		GPIO.setup(AVALANCHE_GPIO_SPI_CE1, GPIO.OUT, initial=GPIO.LOW)
 		
-		self.relayControl(1, True)
-		self.relayControl(2, True)
-		self.relayControl(3, True)
-		self.relayControl(4, True)
+		#initialize enables/mux control (Optimus)
+		GPIO.setup(AVALANCHE_GPIO_STPM34_ENABLE, GPIO.OUT, initial=GPIO.LOW)
 
-		self._logger.info("Sensor boards: Off")
-		self._logger.info("SPI bus 0: Disabled")
+		GPIO.setup(AVALANCHE_GPIO_MUX_S0, GPIO.OUT, initial=GPIO.LOW)
+		GPIO.setup(AVALANCHE_GPIO_MUX_S1, GPIO.OUT, initial=GPIO.LOW)
 
-		self._logger.info("Discharging SPI bus caps - wait {0} seconds...".format(SPI_BUS_DISCHARGE_WAIT_s))
-		time.sleep(SPI_BUS_DISCHARGE_WAIT_s);
+		GPIO.setup(AVALANCHE_GPIO_U3_MISO_EN, GPIO.OUT, initial=GPIO.LOW)
+		GPIO.setup(AVALANCHE_GPIO_U7_MISO_EN, GPIO.OUT, initial=GPIO.LOW)
 
-		self._logger.info("Sensor boards: On")
-		self.sensorPower(True)
-		time.sleep(1);
+		GPIO.setup(AVALANCHE_GPIO_MUX_PUPD_CNTL, GPIO.OUT, initial=GPIO.LOW)
 
-		self._logger.info("SPI bus 0: Enabled")
-		self.spiBus0isolate(False)
+		self._logger.info("Enable/Powerup SPI devices")
+		self.enableSequence()
 
 		self._logger.info("Setup SPI devices")
 		self.setupChannels()
@@ -252,82 +242,119 @@ class Avalanche(object):
 		return self._Channels
 
 
-	def ledToggle(self, led):
-		'''
-		LEDs are controlled through an N Channel MOSFET.
-		If GPIO output = low then LED = off,
-		If GPIO output = high then LED = on
-		'''
-		if led == 1:
-			ledState = not GPIO.input(AVALANCHE_GPIO_LED1)
-			GPIO.output(AVALANCHE_GPIO_LED1, ledState)
-		elif led == 2:
-			ledState = not GPIO.input(AVALANCHE_GPIO_LED2)
-			GPIO.output(AVALANCHE_GPIO_LED2, ledState)
-		elif led == 3:
-			ledState = not GPIO.input(AVALANCHE_GPIO_LED3)
-			GPIO.output(AVALANCHE_GPIO_LED3, ledState)
-		elif led == 4:
-			ledState = not GPIO.input(AVALANCHE_GPIO_LED4)
-			GPIO.output(AVALANCHE_GPIO_LED4, ledState)
-		elif led == 5:
-			ledState = not GPIO.input(AVALANCHE_GPIO_LED5)
-			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
-
-
-	def ledControl(self, led, state):
-		'''
-		LEDs are controlled through an N Channel MOSFET.
-		If GPIO output = low then LED = off,
-		If GPIO output = high then LED = on
-		'''
-		if state == True:
-			ledState = GPIO.HIGH
-		else:
-			ledState = GPIO.LOW
-
-		if led == 1:
-			GPIO.output(AVALANCHE_GPIO_LED1, ledState)
-		elif led == 2:
-			GPIO.output(AVALANCHE_GPIO_LED2, ledState)
-		elif led == 3:
-			GPIO.output(AVALANCHE_GPIO_LED3, ledState)
-		elif led == 4:
-			GPIO.output(AVALANCHE_GPIO_LED4, ledState)
-		elif led == 5:
-			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
-
-
-	def relayControl(self, channel, state):
-		'''
-		Relays are SPST. If the output is high, the relay will close its normally
-		open contact
-		'''
-		if state == True:
-			relayState = GPIO.HIGH
-		else:
-			relayState = GPIO.LOW
-
-		if channel == 1:
-			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL1, relayState)
-		elif channel == 2:
-			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL2, relayState)
-		elif channel == 3:
-			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL3, relayState)
-		elif channel == 4:
-			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL4, relayState)
-
-
 	def syncSensors(self):
 		'''
 		STPM3X sensors can be sync'd by briefly pulling the sync line Low for
 		each sensor board.
 		'''
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)
-		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.LOW)
+		#GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.LOW)
 		time.sleep(0.001)
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
-		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
+		#GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
 
 		return time.time()
 
+
+	def setSync(self):
+		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
+
+
+	def clrSync(self):
+		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)
+
+
+	def chipEnableControl(self, channel, state):
+		'''
+		Relays are SPST. If the output is high, the relay will close its normally
+		open contact
+		'''
+		if state == True:
+			CE_State = GPIO.HIGH
+		else:
+			CE_State = GPIO.LOW
+
+		if channel == 1:
+			GPIO.output(AVALANCHE_GPIO_SPI_CE0, CE_State)
+		elif channel == 2:
+			GPIO.output(AVALANCHE_GPIO_SPI_CE1, CE_State)
+
+	def enableSensors(self):
+		GPIO.output(AVALANCHE_GPIO_STPM34_ENABLE, GPIO.HIGH)
+
+	def disableSensors(self):
+		GPIO.output(AVALANCHE_GPIO_STPM34_ENABLE, GPIO.LOW)
+
+	def setMuxOuputsPullup(self):
+		GPIO.output(AVALANCHE_GPIO_MUX_PUPD_CNTL, GPIO.HIGH)
+
+	def setMuxOuputsPulldown(self):
+		GPIO.output(AVALANCHE_GPIO_MUX_PUPD_CNTL, GPIO.LOW)
+
+
+	def selectSensor(self, device):
+		if device == 1: #SS1
+			print("Select Sensor SS1 - BANK 1")
+			self.selectVoltageBank(1)
+			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.HIGH)
+			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.LOW)
+		elif device == 2: #SS2
+			print("Select Sensor SS2 - BANK 1")
+			self.selectVoltageBank(1)
+			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.LOW)
+			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.LOW)		
+		elif device == 3: #SS3 or SS4
+			print("Select Sensor SS3 - BANK 2")
+			self.selectVoltageBank(2)
+			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.HIGH)
+			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.HIGH)
+		elif device == 4: #SS3 or SS4
+			print("Select Sensor SS4 - BANK 2")
+			self.selectVoltageBank(2)
+			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.LOW)
+			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.HIGH)
+
+
+	def selectVoltageBank(self, bank):
+		if bank == 1:
+			GPIO.output(AVALANCHE_GPIO_U3_MISO_EN, GPIO.HIGH)
+			GPIO.output(AVALANCHE_GPIO_U7_MISO_EN, GPIO.LOW)
+		elif bank == 2:
+			GPIO.output(AVALANCHE_GPIO_U3_MISO_EN, GPIO.LOW)
+			GPIO.output(AVALANCHE_GPIO_U7_MISO_EN, GPIO.HIGH)
+		else:
+			GPIO.output(AVALANCHE_GPIO_U3_MISO_EN, GPIO.LOW)
+			GPIO.output(AVALANCHE_GPIO_U7_MISO_EN, GPIO.LOW)
+
+	def enableSequence(self):
+		#STPM init sequence  
+		#print("SPI-CE0 Line: LOW")
+		self.chipEnableControl(1, False)
+		#print("Sensor Enable: LOW")
+		self.disableSensors()
+
+		time.sleep(0.1);
+		#print("Sensor Enable: HIGH")
+		self.enableSensors()
+		time.sleep(0.1);
+
+		#print("SPI-CE0 Line: HIGH")
+		self.setSync()
+		self.chipEnableControl(1, True)
+		time.sleep(0.1)
+		#print("Mux Outputs: PULLUP")
+		#Avalanche.setMuxOuputsPullup()
+
+		#Send the Global Software Reset signal
+		self.setSync()
+		self.syncSensors()
+		time.sleep(0.001);
+		self.syncSensors()
+		time.sleep(0.001);
+		self.syncSensors()
+		time.sleep(0.001);
+		self.chipEnableControl(1, False)
+		self.setMuxOuputsPulldown()
+		time.sleep(0.001);
+		self.chipEnableControl(1, True)
+		self.setMuxOuputsPullup()

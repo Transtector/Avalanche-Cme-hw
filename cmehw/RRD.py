@@ -64,7 +64,7 @@ class RRD():
 	def __init__(self):
 		''' Verify connection to rrdcached on init
 		'''
-		from Logging import Logger
+		from .Logging import Logger
 
 		self._logger = Logger # get main logger
 		self._logger.info("Setting up RRD")
