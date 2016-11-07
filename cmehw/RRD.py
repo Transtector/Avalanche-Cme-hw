@@ -28,6 +28,12 @@ RRDCACHED_ADDRESS = Config.RRDCACHED_ADDRESS
 # /data/log folder.
 TESTRRD = "test.rrd"
 
+# Inherit from the rrdtool.OperationalError exception
+# to create our own wrapper here.
+class RRD_ERROR(rrdtool.OperationalError):
+	''' handle some RRD errors '''
+	pass
+
 class RRD():
 
 	def __init__(self):
@@ -40,12 +46,36 @@ class RRD():
 
 		start_time = time.time()
 
+		# this is supposed to use the rrdcached service to
+		# create the test.rrd file at /data/log/, but if the
+		# service is not running properly will silently fail
+		# and create the test.rrd file in the cmehw folder.
+		# We'll test for that condition and exit with error
+		# if the test.rrd file is found in our program folder
+		# and NOT found in /data/log.
 		rrdtool.create(TESTRRD, '-d', RRDCACHED_ADDRESS,
 			'--step', '1', 
 			'DS:index:GAUGE:10:0:100',
 			'DS:random:GAUGE:10:0:100',
 			'RRA:LAST:0.5:1:10')
 
+		# if test.rrd exists in our APPROOT folder
+		BAD_RRD = os.path.join(Config.APPROOT, TESTRRD)
+		if os.path.exists(BAD_RRD):
+			# delete the bad test.rrd
+			os.remove(BAD_RRD)
+
+			# log the issue
+			err_msg = 'Invalid RRDCacheD {0} creation - is RRDCacheD running on {1}?'.format(TESTRRD, RRDCACHED_ADDRESS)
+			self._logger.error(err_msg)
+
+			# raise an exception
+			raise RRD_ERROR(err_msg)
+
+
+		# Now we try to update the test.rrd with some random data points
+		# this may also fail if something is wrong with rrdcached, but at
+		# least will report something reasonable in the exception.
 		t = 0
 		while (t < 10):
 			rrdtool.update(TESTRRD, '-d', RRDCACHED_ADDRESS,
