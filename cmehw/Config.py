@@ -22,8 +22,12 @@ if not os.path.exists(LOGDIR):
 		os.makedirs(LOGDIR)
 
 
-# RRD (Round-Robin Database) Configuration
-RRDCACHED_ADDRESS = "cme-mc" # the name of the docker container running rrdcached, default port 42217 is used
+# RRD (Round-Robin Database) Cache Daemon
+# This runs on port 42217 by default and there must either be an
+# rrdcached running on the localhost _OR_ you can start the cme-mc
+# docker with port 42217 mapped to the host machine by running it.
+# See the comments at the top of cme-mc/alpine-rrdcached.docker.
+RRDCACHED_ADDRESS = "localhost"
 
 
 # Main hardware polling loop speed
