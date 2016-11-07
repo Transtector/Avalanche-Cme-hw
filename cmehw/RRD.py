@@ -1,9 +1,31 @@
 import os, glob, sys, time, random
-
 import rrdtool
-
 import Config
 
+'''
+Notes:
+
+The rrdtool uses a daemon (variously called 'rrdtool-cached' or 'rrdcached' depending on the 
+particular software distro under which it's used) service to process reads and writes to/from
+the RRD files.
+
+While technically, the CME implmentation does not currently require a separate service to
+handle RRD processing, there are several advantages to doing so.  First, the cache service
+creates a more robust and fault-tolerant system (e.g., yank the power plug while data is
+being logged to RRD), and can gracefully recover RRD data that might otherwise get corrupted.
+Next, having the RRD cached service in its own docker layer creates a great spot to manage
+the input/output data logging system from the software update perspective.  As the layers are
+loosely coupled, we can more easily replace layer contents with newer/better/working software
+without greatly impacting the other layers.
+'''
+RRDCACHED_ADDRESS = Config.RRDCACHED_ADDRESS
+
+# this is an rrd that's created at init to ensure the RRD system
+# is working properly.  Note that the full path to the file is not
+# given, as that should be handled (encapsulated) by the cache daemon
+# service.  In a pinch (i.e., if the cache layer is not working properly)
+# the path to the RRD files is visible to all layers and resides in the
+# /data/log folder.
 TESTRRD = "test.rrd"
 
 class RRD():
@@ -18,26 +40,26 @@ class RRD():
 
 		start_time = time.time()
 
-		rrdtool.create('/data/log/' + TESTRRD,
-			"--step", "1", 
-			"DS:index:GAUGE:10:0:100",
-			"DS:random:GAUGE:10:0:100",
-			"RRA:LAST:0.5:1:10")
+		rrdtool.create(TESTRRD, '-d', RRDCACHED_ADDRESS,
+			'--step', '1', 
+			'DS:index:GAUGE:10:0:100',
+			'DS:random:GAUGE:10:0:100',
+			'RRA:LAST:0.5:1:10')
 
 		t = 0
 		while (t < 10):
-			rrdtool.update('/data/log/' + TESTRRD,
-				"N:{0}:{1}".format(t, random.randint(0, 100)))
+			rrdtool.update(TESTRRD, '-d', RRDCACHED_ADDRESS,
+				'N:{0}:{1}'.format(t, random.randint(0, 100)))
 			t = t + 1
 			time.sleep(1)
 
 		# TODO: check the results (somehow).  If the RRD doesn't
 		# init properly, then there's no point to continue (I think),
 		# so we'd fire an exception and terminate the cmehw main program.
-		self._test = rrdtool.fetch('/data/log/' + TESTRRD,
-			"LAST",
-			"--start", str(int(start_time)),
-			"--end", str(int(time.time())))
+		self._test = rrdtool.fetch(TESTRRD, '-d', RRDCACHED_ADDRESS,
+			'LAST',
+			'--start', str(int(start_time)),
+			'--end', str(int(time.time())))
 
 		self._logger.info("RRD setup finished")
 
@@ -130,8 +152,7 @@ class RRD():
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 ) ]
 
-			rrdtool.create('/data/log/' + ch_rrd,
-				"--step", "1", *(DS + RRA) )
+			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
 
 			self._logger.info("RRD created for {0}".format(channel.id))
 
@@ -140,14 +161,14 @@ class RRD():
 			ch_rrd = os.path.basename(ch_rrd)
 
 		# Update the channel's RRD
-		DATA_UPDATE = "N:" + ":".join([ "{:f}".format(s.value) for s in channel.sensors ])
+		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.value) for s in channel.sensors ])
 
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
 
 		# try/catch to watch out for updates that occur too often.  Here we just
 		# log then ignore the exception (for now)
 		try:
-			rrdtool.update('/data/log/' + ch_rrd, DATA_UPDATE)
+			rrdtool.update(ch_rrd, '-d', RRDCACHED_ADDRESS, DATA_UPDATE)
 
 		except:
 			self._logger.error(sys.exc_info()[1])
