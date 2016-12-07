@@ -47,12 +47,12 @@ class RRD():
 		start_time = time.time()
 
 		# this is supposed to use the rrdcached service to
-		# create the test.rrd file at /data/log/, but if the
+		# create the test.rrd file in CHDIR, but if the
 		# service is not running properly will silently fail
 		# and create the test.rrd file in the cmehw folder.
 		# We'll test for that condition and exit with error
 		# if the test.rrd file is found in our program folder
-		# and NOT found in /data/log.
+		# and NOT found in CHDIR.
 		rrdtool.create(TESTRRD, '-d', RRDCACHED_ADDRESS,
 			'--step', '1', 
 			'DS:index:GAUGE:10:0:100',
@@ -117,14 +117,14 @@ class RRD():
 			return
 
 		# Use glob to find existing RRD for chX (this might result in None)
-		ch_rrd = glob.glob(os.path.join(Config.LOGDIR, channel.id + '_*.rrd'))
+		ch_rrd = glob.glob(os.path.join(Config.CHDIR, channel.id + '_*.rrd'))
 
 		if ch_rrd:
 			ch_rrd = ch_rrd[0] # full path to first match
 
 
 		# check for presence of "chX.rrd.reset" file
-		ch_rrd_reset = os.path.isfile(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
+		ch_rrd_reset = os.path.isfile(os.path.join(Config.CHDIR, channel.id + '.rrd.reset'))
 
 		if ch_rrd_reset:
 			# remove ch_rrd if it is present
@@ -134,7 +134,7 @@ class RRD():
 				ch_rrd = None
 
 			# remove the ch reset file			
-			os.remove(os.path.join(Config.LOGDIR, channel.id + '.rrd.reset'))
+			os.remove(os.path.join(Config.CHDIR, channel.id + '.rrd.reset'))
 
 
 		if not ch_rrd:

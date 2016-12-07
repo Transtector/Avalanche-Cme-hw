@@ -14,12 +14,16 @@ USERDATA = os.path.abspath('/data') # Cme user data is stored here
 # that the Cme uses for logging.
 LOGDIR = os.path.abspath(os.path.join(USERDATA, 'log')) # /data/log 
 APPLOG = os.path.join(LOGDIR, 'cme-hw.log')
-LOGBYTES = 1024 * 10
-LOGCOUNT = 5
+LOGBYTES = 1024 * 50
+LOGCOUNT = 1
 
-# Create LOGDIR if not already there
-if not os.path.exists(LOGDIR):
-		os.makedirs(LOGDIR)
+# channel data and configuration are stored here
+CHDIR = os.path.abspath(os.path.join(USERDATA, 'channels')) # /data/channels
+
+# Create folders if not already there
+for p in [ LOGDIR, CHDIR ]:
+	if not os.path.exists(p):
+		os.makedirs(p)
 
 
 # RRD (Round-Robin Database) Cache Daemon
