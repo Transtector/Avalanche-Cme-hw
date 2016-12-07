@@ -20,13 +20,16 @@ without greatly impacting the other layers.
 '''
 RRDCACHED_ADDRESS = Config.RRDCACHED_ADDRESS
 
-# this is an rrd that's created at init to ensure the RRD system
+# This is an rrd that's created at init to ensure the RRD system
 # is working properly.  Note that the full path to the file is not
 # given, as that should be handled (encapsulated) by the cache daemon
 # service.  In a pinch (i.e., if the cache layer is not working properly)
 # the path to the RRD files is visible to all layers and resides in the
-# /data/log folder.
+# CHDIR folder.
 TESTRRD = "test.rrd"
+
+# The location where channel data and configuration are stored (typically /data/channels/)
+CHDIR = Config.CHDIR
 
 # Inherit from the rrdtool.OperationalError exception
 # to create our own wrapper here.
@@ -117,16 +120,15 @@ class RRD():
 			return
 
 		# Use glob to find existing RRD for chX (this might result in None)
-		ch_rrd = glob.glob(os.path.join(Config.CHDIR, channel.id + '_*.rrd'))
+		ch_rrd = glob.glob(os.path.join(CHDIR, channel.id + '_*.rrd'))
 
 		if ch_rrd:
 			ch_rrd = ch_rrd[0] # full path to first match
 
-
 		# check for presence of "chX.rrd.reset" file
-		ch_rrd_reset = os.path.isfile(os.path.join(Config.CHDIR, channel.id + '.rrd.reset'))
+		ch_rrd_reset = os.path.join(CHDIR, channel.id + '.rrd.reset')
 
-		if ch_rrd_reset:
+		if os.path.isfile(ch_rrd_reset):
 			# remove ch_rrd if it is present
 			if ch_rrd:
 				os.remove(ch_rrd)
@@ -134,11 +136,10 @@ class RRD():
 				ch_rrd = None
 
 			# remove the ch reset file			
-			os.remove(os.path.join(Config.CHDIR, channel.id + '.rrd.reset'))
-
+			os.remove(ch_rrd_reset)
 
 		if not ch_rrd:
-			# Channel RRD not found or was reset create it.
+			# Channel RRD not found or was reset. (Re)create it here.
 			# One DS for every sensor in the channel.
 
 			# embed first publish time in the RRD filename
@@ -180,17 +181,18 @@ class RRD():
 				# yearly - 1 day stats for 365 days
 				"RRA:AVERAGE:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
-				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 ) ]
+				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 )
+			]
 
 			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
 
 			self._logger.info("RRD created for {0}".format(channel.id))
 
 		else:
-			# ensure ch_rrd is filename only at this point
+			# ensure ch_rrd is a filename only at this point
 			ch_rrd = os.path.basename(ch_rrd)
 
-		# Update the channel's RRD
+		# Create the update argument for the channel's RRD
 		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.value) for s in channel.sensors ])
 
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
