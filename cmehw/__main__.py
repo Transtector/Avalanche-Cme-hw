@@ -6,7 +6,6 @@ import Config
 
 from Logging import Logger
 from Avalanche import Avalanche
-from Models import Channel
 from RRD import RRD
 
 def main(args=None):
@@ -38,14 +37,17 @@ def main(args=None):
 		for ch in channels:
 			ch.stale = True
 
+		# The updateSpiChannels() call on the avalanche object
+		# updates all channels' sensor values to the latest readings.
 		for i, hw_ch in enumerate(avalanche.updateSpiChannels()):
 			# create or update a channel for each hardware channel found
 			found = False
 
+			# search channels cache for each hw_ch enumerated
 			for ch in channels:
 				# search current channels for hw_ch and clear
 				# stale flag if found
-				if id(ch.hw_ch) == id(hw_ch):
+				if id(ch) == id(hw_ch):
 					# id() returns unique memory location of object
 					# so works for checking equality
 					found = True
@@ -53,8 +55,10 @@ def main(args=None):
 					break # break the loop leaving ch == current hw_ch
 
 			if not found:
-				# add hw_ch as a new channel
-				ch = Channel('ch' + str(i), hw_ch)
+				# append the hw_ch as a new channel
+				ch = hw_ch
+				ch.id = 'ch' + str(i)
+				ch.stale = False
 				channels.append(ch)
 
 			rrd.publish(ch) # ch is current hw_ch - publish its values
