@@ -253,9 +253,9 @@ class Stpm3x(object):
 				error_msg = '\tSTPM3X device on SPI bus %d error: missing %s configuration' % (config['spi_device'], p)
 				self.error = error_msg
 				self._logger.error(error_msg)
-			
-			'''
 			else:
+
+				'''
 				if (i == 0):
 					parameter = STPM3X.GAIN1
 				elif (i == 1):
@@ -278,7 +278,7 @@ class Stpm3x(object):
 					parameter = STPM3X.CHC1
 				elif (i == 10):
 					parameter = STPM3X.CHC2
-			'''
+				'''
 				status |= self.write(STPM3X.__dict__[p], config[p])
 
 				if not status == 0:
