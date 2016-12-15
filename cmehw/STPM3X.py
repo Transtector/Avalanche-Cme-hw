@@ -255,7 +255,7 @@ class Stpm3x(object):
 				self._logger.error(error_msg)
 			else:
 				# check for strings and convert as necessary before writing register
-				if type(config[p]) is str:
+				if type(config[p]) is str or type(config[p]) is unicode:
 					config[p] = int(config[p], 0)
 
 				status |= self.write(STPM3X.__dict__[p], config[p])
