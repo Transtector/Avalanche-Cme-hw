@@ -192,9 +192,9 @@ class Avalanche(object):
 				#	0.056499432 : voltage scale for Optimus first proof-of-concept demo
 				#	0.003429594 : current scale for AC Edge and Optimus POC
 
-				s_register = s_config['REGISTER']
-				s_scale = s_config['SCALE']
-				s_threshold = s_config.get('THRESHOLD', None)
+				s_register = s_config['register']
+				s_scale = s_config['scale']
+				s_threshold = s_config.get('threshold', None)
 
 				# The STPM3X sensor read function as a closure to
 				# capture register, scale, and threshold config
