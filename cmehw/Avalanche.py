@@ -182,20 +182,26 @@ class Avalanche(object):
 				s_units = s_config['units']
 				s_range = s_config['range']
 
-				s_register = s_config['READ_REGISTER']
-				s_scale = s_config['READ_SCALE']
-				s_read_threshold = s_config.get('READ_THRESHOLD', None)
+				# Note that the sensor SCALE factor is set during device
+				# calibration.  Here are a few scale factors we used for
+				# various configurations:
+				#
+				#	0.035484044 : voltage scale for EVALSTPM34 board (AC Edge demo)
+				#	0.056499432 : voltage scale for Optimus first proof-of-concept demo
+				#	0.003429594 : current scale for AC Edge and Optimus POC
 
-				# The STPM3X sensor read function 
-				def s_read(device, register, scale, threshold):
-					if threshold is None:
-						s_value = device.read(register) * scale 
-					else:
-						s_value = device.gatedRead(register, threshold) * scale
+				s_register = s_config['REGISTER']
+				s_scale = s_config['SCALE']
+				s_threshold = s_config.get('THRESHOLD', None)
 
-					return s_value
+				# The STPM3X sensor read function as a closure to
+				# capture register, scale, and threshold config
+				def s_read():
+					return lambda: device.read(s_register, s_threshold) * s_scale
 
-				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, lambda d=stpm3x, r=s_register, s=s_scale, t=s_read_threshold: s_read(d, r, s, t) ))
+				# Add the sensor the the _sensors for the Channel
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_read()))
+
 				self._logger.info("Added SPI[%d, %d] STPM3X %s sensor measuring %s" % (spi_bus, spi_device, s_type, s_units))	
 
 			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
