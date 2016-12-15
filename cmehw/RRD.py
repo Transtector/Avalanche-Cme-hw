@@ -161,7 +161,7 @@ class RRD():
 
 				ds = "DS:" + ds_name + ":GAUGE:10" + ds_range
 				DS.append(ds)
-				self._logger.info("RRD added {0}".format(ds))
+				self._logger.info("\tRRD sensor DS added {0}".format(ds))
 
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
@@ -190,17 +190,12 @@ class RRD():
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 )
 			]
 
-			print "\n----- DEBUG RRDTOOL CREATE ----------------"
-			for s in (DS + RRA):
-				print "\t({0}) {1}".format(type(s), s)
-			print "\n"
-
 			# Note: be careful here - the last argment here *(DS + RRA) requires a
 			# list of str.  Loading configs from file that make their way here can
 			# result in unicode items. See http://stackoverflow.com/q/956867.
 			ds_and_rra = [ s.encode('utf-8') for s in (DS + RRA) ]
 			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *ds_and_rra )
-			self._logger.info("RRD created for {0}".format(channel.id))
+			self._logger.info("RRD {0} created".format(os.path.basename(ch_rrd)))
 
 		else:
 			# ensure ch_rrd is a filename only at this point
