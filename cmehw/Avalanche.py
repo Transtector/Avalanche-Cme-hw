@@ -199,7 +199,12 @@ class Avalanche(object):
 				# The STPM3X sensor read function as a closure to
 				# capture register, scale, and threshold config
 				def s_read():
-					return lambda: stpm3x.read(s_register, s_threshold) * s_scale
+
+					def internal_read():
+						print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
+						stpm3x.read(s_register, s_threshold) * s_scale
+
+					return internal_read
 
 				# Add the sensor the the _sensors for the Channel
 				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read()))
