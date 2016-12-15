@@ -39,7 +39,7 @@ def main(args=None):
 
 		# The updateSpiChannels() call on the avalanche object
 		# updates all channels' sensor values to the latest readings.
-		for i, hw_ch in enumerate(avalanche.updateSpiChannels()):
+		for i, hw_ch in enumerate(avalanche.updateChannels()):
 			# create or update a channel for each hardware channel found
 			found = False
 

@@ -103,7 +103,7 @@ class Avalanche(object):
 		self._logger.info("Sensor boards: Off")
 		self._logger.info("SPI bus 0: Disabled")
 
-		self._logger.info("Discharging SPI bus caps - wait %d seconds..." % (SPI_BUS_DISCHARGE_WAIT_s))
+		self._logger.info("Discharging SPI bus caps - wait {0} seconds...".format(SPI_BUS_DISCHARGE_WAIT_s))
 		time.sleep(SPI_BUS_DISCHARGE_WAIT_s);
 
 		self._logger.info("Sensor boards: On")
@@ -160,7 +160,7 @@ class Avalanche(object):
 			spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# setup stmp3x SPI device
-			self._logger.info("Initializing STPM3X device at SPI[%d, %d]" % (spi_bus, spi_device))
+			self._logger.info("Initializing STPM3X device at SPI[{0}, {1}]".format(spi_bus, spi_device))
 
 			# construct a list of sensors for which we have configuration objects (passed in on sensors)
 			_sensors = []
@@ -202,12 +202,12 @@ class Avalanche(object):
 				# Add the sensor the the _sensors for the Channel
 				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_read()))
 
-				self._logger.info("Added SPI[%d, %d] STPM3X %s sensor measuring %s" % (spi_bus, spi_device, s_type, s_units))	
+				self._logger.info("Added SPI[{0}, {1}] STPM3X {2} sensor measuring {3}".format(spi_bus, spi_device, s_type, s_units))	
 
 			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
 
 		else:
-			self._logger.error("SPI channel setup unknown device type %s" % (device_type))
+			self._logger.error("SPI channel setup unknown device type {0}".format(device_type))
 			return
 
 				
@@ -229,15 +229,15 @@ class Avalanche(object):
 			if bus_type == 'SPI':
 				self.setupSpiChannel(config['_spi_config'], config['sensors'])
 			else:
-				self._logger.error("Unknown channel bus type %s"  % (bus_type))
+				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 
 
-	def updateSpiChannels(self):
+	def updateChannels(self):
 		'''
 		Runs through each channel's sensors and reads their value into the value property
 		'''
 		self.syncSensors()
-
+		
 		for ch in self._Channels:
 			# update sensor values
 			if not ch.error:
