@@ -389,9 +389,13 @@ class Stpm3x(object):
 		y = (2 ** bits) / 2
 		return ((x & value ^ y) - y)
 
-	def read(self, register):
-
-		register = STPM3X.__dict__[register]
+	
+	def read(self, register, threshold=None):
+		''' Returns the identified register's value.  If the 
+			value is less than the optional threshold, then 0 (zero)
+			is returned.
+		''' 
+		register = STPM3X.__dict__[register] # get register index from passed name
 
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
@@ -403,30 +407,11 @@ class Stpm3x(object):
 		#convert signed value of various bit width to signed int
 		value = self.convert(maskedValue, register['width'])
 		#print ("Converted Value: " + str(value))
+
+		if threshold is not None and (value < threshold):
+			value = 0
 
 		return value
-
-	def gatedRead(self, register, gateThreshold):
-
-		register = STPM3X.__dict__[register]
-
-		regValue = self._readRegister(register['address'])
-		#print("Register Value: " + hex(regValue))
-
-		#get value from register, mask and shift
-		maskedValue = (regValue & register['mask']) >> register['position']
-		#print("Masked Value:   " + hex(maskedValue))
-
-		#convert signed value of various bit width to signed int
-		value = self.convert(maskedValue, register['width'])
-		#print ("Converted Value: " + str(value))
-
-		if (value < gateThreshold):
-			gatedValue = 0
-		else:
-			gatedValue = value
-
-		return gatedValue
 
 	def write(self, register, value):
 		#read and modify register contents
