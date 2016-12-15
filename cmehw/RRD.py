@@ -191,8 +191,9 @@ class RRD():
 			]
 
 			print "\n----- DEBUG RRDTOOL CREATE ----------------"
-			for s in *(DS + RRA):
-				print "\t{0}".format(s)
+			print "\ttype(DS + RRA) = {0}".format(type((DS + RRA)))
+			for s in (DS + RRA):
+				print "\t({0}) {1}".format(type(s), s)
 			print "\n"
 
 			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
