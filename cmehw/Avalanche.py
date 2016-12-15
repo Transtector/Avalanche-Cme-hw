@@ -191,23 +191,21 @@ class Avalanche(object):
 				#	0.035484044 : voltage scale for EVALSTPM34 board (AC Edge demo)
 				#	0.056499432 : voltage scale for Optimus first proof-of-concept demo
 				#	0.003429594 : current scale for AC Edge and Optimus POC
-
 				s_register = s_config['register']
 				s_scale = s_config['scale']
 				s_threshold = s_config.get('threshold', None)
 
 				# The STPM3X sensor read function as a closure to
 				# capture register, scale, and threshold config
-				def s_read():
+				def s_read(register, scale, threshold):
+					def r():
+						#print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
+						stpm3x.read(register, threshold) * scale
 
-					def internal_read():
-						print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
-						stpm3x.read(s_register, s_threshold) * s_scale
-
-					return internal_read
+					return r
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read()))
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read(s_register, s_scale, s_threshold)))
 
 				self._logger.info("\tSENSOR ADDED: SPI[{0}, {1}] STPM3X {2} measures {3}".format(spi_bus, spi_device, s_type, s_units))	
 
