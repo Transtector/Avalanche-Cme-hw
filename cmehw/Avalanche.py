@@ -37,12 +37,14 @@ CHDIR = Config.CHDIR
 class Avalanche(object):
 
 	class _Sensor:
-		def __init__(self, id, sensor_type, unit, read_function):
+		def __init__(self, id, sensor_type, unit, range, read_function):
 			self.id = id
 			self.type = sensor_type
 			self.unit = unit
-			self.value = 0
+			self.range = range
 			self._read = read_function
+
+			self.value = 0
 
 		def read(self):
 			self.value = self._read()
@@ -180,7 +182,7 @@ class Avalanche(object):
 				# corresponding units = [ "Vrms", "Arms"] for RMS volts and amps.
 				s_type = s_config['type']
 				s_units = s_config['units']
-				s_range = s_config['range']
+				s_range = s_config.get('range', [])
 
 				# Note that the sensor SCALE factor is set during device
 				# calibration.  Here are a few scale factors we used for
@@ -200,7 +202,7 @@ class Avalanche(object):
 					return lambda: stpm3x.read(s_register, s_threshold) * s_scale
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_read()))
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read()))
 
 				self._logger.info("Added SPI[{0}, {1}] STPM3X {2} sensor measuring {3}".format(spi_bus, spi_device, s_type, s_units))	
 

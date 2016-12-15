@@ -153,7 +153,13 @@ class RRD():
 				# NOTE: from rrdtool.org that ds_name must be from 1 to
 				# 19 characters long in the characters [a-zA-Z0-9_].
 				ds_name = "_".join([ s.id, s.type, s.unit ])
-				ds = "DS:" + ds_name + ":GAUGE:10:U:U"
+
+				if len(s.range) > 0:
+					ds_range = ":%f:%f".format(s.range[0], s.range[1])
+				else:
+					ds_range = ":U:U"
+
+				ds = "DS:" + ds_name + ":GAUGE:10" + ds_range
 				DS.append(ds)
 				self._logger.info("RRD added {0}".format(ds))
 
@@ -185,7 +191,6 @@ class RRD():
 			]
 
 			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
-
 			self._logger.info("RRD created for {0}".format(channel.id))
 
 		else:
