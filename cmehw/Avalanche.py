@@ -1,4 +1,4 @@
-import time, glob, json
+import os, time, glob, json
 
 import RPi.GPIO as GPIO
 import spidev
