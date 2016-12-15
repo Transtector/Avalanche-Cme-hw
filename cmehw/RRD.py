@@ -155,7 +155,7 @@ class RRD():
 				ds_name = "_".join([ s.id, s.type, s.unit ])
 
 				if len(s.range) > 0:
-					ds_range = ":%f:%f".format(s.range[0], s.range[1])
+					ds_range = ":{0}:{1}".format(s.range[0], s.range[1])
 				else:
 					ds_range = ":U:U"
 
@@ -189,6 +189,11 @@ class RRD():
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 )
 			]
+
+			print "\n----- DEBUG RRDTOOL CREATE ----------------"
+			for s in *(DS + RRA):
+				print "\t{0}".format(s)
+			print "\n"
 
 			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
 			self._logger.info("RRD created for {0}".format(channel.id))
