@@ -347,7 +347,7 @@ class Stpm3x(object):
 
 	def readConfigRegs(self):
 		#read configuration registers
-		self._logger.info('\tConfiguration Registers:')
+		self._logger.info('\t----- Configuration Registers -----')
 		for row in range(0, 21, 3):
 			regvalue_0 = self._readRegister(row * 2)
 			regvalue_1 = self._readRegister((row + 1) * 2)
@@ -391,6 +391,8 @@ class Stpm3x(object):
 
 	def read(self, register):
 
+		register = STPM3X.__dict__[register]
+
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
 
@@ -405,6 +407,8 @@ class Stpm3x(object):
 		return value
 
 	def gatedRead(self, register, gateThreshold):
+
+		register = STPM3X.__dict__[register]
 
 		regValue = self._readRegister(register['address'])
 		#print("Register Value: " + hex(regValue))
