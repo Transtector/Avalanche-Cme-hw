@@ -1,8 +1,6 @@
 # Cme-hw configuration
 import os
 
-import STPM3X
-
 DEBUG = True
 
 APPROOT = os.path.abspath(os.getcwd()) # /root/Cme-hw/
@@ -36,28 +34,3 @@ RRDCACHED_ADDRESS = "localhost"
 
 # Main hardware polling loop speed
 LOOP_PERIOD_s = 1.0
-
-
-# Discharge sensors for this long before enabling SPI bus
-SENSOR_CAPS_DISCHARGE_WAIT_s = 10
-
-
-# spi bus sensor configurations
-SPI_SENSORS = [
-
-	STPM3X.Config({
-		'spi_device': 0,
-		'CHV1': 0x85C,
-		'CHV2': 0x7FF,
-		'CHC1': 0x800,
-		'CHC2': 0x800,
-	}),
-
-	STPM3X.Config({
-		'spi_device': 1,
-		'CHV1': 0x7ED,
-		'CHV2': 0x7E7,
-		'CHC1': 0x800,
-		'CHC2': 0x800,
-	})
-]

@@ -241,17 +241,20 @@ class Stpm3x(object):
 		from Logging import Logger
 
 		self._logger = Logger
-		self._logger.info('Configuring %s channels' % str(spiHandle))
+		self._logger.info('Configuring STPM3X SPI device %s' % str(spiHandle))
 
-		#print config
+		# config passed is a subset of the STPM3X configuration
+		# use the Config class to get the default values of items NOT passed in:
+		config = Config(config)
 
-		for i, p in enumerate(['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']):
+		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']:
 			status = 0
 			if not p in config:
-				error_msg = '\tSPI channel %d error: missing %s configuration' % (config['spi_device'], p)
+				error_msg = '\tSTPM3X device on SPI bus %d error: missing %s configuration' % (config['spi_device'], p)
 				self.error = error_msg
 				self._logger.error(error_msg)
-
+			
+			'''
 			else:
 				if (i == 0):
 					parameter = STPM3X.GAIN1
@@ -275,16 +278,15 @@ class Stpm3x(object):
 					parameter = STPM3X.CHC1
 				elif (i == 10):
 					parameter = STPM3X.CHC2
-
-
-				status |= self.write(parameter, config[p])
+			'''
+				status |= self.write(STPM3X.__dict__[p], config[p])
 
 				if not status == 0:
-					error_msg = '\tSPI channel %d error: error writing %s to device' % (config['spi_device'], p)
+					error_msg = '\tSTPM3X on SPI device %d: error writing %s to device' % (config['spi_device'], p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					self._logger.info(error_msg)
 				else:
-					msg = '\tSPI channel %d: parameter %s written to device' % (config['spi_device'], p)
+					msg = '\tSTPM3X device %d: parameter %s written' % (config['spi_device'], p)
 					self._logger.info(msg)
 
 		self.readConfigRegs()

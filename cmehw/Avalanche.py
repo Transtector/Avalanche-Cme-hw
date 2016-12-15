@@ -1,13 +1,15 @@
-import time
+import time, glob, json
 
 import RPi.GPIO as GPIO
 import spidev
 
 import Config
 
-from STPM3X import Stpm3x, STPM3X
+# load the STPM3X module and import Stpm3x class
+from STPM3X import Stpm3x
 
-#GPIO assignments
+
+# GPIO assignments
 AVALANCHE_GPIO_SENSOR_POWER     = 5
 AVALANCHE_GPIO_ISOLATE_SPI_BUS  = 6
 
@@ -25,28 +27,39 @@ AVALANCHE_GPIO_LED3 = 34
 AVALANCHE_GPIO_LED4 = 35
 AVALANCHE_GPIO_LED5 = 36
 
+
+# Discharge sensors for this long before enabling SPI bus
+SPI_BUS_DISCHARGE_WAIT_s = 10
+
+# Hardware channels configurations stored here
+CHDIR = Config.CHDIR
+
 class Avalanche(object):
 
 	class _Sensor:
-		def __init__(self, id, sensor_type, unit, value, read_function):
+		def __init__(self, id, sensor_type, unit, read_function):
 			self.id = id
 			self.type = sensor_type
 			self.unit = unit
-			self.value = value
+			self.value = 0
 			self._read = read_function
 
 		def read(self):
 			self.value = self._read()
+			return self.value
 
 
 	class _Channel:
-		def __init__(self, device, error, sensors):
-			self.device = device
+		def __init__(self, bus_type, bus_index, bus_device_index, error, sensors):
+			self.bus_type = bus_type
+			self.bus_index = bus_index
+			self.bus_device_index = bus_device_index
 			self.error = error
 			self.sensors = sensors
 
 
 	_Channels = [] # list of _Channel
+
 
 	def __init__(self):
 
@@ -58,21 +71,21 @@ class Avalanche(object):
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
 
-		#initialize sensor sync pins
+		# initialize sensor sync pins
 		GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
 		GPIO.setup(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.OUT, initial=GPIO.HIGH) # TODO: read from config file
 
-		#initialize relays
+		# initialize relays
 		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL1, GPIO.OUT, initial=GPIO.LOW)
 		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL2, GPIO.OUT, initial=GPIO.LOW)
 		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL3, GPIO.OUT, initial=GPIO.LOW)
 		GPIO.setup(AVALANCHE_GPIO_RELAY_CHANNEL4, GPIO.OUT, initial=GPIO.LOW)
 
-		#setup GPIO for STPM34 power and bus isolator
+		# setup GPIO for STPM34 power and bus isolator
 		GPIO.setup(AVALANCHE_GPIO_SENSOR_POWER, GPIO.OUT, initial=GPIO.HIGH)     #power
 		GPIO.setup(AVALANCHE_GPIO_ISOLATE_SPI_BUS, GPIO.OUT, initial=GPIO.HIGH)  #output enable bus isolator
 
-		#setup GPIO for LED Header
+		# setup GPIO for LED Header
 		GPIO.setup(AVALANCHE_GPIO_LED1, GPIO.OUT, initial=GPIO.LOW)     #LED 1
 		GPIO.setup(AVALANCHE_GPIO_LED2, GPIO.OUT, initial=GPIO.LOW)     #LED 2
 		GPIO.setup(AVALANCHE_GPIO_LED3, GPIO.OUT, initial=GPIO.LOW)     #LED 3
@@ -90,8 +103,8 @@ class Avalanche(object):
 		self._logger.info("Sensor boards: Off")
 		self._logger.info("SPI bus 0: Disabled")
 
-		self._logger.info("Discharging sensor caps - wait {0} seconds...".format(Config.SENSOR_CAPS_DISCHARGE_WAIT_s))
-		time.sleep(Config.SENSOR_CAPS_DISCHARGE_WAIT_s);
+		self._logger.info("Discharging SPI bus caps - wait %d seconds..." % (SPI_BUS_DISCHARGE_WAIT_s))
+		time.sleep(SPI_BUS_DISCHARGE_WAIT_s);
 
 		self._logger.info("Sensor boards: On")
 		self.sensorPower(True)
@@ -101,7 +114,7 @@ class Avalanche(object):
 		self.spiBus0isolate(False)
 
 		self._logger.info("Setup SPI devices")
-		self.setupSpiChannels(Config.SPI_SENSORS)
+		self.setupChannels()
 
 
 	def sensorPower(self, state):
@@ -130,71 +143,88 @@ class Avalanche(object):
 		GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
 
-	def setupSpiChannels(self, config):
-		'''
-		Setup channels for each SPI device in config
-		'''
-		# for each SPI device (in config)
-		for spi_device_index, spi_config in enumerate(config):
+	def setupSpiChannel(self, spi_config, sensors):
 
-			# create a SpiDev for each sensor board
+		# configure based on device type
+		device_type = spi_config['device_type']
+
+		if device_type == 'STPM3X':
+
+			# setup a new SPI channel using a STPM3X device
+			spi_bus = spi_config['bus']
+			spi_device = spi_config['device']
+			
+			# configure bus
 			spi = spidev.SpiDev()
-			spi.open(0, spi_device_index) # TODO: read from config
-			spi.mode = 3   # (CPOL = 1 | CPHA = 1) (0b11)
+			spi.open(spi_bus, spi_device)
+			spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
-			# init stmp3x SPI device
-			self._logger.info("SPI device %d" % (spi_device_index))
-			device = Stpm3x(spi, spi_config)
+			# setup stmp3x SPI device
+			self._logger.info("Initializing STPM3X device at SPI[%d, %d]" % (spi_bus, spi_device))
 
-			# add two channels for each stmp3x SPI device
-			for channel_index in [0, 1]:
+			# construct a list of sensors for which we have configuration objects (passed in on sensors)
+			_sensors = []
 
-				# each SPI device channel has 2 sensors
-				sensors = []
+			for i, s in enumerate(sensors):
+				# Create new Stpm3x device and pass it a configuration.
+				# See the STPM3X and Config class in the same module for configuration keys that can be set here to override
+				# the defaults in the module.  Merge the spi_bus and spi_device indices into the sensor config object as
+				# they're required in the Stpm3x constructor configuration parameter.
+				s_config = s['_config'].copy()
+				s_config.update({ 'spi_bus': spi_bus, 'spi_device': spi_device })
+				stpm3x = Stpm3x(spi, s_config)
 
-				# TODO: Read scale factors from config
-				def v_read(spiDev, chIndex):
-					v_read_param = STPM3X.V2RMS if (chIndex == 0) else STPM3X.V1RMS
-					
-					#scale factor for raw EVALSTPM34 board
-					#volts = spiDev.read(v_read_param) * 0.035484044 
-					
-					#scale factor for Optimus Demo carrier board w/ additional resistors in voltage divider circuit
-					volts = spiDev.read(v_read_param) * 0.056499432
+				# There are some constraints on the sensor type and units as these strings
+				# are used to construct the RRD data stream attributes.  For now, we have
+				# type = [ "VAC", "CAC"] for AC RMS voltage, and AC RMS current types with
+				# corresponding units = [ "Vrms", "Arms"] for RMS volts and amps.
+				s_type = s_config['type']
+				s_units = s_config['units']
+				s_range = s_config['range']
 
-					#print "    %s Ch[%d].VOLTS = %f" % (str(spiDev._spiHandle), chIndex, volts)
-					return volts
+				s_register = s_config['READ_REGISTER']
+				s_scale = s_config['READ_SCALE']
+				s_gated_read = s_config['GATED_READ']
+				s_gate_threshold = s_config['GATE_THRESHOLD']
 
-				def c_read(spiDev, chIndex):
-					c_read_param = STPM3X.C2RMS if (chIndex == 0) else STPM3X.C1RMS
-					amps = spiDev.gatedRead(c_read_param, 0) * 0.003429594
-					#print "    %s Ch[%d].AMPS = %f" % (str(spiDev._spiHandle), chIndex, amps)
-					return amps
+				# The STPM3X sensor read function 
+				def s_read(device):
+					if not gated_read:
+						s_value = device.read(s_register) * s_scale 
+					else:
+						s_value = device.read(s_register, s_gate_threshold) * s_scale
 
-				self._logger.info("Ch[%d] adding 2 sensors:" % (channel_index))
+					return s_value
 
-				# TODO: A _Sensor takes a type (e.g., 'VAC') a unit ('Vrms'), an initial value
-				# and a function that gets called when the sensor value is read.  We should probably
-				# flesh out the class with further refinements for ranges, calibrations, etc., and it
-				# would probably be useful to have enumerations (or some such) used as the sensor
-				# types and/or units.  Because the type and unit strings are used in the creation
-				# of RRD DS's (data sources) names by using an underscore as a delimiter, and DS
-				# names can only contain alphanumeric values plus the underscore, use only complete
-				# names here with NO additional symbols (i.e., type and unit can only be strings 
-				# made up of [a-zA-Z]).  Additionally, there is a 19 character limit on the DS
-				# names, meaning the convention here is to name sensors as:
-				#
-				#	sxy_TYPE_UNIT
-				#
-				# Where sxy is s0 .. s99 (sensor id)
-				#	Empty strings for TYPE and UNIT are acceptable.
-				#	Combined length for TYPE and UNIT strings is 14 characters.
-				#
-				sensors.append(self._Sensor('s0', 'VAC', 'Vrms', 0, lambda d=device, i=channel_index: v_read(d, i)  ))
-				sensors.append(self._Sensor('s1', 'CAC', 'Arms', 0, lambda d=device, i=channel_index: c_read(d, i)  ))
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, lambda d=stpm3x: s_read(d) ))
+				self._logger.info("Added SPI[%d, %d] STPM3X %s sensor measuring %s" % (spi_bus, spi_device, s_type, s_units))	
 
-				# save SPI device channels, their error state, and array of sensors
-				self._Channels.append(self._Channel(device, device.error, sensors))
+			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
+
+		else:
+			self._logger.error("SPI channel setup unknown device type %s" % (device_type))
+			return
+
+				
+	def setupChannels(self):
+		'''
+		Attempt to setup channels for each hardware configuration channel found in CHDIR
+		'''
+		ch_config_pattern = os.path.join(CHDIR, 'ch*_config.json')
+		channel_configs = glob.glob(ch_config_pattern) # e.g., [ ".../ch0_config.json", ".../ch1_config.json", ... ]
+
+		for ch_config in channel_configs:
+			# read config into object
+			with open(ch_config, 'r') as f:
+				config = json.load(f)
+
+			# configure channel based on bus type
+			bus_type = config['_bus_type']
+
+			if bus_type == 'SPI':
+				self.setupSpiChannel(config['_spi_config'], config['sensors'])
+			else:
+				self._logger.error("Unknown channel bus type %s"  % (bus_type))
 
 
 	def updateSpiChannels(self):
@@ -210,6 +240,7 @@ class Avalanche(object):
 					s.read()
 
 		return self._Channels
+
 
 	def ledToggle(self, led):
 		'''
@@ -233,6 +264,7 @@ class Avalanche(object):
 			ledState = not GPIO.input(AVALANCHE_GPIO_LED5)
 			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
 
+
 	def ledControl(self, led, state):
 		'''
 		LEDs are controlled through an N Channel MOSFET.
@@ -255,6 +287,7 @@ class Avalanche(object):
 		elif led == 5:
 			GPIO.output(AVALANCHE_GPIO_LED5, ledState)
 
+
 	def relayControl(self, channel, state):
 		'''
 		Relays are SPST. If the output is high, the relay will close its normally
@@ -274,6 +307,7 @@ class Avalanche(object):
 		elif channel == 4:
 			GPIO.output(AVALANCHE_GPIO_RELAY_CHANNEL4, relayState)
 
+
 	def syncSensors(self):
 		'''
 		STPM3X sensors can be sync'd by briefly pulling the sync line Low for
@@ -286,3 +320,4 @@ class Avalanche(object):
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
 
 		return time.time()
+
