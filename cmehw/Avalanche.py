@@ -187,15 +187,15 @@ class Avalanche(object):
 				s_read_threshold = s_config.get('READ_THRESHOLD', None)
 
 				# The STPM3X sensor read function 
-				def s_read(device):
-					if s_read_threshold is None:
-						s_value = device.read(s_register) * s_scale 
+				def s_read(device, register, scale, threshold):
+					if threshold is None:
+						s_value = device.read(register) * scale 
 					else:
-						s_value = device.gatedRead(s_register, s_read_threshold) * s_scale
+						s_value = device.gatedRead(register, threshold) * scale
 
 					return s_value
 
-				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, lambda d=stpm3x: s_read(d) ))
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, lambda d=stpm3x, r=s_register, s=s_scale, t=s_read_threshold: s_read(d, r, s, t) ))
 				self._logger.info("Added SPI[%d, %d] STPM3X %s sensor measuring %s" % (spi_bus, spi_device, s_type, s_units))	
 
 			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
