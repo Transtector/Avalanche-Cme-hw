@@ -191,12 +191,15 @@ class RRD():
 			]
 
 			print "\n----- DEBUG RRDTOOL CREATE ----------------"
-			print "\ttype(DS + RRA) = {0}".format(type((DS + RRA)))
 			for s in (DS + RRA):
 				print "\t({0}) {1}".format(type(s), s)
 			print "\n"
 
-			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *(DS + RRA) )
+			# Note: be careful here - the last argment here *(DS + RRA) requires a
+			# list of str.  Loading configs from file that make their way here can
+			# result in unicode items. See http://stackoverflow.com/q/956867.
+			ds_and_rra = [ s.encode('utf-8') for s in (DS + RRA) ]
+			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *ds_and_rra )
 			self._logger.info("RRD created for {0}".format(channel.id))
 
 		else:
