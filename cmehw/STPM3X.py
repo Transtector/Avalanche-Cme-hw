@@ -254,31 +254,10 @@ class Stpm3x(object):
 				self.error = error_msg
 				self._logger.error(error_msg)
 			else:
+				# check for strings and convert as necessary before writing register
+				if type(config[p]) is str:
+					config[p] = int(config[p], 0)
 
-				'''
-				if (i == 0):
-					parameter = STPM3X.GAIN1
-				elif (i == 1):
-					parameter = STPM3X.GAIN2
-				elif (i == 2):
-					parameter = STPM3X.ENVREF1
-				elif (i == 3):
-					parameter = STPM3X.ENVREF2
-				elif (i == 4):
-					parameter = STPM3X.TC1
-				elif (i == 5):
-					parameter = STPM3X.TC2
-				elif (i == 6):
-					parameter = STPM3X.REF_FREQ
-				elif (i == 7):
-					parameter = STPM3X.CHV1
-				elif (i == 8):
-					parameter = STPM3X.CHV2
-				elif (i == 9):
-					parameter = STPM3X.CHC1
-				elif (i == 10):
-					parameter = STPM3X.CHC2
-				'''
 				status |= self.write(STPM3X.__dict__[p], config[p])
 
 				if not status == 0:
