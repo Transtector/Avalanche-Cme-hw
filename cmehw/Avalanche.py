@@ -184,15 +184,14 @@ class Avalanche(object):
 
 				s_register = s_config['READ_REGISTER']
 				s_scale = s_config['READ_SCALE']
-				s_gated_read = s_config['GATED_READ']
-				s_gate_threshold = s_config['GATE_THRESHOLD']
+				s_read_threshold = s_config.get('READ_THRESHOLD', None)
 
 				# The STPM3X sensor read function 
 				def s_read(device):
-					if not gated_read:
+					if s_read_threshold is None:
 						s_value = device.read(s_register) * s_scale 
 					else:
-						s_value = device.read(s_register, s_gate_threshold) * s_scale
+						s_value = device.gatedRead(s_register, s_read_threshold) * s_scale
 
 					return s_value
 

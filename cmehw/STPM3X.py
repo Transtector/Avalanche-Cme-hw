@@ -347,7 +347,7 @@ class Stpm3x(object):
 
 	def readConfigRegs(self):
 		#read configuration registers
-		self._logger.info('Configuration Registers:')
+		self._logger.info('\tConfiguration Registers:')
 		for row in range(0, 21, 3):
 			regvalue_0 = self._readRegister(row * 2)
 			regvalue_1 = self._readRegister((row + 1) * 2)
