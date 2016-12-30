@@ -37,6 +37,26 @@ class RRD_ERROR(rrdtool.OperationalError):
 	''' handle some RRD errors '''
 	pass
 
+# these are rrdtool wrappers that use the RRDCacheD (or not)
+def _rrdcreate(rrdfile, *args):
+	if RRDCACHED_ADDRESS:
+		return rrdtool.create(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+
+	return rrdtool.create(os.path.join(CHDIR, rrdfile), *args)
+
+def _rrdupdate(rrdfile, *args):
+	if RRDCACHED_ADDRESS:
+		return rrdtool.update(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+
+	return rrdtool.update(os.path.join(CHDIR, rrdfile), *args)
+
+def _rrdfetch(rrdfile, *args):
+	if RRDCACHED_ADDRESS:
+		return rrdtool.fetch(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+
+	return rrdtool.fetch(os.path.join(CHDIR, rrdfile), *args)
+
+
 class RRD():
 
 	def __init__(self):
@@ -56,7 +76,7 @@ class RRD():
 		# We'll test for that condition and exit with error
 		# if the test.rrd file is found in our program folder
 		# and NOT found in CHDIR.
-		rrdtool.create(TESTRRD, '-d', RRDCACHED_ADDRESS,
+		_rrdcreate(TESTRRD,
 			'--step', '1', 
 			'DS:index:GAUGE:10:0:100',
 			'DS:random:GAUGE:10:0:100',
@@ -81,15 +101,14 @@ class RRD():
 		# least will report something reasonable in the exception.
 		t = 0
 		while (t < 10):
-			rrdtool.update(TESTRRD, '-d', RRDCACHED_ADDRESS,
-				'N:{0}:{1}'.format(t, random.randint(0, 100)))
+			_rrdupdate(TESTRRD, 'N:{0}:{1}'.format(t, random.randint(0, 100)))
 			t = t + 1
 			time.sleep(1)
 
 		# TODO: check the results (somehow).  If the RRD doesn't
 		# init properly, then there's no point to continue (I think),
 		# so we'd fire an exception and terminate the cmehw main program.
-		self._test = rrdtool.fetch(TESTRRD, '-d', RRDCACHED_ADDRESS,
+		self._test = _rrdfetch(TESTRRD,
 			'LAST',
 			'--start', str(int(start_time)),
 			'--end', str(int(time.time())))
@@ -194,7 +213,7 @@ class RRD():
 			# list of str.  Loading configs from file that make their way here can
 			# result in unicode items. See http://stackoverflow.com/q/956867.
 			ds_and_rra = [ s.encode('utf-8') for s in (DS + RRA) ]
-			rrdtool.create(ch_rrd, '-d', RRDCACHED_ADDRESS, '--step', '1', *ds_and_rra )
+			_rrdcreate(ch_rrd, '--step', '1', *ds_and_rra )
 			self._logger.info("RRD {0} created".format(os.path.basename(ch_rrd)))
 
 		else:
@@ -209,7 +228,7 @@ class RRD():
 		# try/catch to watch out for updates that occur too often.  Here we just
 		# log then ignore the exception (for now)
 		try:
-			rrdtool.update(ch_rrd, '-d', RRDCACHED_ADDRESS, DATA_UPDATE)
+			_rrdupdate(ch_rrd, '-d', RRDCACHED_ADDRESS, DATA_UPDATE)
 
 		except:
 			self._logger.error(sys.exc_info()[1])
