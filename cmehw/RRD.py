@@ -2,6 +2,9 @@ import os, glob, sys, time, random
 import rrdtool
 import Config
 
+# The location where channel data and configuration are stored (typically /data/channels/)
+CHDIR = Config.CHDIR
+
 '''
 Notes:
 
@@ -26,10 +29,8 @@ RRDCACHED_ADDRESS = Config.RRDCACHED_ADDRESS
 # service.  In a pinch (i.e., if the cache layer is not working properly)
 # the path to the RRD files is visible to all layers and resides in the
 # CHDIR folder.
-TESTRRD = "test.rrd"
+TESTRRD = os.path.join(CHDIR, "test.rrd")
 
-# The location where channel data and configuration are stored (typically /data/channels/)
-CHDIR = Config.CHDIR
 
 # Inherit from the rrdtool.OperationalError exception
 # to create our own wrapper here.
