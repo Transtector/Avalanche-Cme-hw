@@ -84,6 +84,7 @@ class RRD():
 			'RRA:LAST:0.5:1:10')
 
 		# if test.rrd exists in our APPROOT folder
+		'''  JJB:  Commented out for use w/o RRDCacheD
 		BAD_RRD = os.path.join(Config.APPROOT, TESTRRD)
 		if os.path.exists(BAD_RRD):
 			# delete the bad test.rrd
@@ -95,8 +96,8 @@ class RRD():
 
 			# raise an exception
 			raise RRD_ERROR(err_msg)
-
-
+		'''
+		
 		# Now we try to update the test.rrd with some random data points
 		# this may also fail if something is wrong with rrdcached, but at
 		# least will report something reasonable in the exception.
