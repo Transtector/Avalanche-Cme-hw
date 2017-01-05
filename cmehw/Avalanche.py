@@ -205,7 +205,7 @@ class Avalanche(object):
 				# Add the sensor the the _sensors for the Channel
 				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read(s_register, s_scale, s_threshold)))
 
-				self._logger.info("\tSENSOR ADDED: SPI[{0}, {1}] STPM3X {2} measures {3}".format(spi_bus, spi_device, s_type, s_units))	
+				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
 			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
 			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(spi_bus, spi_device, len(_sensors)))
