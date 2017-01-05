@@ -243,12 +243,12 @@ class Stpm3x(object):
 		config = Config(config)
 
 		spi_bus = config['spi_bus']
-		spi_dev = config['spi_device']
+		spi_device = config['spi_device']
 
 		from Logging import Logger
 
 		self._logger = Logger
-		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(spi_bus, spi_dev))
+		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(spi_bus, spi_device))
 
 		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']:
 			status = 0
