@@ -238,19 +238,22 @@ class Stpm3x(object):
 		self._spiHandle = spiHandle
 		self.error = '' # empty for no errors
 
-		from Logging import Logger
-
-		self._logger = Logger
-		self._logger.info('Configuring STPM3X SPI device {0}'.format(str(spiHandle)))
-
 		# config passed is a subset of the STPM3X configuration
 		# use the Config class to get the default values of items NOT passed in:
 		config = Config(config)
 
+		spi_bus = config['spi_bus']
+		spi_dev = config['spi_device']
+
+		from Logging import Logger
+
+		self._logger = Logger
+		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(spi_bus, spi_dev))
+
 		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']:
 			status = 0
 			if not p in config:
-				error_msg = '\tSTPM3X device on SPI bus {0} error: missing {1} configuration'.format(config['spi_device'], p)
+				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(spi_bus, spi_device, p)
 				self.error = error_msg
 				self._logger.error(error_msg)
 			else:
@@ -261,11 +264,11 @@ class Stpm3x(object):
 				status |= self.write(STPM3X.__dict__[p], config[p])
 
 				if not status == 0:
-					error_msg = '\tSTPM3X on SPI device {0}: error writing {1} to device'.format(config['spi_device'], p)
+					error_msg = '\tSPI [{0}, {1}] STPM3X device error writing {2} to device'.format(spi_bus, spi_device, p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					self._logger.info(error_msg)
 				else:
-					msg = '\tSTPM3X device {0}: parameter {1} written'.format(config['spi_device'], p)
+					msg = '\tSPI [{0}, {1}] STPM3X parameter {1} written'.format(spi_bus, spi_device, p)
 					self._logger.info(msg)
 
 		self.readConfigRegs()

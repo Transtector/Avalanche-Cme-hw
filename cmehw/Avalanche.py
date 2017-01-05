@@ -153,28 +153,25 @@ class Avalanche(object):
 		if device_type == 'STPM3X':
 
 			# setup a new SPI channel using a STPM3X device
-			spi_bus = spi_config['bus']
-			spi_device = spi_config['device']
+			spi_bus = spi_config['spi_bus']
+			spi_device = spi_config['spi_device']
 			
 			# configure bus
 			spi = spidev.SpiDev()
 			spi.open(spi_bus, spi_device)
 			spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
-			# setup stmp3x SPI device
-			self._logger.info("Initializing STPM3X device at SPI[{0}, {1}]".format(spi_bus, spi_device))
+			# Create an STPM3X device object on the SPI bus and pass the configuration.
+			# See the STPM3X and Config class in the same module for configuration keys that
+			# can be set here to override the defaults in the module.
+			stpm3x = Stpm3x(spi, spi_config)
 
-			# construct a list of sensors for which we have configuration objects (passed in on sensors)
+			# Construct a list of sensors for which we have configuration objects (passed in on sensors)
 			_sensors = []
 
 			for i, s in enumerate(sensors):
-				# Create new Stpm3x device and pass it a configuration.
-				# See the STPM3X and Config class in the same module for configuration keys that can be set here to override
-				# the defaults in the module.  Merge the spi_bus and spi_device indices into the sensor config object as
-				# they're required in the Stpm3x constructor configuration parameter.
+
 				s_config = s['_config'].copy()
-				s_config.update({ 'spi_bus': spi_bus, 'spi_device': spi_device })
-				stpm3x = Stpm3x(spi, s_config)
 
 				# There are some constraints on the sensor type and units as these strings
 				# are used to construct the RRD data stream attributes.  For now, we have
@@ -200,7 +197,7 @@ class Avalanche(object):
 				def s_read(register, scale, threshold):
 
 					def r():
-						#print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
+						print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
 						return stpm3x.read(register, threshold) * scale
 
 					return r
@@ -211,6 +208,7 @@ class Avalanche(object):
 				self._logger.info("\tSENSOR ADDED: SPI[{0}, {1}] STPM3X {2} measures {3}".format(spi_bus, spi_device, s_type, s_units))	
 
 			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
+			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(spi_bus, spi_device, len(_sensors)))
 
 		else:
 			self._logger.error("SPI channel setup unknown device type {0}".format(device_type))
