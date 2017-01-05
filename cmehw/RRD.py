@@ -21,7 +21,7 @@ the input/output data logging system from the software update perspective.  As t
 loosely coupled, we can more easily replace layer contents with newer/better/working software
 without greatly impacting the other layers.
 '''
-RRDCACHED_ADDRESS = Config.RRDCACHED_ADDRESS
+RRDCACHED = Config.RRDCACHED
 
 # This is an rrd that's created at init to ensure the RRD system
 # is working properly.  Note that the full path to the file is not
@@ -40,20 +40,20 @@ class RRD_ERROR(rrdtool.OperationalError):
 
 # these are rrdtool wrappers that use the RRDCacheD (or not)
 def _rrdcreate(rrdfile, *args):
-	if RRDCACHED_ADDRESS:
-		return rrdtool.create(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+	if RRDCACHED:
+		return rrdtool.create(rrdfile, '-d', RRDCACHED, *args)
 
 	return rrdtool.create(os.path.join(CHDIR, rrdfile), *args)
 
 def _rrdupdate(rrdfile, *args):
-	if RRDCACHED_ADDRESS:
-		return rrdtool.update(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+	if RRDCACHED:
+		return rrdtool.update(rrdfile, '-d', RRDCACHED, *args)
 
 	return rrdtool.update(os.path.join(CHDIR, rrdfile), *args)
 
 def _rrdfetch(rrdfile, *args):
-	if RRDCACHED_ADDRESS:
-		return rrdtool.fetch(rrdfile, '-d', RRDCACHED_ADDRESS, *args)
+	if RRDCACHED:
+		return rrdtool.fetch(rrdfile, '-d', RRDCACHED, *args)
 
 	return rrdtool.fetch(os.path.join(CHDIR, rrdfile), *args)
 
@@ -91,7 +91,7 @@ class RRD():
 			os.remove(BAD_RRD)
 
 			# log the issue
-			err_msg = 'Invalid RRDCacheD {0} creation - is RRDCacheD running on {1}?'.format(TESTRRD, RRDCACHED_ADDRESS)
+			err_msg = 'Invalid RRDCacheD {0} creation - is RRDCacheD running on {1}?'.format(TESTRRD, RRDCACHED)
 			self._logger.error(err_msg)
 
 			# raise an exception
@@ -228,9 +228,10 @@ class RRD():
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
 
 		# try/catch to watch out for updates that occur too often.  Here we just
-		# log then ignore the exception (for now)
+		# log and ignore the exception (for now).  This may just be related to
+		# an issue with the RRDCacheD and floating point rounding errors.
 		try:
-			_rrdupdate(ch_rrd, '-d', RRDCACHED_ADDRESS, DATA_UPDATE)
+			_rrdupdate(ch_rrd, DATA_UPDATE)
 
 		except:
 			self._logger.error(sys.exc_info()[1])
