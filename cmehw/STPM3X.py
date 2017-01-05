@@ -268,7 +268,7 @@ class Stpm3x(object):
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					self._logger.info(error_msg)
 				else:
-					msg = '\tSPI [{0}, {1}] STPM3X parameter {1} written'.format(spi_bus, spi_device, p)
+					msg = '\tSPI [{0}, {1}] STPM3X device parameter {2} written'.format(spi_bus, spi_device, p)
 					self._logger.info(msg)
 
 		self.readConfigRegs()
