@@ -197,7 +197,7 @@ class Avalanche(object):
 				def s_read(register, scale, threshold):
 
 					def r():
-						print "\tREADING: {0} at SCALE: {1}".format(s_register, s_scale)
+						print "\tREADING: {0} (SCALE = {1}, THRESHOLD = {2})".format(register, scale, threshold)
 						return stpm3x.read(register, threshold) * scale
 
 					return r
