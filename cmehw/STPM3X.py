@@ -151,7 +151,7 @@ class STPM3X:
 # STPM3X sensor configuration
 # Override defaults by passing them at construction, e.g.:
 #   s = Config() # provides default configuration
-#   s = Config({ 'spi_device': 1 }) # overrides default 'spi_device' value
+#   s = Config({ 'device_index': 1 }) # overrides default 'device_index' value
 class Config(dict):
 
 	def __init__(self, *args, **kwargs):
@@ -159,8 +159,8 @@ class Config(dict):
 		self['gpio_sync'] = 12
 
 		# SPI Interface
-		self['spi_bus'] = 0
-		self['spi_device'] = 0
+		self['bus_index'] = 0
+		self['device_index'] = 0
 
 		# ZCR/CLK Pin
 		self['ZCR_SEL'] = 0
@@ -242,18 +242,18 @@ class Stpm3x(object):
 		# use the Config class to get the default values of items NOT passed in:
 		config = Config(config)
 
-		spi_bus = config['spi_bus']
-		spi_device = config['spi_device']
+		bus_index = config['bus_index']
+		device_index = config['device_index']
 
 		from Logging import Logger
 
 		self._logger = Logger
-		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(spi_bus, spi_device))
+		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(bus_index, device_index))
 
 		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']:
 			status = 0
 			if not p in config:
-				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(spi_bus, spi_device, p)
+				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(bus_index, device_index, p)
 				self.error = error_msg
 				self._logger.error(error_msg)
 			else:
@@ -264,11 +264,11 @@ class Stpm3x(object):
 				status |= self.write(STPM3X.__dict__[p], config[p])
 
 				if not status == 0:
-					error_msg = '\tSPI [{0}, {1}] STPM3X device error writing {2} to device'.format(spi_bus, spi_device, p)
+					error_msg = '\tSPI [{0}, {1}] STPM3X device error writing {2} to device'.format(bus_index, device_index, p)
 					self.error = error_msg if not self.error else self.error + ', ' + error_msg
 					self._logger.info(error_msg)
 				else:
-					msg = '\tSPI [{0}, {1}] STPM3X device parameter {2} written'.format(spi_bus, spi_device, p)
+					msg = '\tSPI [{0}, {1}] STPM3X device parameter {2} written'.format(bus_index, device_index, p)
 					self._logger.info(msg)
 
 		self.readConfigRegs()

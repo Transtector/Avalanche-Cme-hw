@@ -153,12 +153,12 @@ class Avalanche(object):
 		if device_type == 'STPM3X':
 
 			# setup a new SPI channel using a STPM3X device
-			spi_bus = spi_config['spi_bus']
-			spi_device = spi_config['spi_device']
+			bus_index = spi_config['bus_index']
+			device_index = spi_config['device_index']
 			
 			# configure bus
 			spi = spidev.SpiDev()
-			spi.open(spi_bus, spi_device)
+			spi.open(bus_index, device_index)
 			spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# Create an STPM3X device object on the SPI bus and pass the configuration.
@@ -224,15 +224,15 @@ class Avalanche(object):
 		channel_configs = glob.glob(ch_config_pattern) # e.g., [ ".../ch0_config.json", ".../ch1_config.json", ... ]
 
 		for ch_config in channel_configs:
-			# read config into object
+			# read channel _config into object
 			with open(ch_config, 'r') as f:
-				config = json.load(f)
+				ch = json.load(f)
 
 			# configure channel based on bus type
-			bus_type = config['_bus_type']
+			bus_type = ch['_config']['bus_type']
 
 			if bus_type == 'SPI':
-				self.setupSpiChannel(config['_spi_config'], config['sensors'])
+				self.setupSpiChannel(ch['_config'], ch['sensors'])
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 

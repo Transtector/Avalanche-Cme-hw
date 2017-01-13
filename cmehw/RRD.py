@@ -187,7 +187,7 @@ class RRD():
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
-				# real-time - every point for 2 hours (3600 points/hour)
+				# live - every point for 2 hours (3600 points/hour)
 				"RRA:LAST:0.5:1:{:d}".format( 2 * 3600 ),
 
 				# daily - 5 minute stats for a day (12 5m blocks per hour)
