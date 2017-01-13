@@ -208,8 +208,8 @@ class Avalanche(object):
 
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
-			self._Channels.append(self._Channel("SPI", spi_bus, spi_device, stpm3x.error, _sensors))
-			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(spi_bus, spi_device, len(_sensors)))
+			self._Channels.append(self._Channel("SPI", bus_index, device_index, stpm3x.error, _sensors))
+			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(bus_index, device_index, len(_sensors)))
 
 		else:
 			self._logger.error("SPI channel setup unknown device type {0}".format(device_type))
