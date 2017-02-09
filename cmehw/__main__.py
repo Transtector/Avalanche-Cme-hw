@@ -2,7 +2,7 @@
 
 import sys, time
 
-import Config
+from .common import Config
 
 from Logging import Logger
 from Avalanche import Avalanche

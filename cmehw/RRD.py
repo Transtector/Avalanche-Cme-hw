@@ -1,6 +1,7 @@
 import os, glob, sys, time, random
 import rrdtool
-import Config
+
+from .common import Config
 
 # The location where channel data and configuration are stored (typically /data/channels/)
 CHDIR = Config.CHDIR

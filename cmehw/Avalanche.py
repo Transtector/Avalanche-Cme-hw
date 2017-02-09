@@ -3,7 +3,7 @@ import os, time, glob, json
 import RPi.GPIO as GPIO
 import spidev
 
-import Config
+from .common import Config
 
 # load the STPM3X module and import Stpm3x class
 from STPM3X import Stpm3x

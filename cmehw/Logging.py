@@ -1,7 +1,7 @@
 # Common logging module
 import logging, logging.handlers
 
-import Config
+from .common import Config
 
 # configure app logging default logs to screen only if DEBUG set in config
 Logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ formatter = logging.Formatter('%(asctime)s %(levelname)-8s [%(name)s] %(message)
 							   datefmt='%Y-%m-%d %H:%M:%S')
 
 # always send app log to file
-fh = logging.handlers.RotatingFileHandler(Config.APPLOG,
+fh = logging.handlers.RotatingFileHandler(Config.HWLOG,
 										  maxBytes=Config.LOGBYTES,
 										  backupCount=Config.LOGCOUNT)
 # increase level if DEBUG set

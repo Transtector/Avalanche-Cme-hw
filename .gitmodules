@@ -1,0 +1,3 @@
+[submodule "cmehw/common"]
+	path = cmehw/common
+	url = git@cuscsgit01.smiths.net:Avalanche/Cme-common.git
