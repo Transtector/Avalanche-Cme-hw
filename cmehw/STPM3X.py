@@ -231,11 +231,9 @@ class Config(dict):
 
 class Stpm3x(object):
 
-	_spiHandle = 0
 	_logger = None
 
-	def __init__(self, spiHandle, config):
-		self._spiHandle = spiHandle
+	def __init__(self, config):
 		self.error = '' # empty for no errors
 
 		# config passed is a subset of the STPM3X configuration
@@ -245,7 +243,7 @@ class Stpm3x(object):
 		bus_index = config['bus_index']
 		device_index = config['device_index']
 
-		from Logging import Logger
+		from .Logging import Logger
 
 		self._logger = Logger
 		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(bus_index, device_index))
@@ -258,7 +256,7 @@ class Stpm3x(object):
 				self._logger.error(error_msg)
 			else:
 				# check for strings and convert as necessary before writing register
-				if type(config[p]) is str or type(config[p]) is unicode:
+				if type(config[p]) is str or type(config[p]) is bytes:
 					config[p] = int(config[p], 0)
 
 				status |= self.write(STPM3X.__dict__[p], config[p])

@@ -137,24 +137,25 @@ class Avalanche(object):
 
 	def setupSpiChannel(self, spi_config, sensors):
 
+		# setup a new SPI channel using a STPM3X device
+		bus_index = spi_config['bus_index']
+		
+		# configure SPI bus
+		spi = spidev.SpiDev()
+		spi.open(bus_index, device_index)
+		spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
+
 		# configure based on device type
 		device_type = spi_config['device_type']
+		device_index = spi_config['device_index']
 
 		if device_type == 'STPM3X':
-
-			# setup a new SPI channel using a STPM3X device
-			bus_index = spi_config['bus_index']
-			device_index = spi_config['device_index']
-			
-			# configure bus
-			spi = spidev.SpiDev()
-			spi.open(bus_index, device_index)
-			spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
 			# Create an STPM3X device object on the SPI bus and pass the configuration.
 			# See the STPM3X and Config class in the same module for configuration keys that
 			# can be set here to override the defaults in the module.
-			stpm3x = Stpm3x(spi, spi_config)
+			self.selectSensor(device_index)
+			stpm3x = Stpm3x(spi_config)
 
 			# Construct a list of sensors for which we have configuration objects (passed in on sensors)
 			_sensors = []
@@ -184,17 +185,18 @@ class Avalanche(object):
 
 				# The STPM3X sensor read function as a closure to
 				# capture register, scale, and threshold config
-				def s_read(register, scale, threshold):
+				def s_read(device, register, scale, threshold):
 
 					def r():
+						self.selectSensor(device)
 						v = stpm3x.read(register, threshold) * scale
-						#print "\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v)
+						print "\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v)
 						return v
 
 					return r
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read(s_register, s_scale, s_threshold)))
+				_sensors.append(self._Sensor('s' + str(i), s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold)))
 
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
