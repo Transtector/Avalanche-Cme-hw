@@ -238,7 +238,7 @@ class Stpm3x(object):
 		self.error = '' # empty for no errors
 
 		self._spiHandle = spiHandle
-		
+
 		# config passed is a subset of the STPM3X configuration
 		# use the Config class to get the default values of items NOT passed in:
 		config = Config(config)
@@ -390,7 +390,7 @@ class Stpm3x(object):
 		stackoverflow.com/questions/3222088/simulating-cs-sbyte-8-bit-signed-integer-casting-in-python
 		'''
 		x = (2 ** bits) - 1
-		y = (2 ** bits) / 2
+		y = (2 ** bits) // 2  # note "//" is integer division for Python 3
 		return ((x & value ^ y) - y)
 
 	

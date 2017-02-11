@@ -144,7 +144,7 @@ class Avalanche(object):
 		
 		# configure SPI bus
 		spi = spidev.SpiDev()
-		spi.open(bus_index, device_index)
+		spi.open(bus_index, 0)
 		spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
 		# configure based on device type

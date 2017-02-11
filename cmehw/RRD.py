@@ -215,7 +215,7 @@ class RRD():
 			# Note: be careful here - the last argment here *(DS + RRA) requires a
 			# list of str.  Loading configs from file that make their way here can
 			# result in unicode items. See http://stackoverflow.com/q/956867.
-			ds_and_rra = [ s.encode('utf-8') for s in (DS + RRA) ]
+			ds_and_rra = [ str(s) for s in (DS + RRA) ]
 			_rrdcreate(ch_rrd, '--step', '1', *ds_and_rra )
 			self._logger.info("RRD {0} created".format(os.path.basename(ch_rrd)))
 
