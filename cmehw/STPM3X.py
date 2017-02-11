@@ -231,11 +231,14 @@ class Config(dict):
 
 class Stpm3x(object):
 
+	_spiHandle = 0
 	_logger = None
 
-	def __init__(self, config):
+	def __init__(self, spiHandle, config):
 		self.error = '' # empty for no errors
 
+		self._spiHandle = spiHandle
+		
 		# config passed is a subset of the STPM3X configuration
 		# use the Config class to get the default values of items NOT passed in:
 		config = Config(config)

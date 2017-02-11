@@ -139,6 +139,8 @@ class Avalanche(object):
 
 		# setup a new SPI channel using a STPM3X device
 		bus_index = spi_config['bus_index']
+		device_type = spi_config['device_type']
+		device_index = spi_config['device_index']
 		
 		# configure SPI bus
 		spi = spidev.SpiDev()
@@ -146,16 +148,13 @@ class Avalanche(object):
 		spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
 		# configure based on device type
-		device_type = spi_config['device_type']
-		device_index = spi_config['device_index']
-
 		if device_type == 'STPM3X':
 
 			# Create an STPM3X device object on the SPI bus and pass the configuration.
 			# See the STPM3X and Config class in the same module for configuration keys that
 			# can be set here to override the defaults in the module.
 			self.selectSensor(device_index)
-			stpm3x = Stpm3x(spi_config)
+			stpm3x = Stpm3x(spi, spi_config)
 
 			# Construct a list of sensors for which we have configuration objects (passed in on sensors)
 			_sensors = []
@@ -190,7 +189,7 @@ class Avalanche(object):
 					def r():
 						self.selectSensor(device)
 						v = stpm3x.read(register, threshold) * scale
-						print "\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v)
+						print("\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v))
 						return v
 
 					return r
