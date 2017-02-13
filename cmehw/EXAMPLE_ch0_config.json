@@ -1,0 +1,45 @@
+{
+	"_config": {
+		"bus_index": 0,
+		"device_index": 0,
+		"bus_type": "SPI",
+		"device_type": "STPM3X"
+	},
+	"sensors": [
+		{
+			"name": "s0",
+			"thresholds": [],
+			"_config": {
+				"scale": 0.035484044,
+				"threshold": 0,
+				"range": [
+					0,
+					300
+				],
+				"type": "VAC",
+				"register": "V1RMS",
+				"units": "Vrms"
+			},
+			"id": "s0"
+		},
+		{
+			"name": "s1",
+			"thresholds": [],
+			"_config": {
+				"scale": 0.003429594,
+				"threshold": 0,
+				"range": [
+					0,
+					100
+				],
+				"type": "CAC",
+				"register": "C1RMS",
+				"units": "Arms"
+			},
+			"id": "s1"
+		}
+	],
+	"description": "Ch 2 for Vrajesh",
+	"name": "Input Channel",
+	"id": "ch0",
+}
