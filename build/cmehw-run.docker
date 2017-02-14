@@ -12,20 +12,15 @@
 #		--device=/dev/spidev0.0:/dev/spidev0.0 \
 #		--device=/dev/spidev0.1:/dev/spidev0.1 \
 #		--device=/dev/mem:/dev/mem \
-#		--link cme-mc:cme-mc \
 #		--privileged \
 #		--name cme-hw \
 #		-v /data:/data \
 #		cme-hw
 
 # Uses our base bare-bones Alpine Linux and Python 2.7
-FROM base-alpine-python
+FROM cmehw-base
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
-
-# cme-hw also requires rrdtool be installed
-RUN apk --update add rrdtool && \
-	rm /var/cache/apk/*
 
 # Application wheels should be built into wheelhouse folder
 COPY wheelhouse wheelhouse/

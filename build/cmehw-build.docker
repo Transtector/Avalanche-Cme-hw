@@ -14,18 +14,18 @@
 #		-v "$(pwd)"/wheelhouse:/wheelhouse \
 #		cmehw-build
 
-# Uses the base-alpine-python (2.7) image
-FROM base-alpine-python
+# Uses the cmehw-base docker
+FROM cmehw-base
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 
 # Add build tools, headers, and Python dev tools
 RUN apk add --update \
-	build-base \
-	linux-headers \
-	rrdtool-dev \
-	python-dev && \
-	pip install wheel 
+		build-base \
+		linux-headers \
+		rrdtool-dev \
+		python3-dev && \
+		pip install wheel 	
 
 # Set up the environment for pip to built wheels location
 ENV WHEELHOUSE=/wheelhouse

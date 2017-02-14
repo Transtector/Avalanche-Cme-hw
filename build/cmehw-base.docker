@@ -1,0 +1,34 @@
+# An Alpine Linux distro for the CME Raspberry Pi
+# with bash, Python 3.5, and rrdtool installed.
+#
+#	- uses hypriot/rpi-alpine-scratch as a minimal Linux
+#	- updates the Alpine APK repo to use v3.5 packages
+#	- adds bash (and a nice .bashrc to /root) 
+#	- adds python 3.5 (pip included in w/Python 3.5)
+#	- adds rrdtool
+
+# Use Hypriot's slim Alpine for RPi image
+FROM hypriot/rpi-alpine-scratch
+
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
+# Use v3.5 apk branch for package updates, add bash, and clear the
+# package cache to keep image size small.  Get python3 from Alpine
+# package repository and upgrade pip. Clear the cache when we're done.
+RUN echo -e "http://nl.alpinelinux.org/alpine/v3.5/main\n" > /etc/apk/repositories && \
+	apk --update add bash python3 rrdtool && \
+	rm /var/cache/apk/* && \
+	pushd /usr/bin && \
+	ln -s python3.5 python && \
+	ln -s pip3.5 pip && \
+	popd && \
+	pip install --upgrade pip
+
+# Work from /root
+WORKDIR /root
+
+# Adds a reference .bashrc for nice prompt and terminal colors
+COPY ref.bashrc .bashrc
+
+# bash prompt for default command
+CMD ["/bin/bash"]
