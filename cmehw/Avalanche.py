@@ -214,7 +214,7 @@ class Avalanche(object):
 		ch_config_pattern = os.path.join(CHDIR, 'ch*_config.json')
 		channel_configs = glob.glob(ch_config_pattern) # e.g., [ ".../ch0_config.json", ".../ch1_config.json", ... ]
 
-		for ch_config in channel_configs:
+		for ch_config in sorted(channel_configs):
 			# read channel _config into object
 			with open(ch_config, 'r') as f:
 				ch = json.load(f)
@@ -249,10 +249,9 @@ class Avalanche(object):
 		each sensor board.
 		'''
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.LOW)
-		#GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.LOW)
 		time.sleep(0.001)
 		GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR0, GPIO.HIGH)
-		#GPIO.output(AVALANCHE_GPIO_SYNC_SENSOR1, GPIO.HIGH)
+		time.sleep(0.001)
 
 		return time.time()
 
@@ -329,31 +328,28 @@ class Avalanche(object):
 
 	def enableSequence(self):
 		#STPM init sequence  
-		#print("SPI-CE0 Line: LOW")
-		self.chipEnableControl(1, False)
-		#print("Sensor Enable: LOW")
+
+		#Ensure all SSx lines are low (PUPD_CTRL = LOW) before enabling the chips with the enable signal
 		self.disableSensors()
+		self.setMuxOuputsPulldown()
+		self.chipEnableControl(1, False)
+		time.sleep(0.5);
 
-		time.sleep(0.1);
-		#print("Sensor Enable: HIGH")
+		#Enable the sensors chips by transitioning 
 		self.enableSensors()
-		time.sleep(0.1);
+		time.sleep(0.2);
 
-		#print("SPI-CE0 Line: HIGH")
+		#Set Lines to their default state, SSx lines are HIGH, Sync is HIGH, CE0 is high
 		self.setSync()
+		self.setMuxOuputsPullup()
 		self.chipEnableControl(1, True)
 		time.sleep(0.1)
-		#print("Mux Outputs: PULLUP")
-		#Avalanche.setMuxOuputsPullup()
 
-		#Send the Global Software Reset signal
-		self.setSync()
+		#Send the Global Software Reset signal (3 1ms LOW pulses followed by a 1ms LOW Pulse on SSx lines)
 		self.syncSensors()
-		time.sleep(0.001);
 		self.syncSensors()
-		time.sleep(0.001);
 		self.syncSensors()
-		time.sleep(0.001);
+
 		self.chipEnableControl(1, False)
 		self.setMuxOuputsPulldown()
 		time.sleep(0.001);

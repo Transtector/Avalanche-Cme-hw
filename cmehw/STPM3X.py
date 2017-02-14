@@ -147,6 +147,10 @@ class STPM3X:
 	CHC1 = {'address': DSPCR6_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
 	CHC2 = {'address': DSPCR8_REGADDR, 'width': 12, 'position': 0, 'mask': calcMask(12,0)}
 
+	#Current Channel Calibration
+	ZCR_EN = {'address': DSPCR3_REGADDR, 'width': 1, 'position': 16, 'mask': calcMask(1,16)}
+	ZCR_SEL = {'address': DSPCR3_REGADDR, 'width': 2, 'position': 14, 'mask': calcMask(2,14)}
+
 
 # STPM3X sensor configuration
 # Override defaults by passing them at construction, e.g.:
@@ -163,7 +167,7 @@ class Config(dict):
 		self['device_index'] = 0
 
 		# ZCR/CLK Pin
-		self['ZCR_SEL'] = 0
+		self['ZCR_SEL'] = 3
 		self['ZCR_EN'] = 0
 
 		# Tamper
@@ -251,7 +255,7 @@ class Stpm3x(object):
 		self._logger = Logger
 		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(bus_index, device_index))
 
-		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2']:
+		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2','ZCR_EN','ZCR_SEL']:
 			status = 0
 			if not p in config:
 				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(bus_index, device_index, p)
