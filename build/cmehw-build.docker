@@ -14,8 +14,8 @@
 #		-v "$(pwd)"/wheelhouse:/wheelhouse \
 #		cmehw-build
 
-# Uses the cmehw-base docker
-FROM cmehw-base
+# Uses the cme-base docker (see Cme/build/cme-base.docker)
+FROM cme-base
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 

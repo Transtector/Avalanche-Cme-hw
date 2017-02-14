@@ -17,8 +17,8 @@
 #		-v /data:/data \
 #		cme-hw
 
-# Uses our base bare-bones Alpine Linux and Python 2.7
-FROM cmehw-base
+# Uses cme-base docker (see Cme/build/cme-base.docker)
+FROM cme-base
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 
