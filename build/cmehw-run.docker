@@ -15,7 +15,7 @@
 #		--privileged \
 #		--name cme-hw \
 #		-v /data:/data \
-#		cme-hw
+#		cme-hw:0.1.0
 
 # Uses cme-base docker (see Cme/build/cme-base.docker)
 FROM cme-base
@@ -23,10 +23,12 @@ FROM cme-base
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 
 # Application wheels should be built into wheelhouse folder
+COPY VERSION VERSION
 COPY wheelhouse wheelhouse/
 
 # Install the app using pip and built wheels
 RUN pip install --no-index -f wheelhouse cmehw
+RUN rm -rf wheelhouse/
 
 # Run the Cme-hw application
-ENTRYPOINT ["cmehw"]
+CMD ["cmehw"]
