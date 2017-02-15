@@ -8,8 +8,8 @@ with open(os.path.join(os.getcwd(), 'VERSION')) as f:
 setup (
 	name				= "cmehw",
 	version				= version,
-	description			= "CME hardware interface",
-	packages			= ['cmehw'],
+	description			= "CME hardware/sensor interface",
+	packages			= ['cmehw', 'cmehw.common'],
 	install_requires	= ["crcmod", "rrdtool", "RPi.GPIO",	"spidev" ],
 	entry_points		= {'console_scripts': ['cmehw = cmehw.__main__:main']}
 )

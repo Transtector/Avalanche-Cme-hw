@@ -15,7 +15,7 @@
 #		--privileged \
 #		--name cme-hw \
 #		-v /data:/data \
-#		cme-hw:0.1.0
+#		cmehw:0.1.0
 
 # Uses cme-base docker (see Cme/build/cme-base.docker)
 FROM cme-base
