@@ -8,6 +8,8 @@ from .Logging import Logger
 from .Avalanche import Avalanche
 from .RRD import RRD
 
+from .Thresholds import ProcessAlarms
+
 def main(args=None):
 	'''Main hardware loop'''
 
@@ -22,6 +24,8 @@ def main(args=None):
 	avalanche = Avalanche() # CME transducer bus initialization
 
 	rrd = RRD() # round-robin database - stores channel data
+
+	threshold = Threshold()
 
 	channels = [] # transducer channels 
 
@@ -62,6 +66,7 @@ def main(args=None):
 				channels.append(ch)
 
 			rrd.publish(ch) # ch is current hw_ch - publish its values
+			ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
 
 
 		# how long to finish loop?

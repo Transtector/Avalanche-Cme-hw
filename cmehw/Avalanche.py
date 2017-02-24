@@ -45,7 +45,11 @@ SPI_BUS_DISCHARGE_WAIT_s = 10
 # Hardware channels configurations stored here
 CHDIR = Config.CHDIR
 
+BUFFER_POINTS = Config.BUFFER_POINTS
+
 class Avalanche(object):
+
+	from collections import deque
 
 	class _Sensor:
 		def __init__(self, id, sensor_type, unit, range, read_function):
@@ -55,11 +59,17 @@ class Avalanche(object):
 			self.range = range
 			self._read = read_function
 
-			self.value = 0
+			# keep a buffer of values
+			# new values are pushed at left (values[0])
+			# and oldest value falls off right
+			self.values = deque([None for x in range(BUFFER_POINTS)]) 
 
 		def read(self):
-			self.value = self._read()
-			return self.value
+
+			value = self._read() # read the sensor value
+			self.values.appendleft([ self.tick, value ]) # push onto buffer
+			self.values.pop() # remove oldest
+			return value
 
 
 	class _Channel:
@@ -101,6 +111,8 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_U7_MISO_EN, GPIO.OUT, initial=GPIO.LOW)
 
 		GPIO.setup(AVALANCHE_GPIO_MUX_PUPD_CNTL, GPIO.OUT, initial=GPIO.LOW)
+
+		self.tick = 0 # tracks sync time
 
 		self._logger.info("Enable/Powerup SPI devices")
 		self.enableSequence()
@@ -189,7 +201,7 @@ class Avalanche(object):
 					def r():
 						self.selectSensor(device)
 						v = stpm3x.read(register, threshold) * scale
-						print("\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v))
+						#print("\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v))
 						return v
 
 					return r
@@ -232,7 +244,7 @@ class Avalanche(object):
 		'''
 		Runs through each channel's sensors and reads their value into the value property
 		'''
-		self.syncSensors()
+		self.tick = self.syncSensors()
 		
 		for ch in self._Channels:
 			# update sensor values
