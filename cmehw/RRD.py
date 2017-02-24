@@ -188,8 +188,8 @@ class RRD():
 
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
-				# live - every point for 2 hours (3600 points/hour)
-				"RRA:LAST:0.5:1:{:d}".format( 2 * 3600 ),
+				# live - every point for 15 minutes (3600 points/hour, 900 points/15 min)
+				"RRA:LAST:0.5:1:{:d}".format( 2 * 900 ),
 
 				# daily - 5 minute stats for a day (12 5m blocks per hour)
 				"RRA:AVERAGE:0.5:5m:{:d}".format( 12 * 24 ),
@@ -224,7 +224,7 @@ class RRD():
 			ch_rrd = os.path.basename(ch_rrd)
 
 		# Create the update argument for the channel's RRD
-		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.value) for s in channel.sensors ])
+		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.values[0][1]) for s in channel.sensors ])
 
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
 
