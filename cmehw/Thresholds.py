@@ -16,6 +16,7 @@ CHDIR = Config.CHDIR
 MAX_ALARM_POINTS = Config.MAX_ALARM_POINTS # how many points collected while in alarm condition
 ALARM_LEAD_POINTS = Config.ALARM_LEAD_POINTS # how many pre- and post- alarm points are saved
 
+
 def ProcessAlarms(channel):
 	# TODO: We should probably bound the size of the alarm files.
 

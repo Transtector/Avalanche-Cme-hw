@@ -1,5 +1,8 @@
 import os, time, glob, json
 
+from collections import deque
+
+
 import RPi.GPIO as GPIO
 import spidev
 
@@ -47,39 +50,37 @@ CHDIR = Config.CHDIR
 
 BUFFER_POINTS = Config.BUFFER_POINTS
 
+class _Sensor:
+	def __init__(self, id, sensor_type, unit, sensor_range, read_function):
+		self.id = id
+		self.type = sensor_type
+		self.unit = unit
+		self.range = sensor_range
+		self._read = read_function
+
+		# keep a buffer of values
+		# new values are pushed at left (values[0])
+		# and oldest value falls off right
+		self.values = deque([None for x in range(BUFFER_POINTS)]) 
+
+	def read(self, tick):
+
+		value = self._read() # read the sensor value
+		self.values.appendleft([ tick, value ]) # push onto buffer
+		self.values.pop() # remove oldest
+		return value
+
+
+class _Channel:
+	def __init__(self, bus_type, bus_index, bus_device_index, error, sensors):
+		self.bus_type = bus_type
+		self.bus_index = bus_index
+		self.bus_device_index = bus_device_index
+		self.error = error
+		self.sensors = sensors
+
+
 class Avalanche(object):
-
-	from collections import deque
-
-	class _Sensor:
-		def __init__(self, id, sensor_type, unit, range, read_function):
-			self.id = id
-			self.type = sensor_type
-			self.unit = unit
-			self.range = range
-			self._read = read_function
-
-			# keep a buffer of values
-			# new values are pushed at left (values[0])
-			# and oldest value falls off right
-			self.values = deque([None for x in range(BUFFER_POINTS)]) 
-
-		def read(self):
-
-			value = self._read() # read the sensor value
-			self.values.appendleft([ self.tick, value ]) # push onto buffer
-			self.values.pop() # remove oldest
-			return value
-
-
-	class _Channel:
-		def __init__(self, bus_type, bus_index, bus_device_index, error, sensors):
-			self.bus_type = bus_type
-			self.bus_index = bus_index
-			self.bus_device_index = bus_device_index
-			self.error = error
-			self.sensors = sensors
-
 
 	_Channels = [] # list of _Channel
 
@@ -226,6 +227,7 @@ class Avalanche(object):
 		ch_config_pattern = os.path.join(CHDIR, 'ch*_config.json')
 		channel_configs = glob.glob(ch_config_pattern) # e.g., [ ".../ch0_config.json", ".../ch1_config.json", ... ]
 
+		count = 0
 		for ch_config in sorted(channel_configs):
 			# read channel _config into object
 			with open(ch_config, 'r') as f:
@@ -236,8 +238,11 @@ class Avalanche(object):
 
 			if bus_type == 'SPI':
 				self.setupSpiChannel(ch['_config'], ch['sensors'])
+				count = count + 1
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
+
+		self._logger.info("Done setting up {0} channels".format(count))
 
 
 	def updateChannels(self):
@@ -250,7 +255,7 @@ class Avalanche(object):
 			# update sensor values
 			if not ch.error:
 				for s in ch.sensors:
-					s.read()
+					s.read(self.tick)
 
 		return self._Channels
 
@@ -306,22 +311,22 @@ class Avalanche(object):
 
 	def selectSensor(self, device):
 		if device == 1: #SS1
-			print("Select Sensor SS1 - BANK 1")
+			#print("Select Sensor SS1 - BANK 1")
 			self.selectVoltageBank(1)
 			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.HIGH)
 			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.LOW)
 		elif device == 2: #SS2
-			print("Select Sensor SS2 - BANK 1")
+			#print("Select Sensor SS2 - BANK 1")
 			self.selectVoltageBank(1)
 			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.LOW)
 			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.LOW)		
 		elif device == 3: #SS3 or SS4
-			print("Select Sensor SS3 - BANK 2")
+			#print("Select Sensor SS3 - BANK 2")
 			self.selectVoltageBank(2)
 			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.HIGH)
 			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.HIGH)
 		elif device == 4: #SS3 or SS4
-			print("Select Sensor SS4 - BANK 2")
+			#print("Select Sensor SS4 - BANK 2")
 			self.selectVoltageBank(2)
 			GPIO.output(AVALANCHE_GPIO_MUX_S0, GPIO.LOW)
 			GPIO.output(AVALANCHE_GPIO_MUX_S1, GPIO.HIGH)

@@ -25,8 +25,6 @@ def main(args=None):
 
 	rrd = RRD() # round-robin database - stores channel data
 
-	threshold = Threshold()
-
 	channels = [] # transducer channels 
 
 	print("\n ---")
