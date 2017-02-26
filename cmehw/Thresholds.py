@@ -3,7 +3,9 @@
 # Works with hardware channels to save alarms if current channel values are not within nominal
 # region defined by channel threshold configuration
 
-import os, json, tempfile
+import os, json, time, tempfile
+
+from random import randint
 
 from .Logging import Logger
 from .common import Config
@@ -16,6 +18,15 @@ CHDIR = Config.CHDIR
 MAX_ALARM_POINTS = Config.MAX_ALARM_POINTS # how many points collected while in alarm condition
 ALARM_LEAD_POINTS = Config.ALARM_LEAD_POINTS # how many pre- and post- alarm points are saved
 
+# Cache the channel configuration files so we
+# don't have to read from disk every time through.
+CONFIGS_CACHE = {}
+
+# Cache alarms in memory and dump to disk only
+# every so often.  Can't be too long in between
+# updates, though, as the API layer will read
+# alarms from disk.
+ALARMS_CACHE = {}
 
 def ProcessAlarms(channel):
 	# TODO: We should probably bound the size of the alarm files.
@@ -174,7 +185,6 @@ def ProcessAlarms(channel):
 
 	#Logger.debug("Done processing alarms:")
 	#Logger.debug("{0}".format(ch_alarms))
-
 	_saveAlarms(channel, ch_alarms)
 
 
@@ -198,7 +208,7 @@ def _checkAlarm(value, threshold, d):
 			
 
 def _loadAlarms(channel):
-	ch_alarms = {}
+	global ALARMS_CACHE
 
 	ch_alarms_file = os.path.join(CHDIR, channel.id + '_alarms.json')
 
@@ -210,39 +220,60 @@ def _loadAlarms(channel):
 		if os.path.isfile(ch_alarms_file):
 			os.remove(ch_alarms_file)
 			Logger.info("{0} alarms reset".format(channel.id))
-			ch_alarms = {}
+			del ALARMS_CACHE[channel.id]
 
 		# remove the ch reset file
 		os.remove(ch_alarms_reset)
 
 	else:
-		if os.path.isfile(ch_alarms_file):
-			with open(ch_alarms_file, 'r') as f:
-				ch_alarms = json.load(f)
 
-	return ch_alarms
+		# read alarms from file to load cache
+		if not ALARMS_CACHE.get(channel.id, None):
+			if os.path.isfile(ch_alarms_file):
+				with open(ch_alarms_file, 'r') as f:
+					ALARMS_CACHE[channel.id] = json.load(f)
+
+	return ALARMS_CACHE[channel.id]
 
 
+# Saves alarms to disk, but only every so often to avoid
+# file IO thrashing.  Uses a random delay time since last
+# save to try to avoid all channels saving their alarms
+# at the same time.
 def _saveAlarms(channel, alarms):
+	global ALARMS_CACHE
+
 	ch_alarms_file = os.path.join(CHDIR, channel.id + '_alarms.json')
-	with LockedOpen(ch_alarms_file, 'a') as fh:
-		with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(ch_alarms_file), delete=False) as tf:
-			json.dump(alarms, tf, indent="\t")
-			tempname = tf.name
-		os.replace(tempname, ch_alarms_file)
+
+	# if last saved more than 10-20 seconds ago, go ahead and save alarms to disk
+	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', None)
+	if not last_saved or time.time() - last_saved > randint(10, 20):
+		
+		ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
+
+		with LockedOpen(ch_alarms_file, 'a') as fh:
+			with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(ch_alarms_file), delete=False) as tf:
+				json.dump(alarms, tf, indent="\t")
+				tempname = tf.name
+			os.replace(tempname, ch_alarms_file)
 
 
 def _loadConfig(channel):
-	# return the channel configuration for passed channel
-	config = None
 
-	# Use glob to find existing RRD for chX (this might result in None)
+	global CONFIGS_CACHE
+
+	# get channel configuration filename
 	config_file = os.path.join(CHDIR, channel.id + '_config.json')
+	config_file_lastmod = os.stat(config_file).st_mtime
 
-	# load channel config (if any)
-	if os.path.isfile(config_file):
-		with open(config_file, 'r') as f:
-			config = json.load(f)
+	# if there's no config in the CONFIGS cache OR if the modification
+	# time has changed on the config file then go ahead and load from file
+	if not CONFIGS_CACHE.get(channel.id, None) or CONFIGS_CACHE.get(channel.id + '_lastmod', 0) != config_file_lastmod:
+		# load channel config (if any)
+		if os.path.isfile(config_file):
+			with open(config_file, 'r') as f:
+				CONFIGS_CACHE[channel.id] = json.load(f)
+				CONFIGS_CACHE[channel.id + '_lastmod'] = config_file_lastmod
 
-	return config
+	return CONFIGS_CACHE[channel.id]
 
