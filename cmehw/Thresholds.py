@@ -227,7 +227,9 @@ def _loadAlarms(channel):
 
 	else:
 
-		# read alarms from file to load cache
+		# read alarms from file to load cache - note that this is
+		# only done at startup.  Rest of the time, the cache
+		# supplies the alarm history.
 		if not ALARMS_CACHE.get(channel.id, None):
 			if os.path.isfile(ch_alarms_file):
 				with open(ch_alarms_file, 'r') as f:
@@ -269,6 +271,7 @@ def _loadConfig(channel):
 	# if there's no config in the CONFIGS cache OR if the modification
 	# time has changed on the config file then go ahead and load from file
 	if not CONFIGS_CACHE.get(channel.id, None) or CONFIGS_CACHE.get(channel.id + '_lastmod', 0) != config_file_lastmod:
+		Logger.debug("Loading channel {0} configuration".foramt(channel.id))
 		# load channel config (if any)
 		if os.path.isfile(config_file):
 			with open(config_file, 'r') as f:
