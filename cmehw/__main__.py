@@ -59,7 +59,6 @@ def main(args=None):
 			if not found:
 				# append the hw_ch as a new channel
 				ch = hw_ch
-				ch.id = 'ch' + str(i)
 				ch.stale = False
 				channels.append(ch)
 

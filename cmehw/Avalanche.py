@@ -72,7 +72,8 @@ class _Sensor:
 
 
 class _Channel:
-	def __init__(self, bus_type, bus_index, bus_device_index, error, sensors):
+	def __init__(self, id, bus_type, bus_index, bus_device_index, error, sensors):
+		self.id = id
 		self.bus_type = bus_type
 		self.bus_index = bus_index
 		self.bus_device_index = bus_device_index
@@ -148,7 +149,7 @@ class Avalanche(object):
 		GPIO.output(AVALANCHE_GPIO_ISOLATE_SPI_BUS, outputState)
 
 
-	def setupSpiChannel(self, spi_config, sensors):
+	def setupSpiChannel(self, ch_id, spi_config, sensors):
 
 		# setup a new SPI channel using a STPM3X device
 		bus_index = spi_config['bus_index']
@@ -212,7 +213,7 @@ class Avalanche(object):
 
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
-			self._Channels.append(_Channel("SPI", bus_index, device_index, stpm3x.error, _sensors))
+			self._Channels.append(_Channel(ch_id, "SPI", bus_index, device_index, stpm3x.error, _sensors))
 			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(bus_index, device_index, len(_sensors)))
 
 		else:
@@ -237,7 +238,7 @@ class Avalanche(object):
 			bus_type = ch['_config']['bus_type']
 
 			if bus_type == 'SPI':
-				self.setupSpiChannel(ch['_config'], ch['sensors'])
+				self.setupSpiChannel(ch['id'], ch['_config'], ch['sensors'])
 				count = count + 1
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
