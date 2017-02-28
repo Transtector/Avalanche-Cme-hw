@@ -96,7 +96,9 @@ def ProcessAlarms(channel):
 		return 
 
 	# Load previous channel alarms from file
-	ch_alarms = _loadAlarms(channel)
+	_loadAlarms(channel)
+
+	ch_alarms = ALARMS_CACHE.get(channel.id, {})
 
 	# check each channel sensor value against the thresholds
 	for sensor in channel.sensors:
@@ -185,7 +187,7 @@ def ProcessAlarms(channel):
 
 	#Logger.debug("Done processing alarms:")
 	#Logger.debug("{0}".format(ch_alarms))
-	_saveAlarms(channel, ch_alarms)
+	_saveAlarms(channel)
 
 
 def _isNumeric(s):
@@ -235,33 +237,37 @@ def _loadAlarms(channel):
 			if os.path.isfile(ch_alarms_file):
 				with open(ch_alarms_file, 'r') as f:
 					ALARMS_CACHE[channel.id] = json.load(f)
+					Logger.info("Previous {0} alarms loaded".format(channel.id))
 			else:
 				# alarms file not there yet - add a cache entry
+				Logger.info("No previous {0} alarms to load".format(channel.id))
 				ALARMS_CACHE.setdefault(channel.id, {})
-
-	return ALARMS_CACHE[channel.id]
 
 
 # Saves alarms to disk, but only every so often to avoid
 # file IO thrashing.  Uses a random delay time since last
 # save to try to avoid all channels saving their alarms
 # at the same time.
-def _saveAlarms(channel, alarms):
+def _saveAlarms(channel):
 	global ALARMS_CACHE
 
 	ch_alarms_file = os.path.join(CHDIR, channel.id + '_alarms.json')
 
 	# if last saved more than 10-20 seconds ago, go ahead and save alarms to disk
 	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', None)
-	if not last_saved or time.time() - last_saved > randint(10, 20):
-		
-		ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
+	alarms = ALARMS_CACHE.get(channel.id, None)
 
+	if alarms and not last_saved or time.time() - last_saved > randint(10, 20):
+
+		# dump to file
 		with LockedOpen(ch_alarms_file, 'a') as fh:
 			with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(ch_alarms_file), delete=False) as tf:
 				json.dump(alarms, tf, indent="\t")
 				tempname = tf.name
 			os.replace(tempname, ch_alarms_file)
+
+			ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
+			Logging.debug("Updated {0} alarms".format(channel.id))
 
 
 def _loadConfig(channel):
