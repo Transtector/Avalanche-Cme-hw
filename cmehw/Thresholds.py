@@ -257,7 +257,7 @@ def _saveAlarms(channel):
 	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', None)
 	alarms = ALARMS_CACHE.get(channel.id, None)
 
-	if alarms and not last_saved or time.time() - last_saved > randint(10, 20):
+	if alarms and not last_saved or (time.time() - last_saved > randint(10, 20)):
 
 		# dump to file
 		with LockedOpen(ch_alarms_file, 'a') as fh:
