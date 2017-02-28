@@ -127,7 +127,7 @@ def ProcessAlarms(channel):
 			# if there isn't one, set an empty list as the default
 			s_class_alarms = s_alarms.setdefault(classification, [])
 
-			Logger.debug("Checking [{0}, {1}] for {2}...".format(s_value[0], s_value[1], classification))
+			#Logger.debug("Checking [{0}, {1}] for {2}...".format(s_value[0], s_value[1], classification))
 
 			# determine alarm state True or False
 			alarm = _checkAlarm(s_value[1], th_value, direction)
