@@ -142,7 +142,7 @@ def ProcessAlarms(channel):
 				prev_alarm_points = s_class_alarms[-MAX_ALARM_POINTS:]
 				#Logger.debug("   Checking previous {0} alarm points...".format(MAX_ALARM_POINTS))
 
-				if not prev_alarm_points[-1]:
+				if not prev_alarm_points or not prev_alarm_points[-1]:
 					# no previous alarm points, or a new alarm segment
 					# create new record w/all sensor buffer values
 					#Logger.debug("   ...NO previous alarm point for {0}, so we'll add these points".format(classification))
