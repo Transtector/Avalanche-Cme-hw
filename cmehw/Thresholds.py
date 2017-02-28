@@ -262,8 +262,9 @@ def _saveAlarms(channel, alarms):
 	# if last saved more than 10-20 seconds ago, go ahead and save alarms to disk
 	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', 0)
 
+	# TODO: we could avoid saves to file if nothing has changed with the alarms
+	# since last save, but may be more lengthy to do that than just dump to file.
 	if alarms and not last_saved or (time.time() - last_saved > randint(10, 20)):
-
 		# dump to file
 		with LockedOpen(ch_alarms_file, 'a') as fh:
 			with tempfile.NamedTemporaryFile('w', dir=os.path.dirname(ch_alarms_file), delete=False) as tf:
@@ -271,8 +272,9 @@ def _saveAlarms(channel, alarms):
 				tempname = tf.name
 			os.replace(tempname, ch_alarms_file)
 
+			# update the save time
 			ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
-			Logger.debug("Saved channel {0} alarms".format(channel.id))
+			#Logger.debug("Saved channel {0} alarms".format(channel.id))
 
 	# update global cache
 	ALARMS_CACHE[channel.id] = alarms
