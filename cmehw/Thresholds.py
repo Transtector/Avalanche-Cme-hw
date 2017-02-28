@@ -233,20 +233,20 @@ def _loadAlarms(channel):
 	# supplies the alarm history.
 	if not channel.id in ALARMS_CACHE:
 
-		Logger.debug("Channel {0} alarms not loaded".format(channel.id))
+		#Logger.debug("Channel {0} alarms not loaded".format(channel.id))
 
 		if os.path.isfile(ch_alarms_file):
-			Logger.debug("Channel {0} alarms file found".format(channel.id))
+			#Logger.debug("Channel {0} alarms file found".format(channel.id))
 			# try to load from file
 			with open(ch_alarms_file, 'r') as f:
 				ALARMS_CACHE[channel.id] = json.load(f)
-				Logger.info("Loaded channel {0} alarms".format(channel.id))
+				#Logger.info("Loaded channel {0} alarms".format(channel.id))
 		else:
 			# no alarms file - just create empty holder
 			ALARMS_CACHE[channel.id] = {}
-			Logger.debug("Channel {0} alarms initialized".format(channel.id))
+			#Logger.debug("Channel {0} alarms initialized".format(channel.id))
 
-	Logger.debug("_loadAlarms: {0}".format(ALARMS_CACHE))
+	#Logger.debug("_loadAlarms: {0}".format(ALARMS_CACHE))
 	return ALARMS_CACHE[channel.id]
 
 
