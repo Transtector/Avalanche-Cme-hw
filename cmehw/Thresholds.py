@@ -96,9 +96,7 @@ def ProcessAlarms(channel):
 		return 
 
 	# Load previous channel alarms from file
-	_loadAlarms(channel)
-
-	ch_alarms = ALARMS_CACHE.get(channel.id, {})
+	ch_alarms = _loadAlarms(channel)
 
 	# check each channel sensor value against the thresholds
 	for sensor in channel.sensors:
@@ -187,7 +185,7 @@ def ProcessAlarms(channel):
 
 	#Logger.debug("Done processing alarms:")
 	#Logger.debug("{0}".format(ch_alarms))
-	_saveAlarms(channel)
+	_saveAlarms(channel, ch_alarms)
 
 
 def _isNumeric(s):
@@ -222,40 +220,38 @@ def _loadAlarms(channel):
 		if os.path.isfile(ch_alarms_file):
 			os.remove(ch_alarms_file)
 		
-		Logger.info("{0} alarms reset".format(channel.id))
-		ALARMS_CACHE.setdefault(channel.id, {})
-
 		# remove the ch reset file
 		os.remove(ch_alarms_reset)
 
-	else:
+		# clear the global cache
+		ALARMS_CACHE[channel.id] = None
+		Logger.info("{0} alarms reset".format(channel.id))
 
+
+	else:
 		# read alarms from file to load cache - note that this is
 		# only done at startup.  Rest of the time, the cache
 		# supplies the alarm history.
-		if not ALARMS_CACHE.get(channel.id, None):
+		if not ALARMS_CACHE.setdefault(channel.id, None):
 			if os.path.isfile(ch_alarms_file):
 				with open(ch_alarms_file, 'r') as f:
 					ALARMS_CACHE[channel.id] = json.load(f)
 					Logger.info("Previous {0} alarms loaded".format(channel.id))
-			else:
-				# alarms file not there yet - add a cache entry
-				Logger.info("No previous {0} alarms to load".format(channel.id))
-				ALARMS_CACHE.setdefault(channel.id, {})
+
+	return ALARMS_CACHE[channel.id]
 
 
 # Saves alarms to disk, but only every so often to avoid
 # file IO thrashing.  Uses a random delay time since last
 # save to try to avoid all channels saving their alarms
 # at the same time.
-def _saveAlarms(channel):
+def _saveAlarms(channel, alarms):
 	global ALARMS_CACHE
 
 	ch_alarms_file = os.path.join(CHDIR, channel.id + '_alarms.json')
 
 	# if last saved more than 10-20 seconds ago, go ahead and save alarms to disk
-	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', None)
-	alarms = ALARMS_CACHE.get(channel.id, None)
+	last_saved = ALARMS_CACHE.get(channel.id + '_lastsave', 0)
 
 	if alarms and not last_saved or (time.time() - last_saved > randint(10, 20)):
 
@@ -267,7 +263,10 @@ def _saveAlarms(channel):
 			os.replace(tempname, ch_alarms_file)
 
 			ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
-			Logging.debug("Updated {0} alarms".format(channel.id))
+			Logger.debug("Updated {0} alarms".format(channel.id))
+
+	# update global cache
+	ALARMS_CACHE[channel.id] = alarms
 
 
 def _loadConfig(channel):
