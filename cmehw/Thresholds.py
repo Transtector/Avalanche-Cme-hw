@@ -95,7 +95,7 @@ def ProcessAlarms(channel):
 		#self.Logger.debug("No sensors configured for channel {0}".format(channel.id))
 		return 
 
-	# Load previous channel alarms from file
+	# Load previous channel alarms from file; ch_alarms might be empty dict
 	ch_alarms = _loadAlarms(channel)
 
 	# check each channel sensor value against the thresholds
@@ -113,7 +113,8 @@ def ProcessAlarms(channel):
 			#Logger.debug("No thresholds found for channel {0}, sensor {1}".format(channel.id, sensor.id))
 			continue # no thresholds - skip this sensor
 
-		s_alarms = ch_alarms.get(sensor.id, {})
+		# get sensor alarms or set empty if none yet exist
+		s_alarms = ch_alarms.setdefault(sensor.id, {})
 
 		# check sensor value against thresholds
 		for t in thresholds:
@@ -224,20 +225,28 @@ def _loadAlarms(channel):
 		os.remove(ch_alarms_reset)
 
 		# clear the global cache
-		ALARMS_CACHE[channel.id] = None
+		ALARMS_CACHE[channel.id] = {}
 		Logger.info("{0} alarms reset".format(channel.id))
 
+	# read alarms from file to load cache - note that this is
+	# only done at startup.  Rest of the time, the cache
+	# supplies the alarm history.
+	if not channel.id in ALARMS_CACHE:
 
-	else:
-		# read alarms from file to load cache - note that this is
-		# only done at startup.  Rest of the time, the cache
-		# supplies the alarm history.
-		if not ALARMS_CACHE.setdefault(channel.id, None):
-			if os.path.isfile(ch_alarms_file):
-				with open(ch_alarms_file, 'r') as f:
-					ALARMS_CACHE[channel.id] = json.load(f)
-					Logger.info("Previous {0} alarms loaded".format(channel.id))
+		Logger.debug("Channel {0} alarms not loaded".format(channel.id))
 
+		if os.path.isfile(ch_alarms_file):
+			Logger.debug("Channel {0} alarms file found".format(channel.id))
+			# try to load from file
+			with open(ch_alarms_file, 'r') as f:
+				ALARMS_CACHE[channel.id] = json.load(f)
+				Logger.info("Loaded channel {0} alarms".format(channel.id))
+		else:
+			# no alarms file - just create empty holder
+			ALARMS_CACHE[channel.id] = {}
+			Logger.debug("Channel {0} alarms initialized".format(channel.id))
+
+	Logger.debug("_loadAlarms: {0}".format(ALARMS_CACHE))
 	return ALARMS_CACHE[channel.id]
 
 
@@ -263,7 +272,7 @@ def _saveAlarms(channel, alarms):
 			os.replace(tempname, ch_alarms_file)
 
 			ALARMS_CACHE[channel.id + '_lastsave'] = time.time()
-			Logger.debug("Updated {0} alarms".format(channel.id))
+			Logger.debug("Saved channel {0} alarms".format(channel.id))
 
 	# update global cache
 	ALARMS_CACHE[channel.id] = alarms
