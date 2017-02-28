@@ -234,6 +234,9 @@ def _loadAlarms(channel):
 			if os.path.isfile(ch_alarms_file):
 				with open(ch_alarms_file, 'r') as f:
 					ALARMS_CACHE[channel.id] = json.load(f)
+			else:
+				# alarms file not there yet - add a cache entry
+				ALARMS_CACHE.setdefault(channel.id, {})
 
 	return ALARMS_CACHE[channel.id]
 
