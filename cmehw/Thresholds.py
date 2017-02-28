@@ -146,7 +146,7 @@ def ProcessAlarms(channel):
 					# no previous alarm points, or a new alarm segment
 					# create new record w/all sensor buffer values
 					#Logger.debug("   ...NO previous alarm point for {0}, so we'll add these points".format(classification))
-					alarms_to_add = [[x[0], x[1]] for x in sensor.values if _isNumeric(x[0]) and _isNumeric(x[1])]
+					alarms_to_add = [ [ x[0], x[1] ] for x in sensor.values if x and _isNumeric(x[0]) and _isNumeric(x[1]) ]
 					#Logger.debug("alarms to add: {0}".format(alarms_to_add))
 					s_class_alarms.extend(alarms_to_add)
 
