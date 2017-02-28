@@ -219,8 +219,9 @@ def _loadAlarms(channel):
 		# remove ch_alarms if it is present
 		if os.path.isfile(ch_alarms_file):
 			os.remove(ch_alarms_file)
-			Logger.info("{0} alarms reset".format(channel.id))
-			del ALARMS_CACHE[channel.id]
+		
+		Logger.info("{0} alarms reset".format(channel.id))
+		ALARMS_CACHE.setdefault(channel.id, {})
 
 		# remove the ch reset file
 		os.remove(ch_alarms_reset)
