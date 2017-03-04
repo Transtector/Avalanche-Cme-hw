@@ -1,4 +1,4 @@
-import os, glob, sys, time, random
+import os, glob, sys, time, random, re
 import rrdtool
 
 from .common import Config
@@ -174,7 +174,10 @@ class RRD():
 				
 				# NOTE: from rrdtool.org that ds_name must be from 1 to
 				# 19 characters long in the characters [a-zA-Z0-9_].
-				ds_name = "_".join([ s.id, s.type, s.unit ])
+				regex = re.compile('[^a-zA-Z0-9_]')
+				clean_type = regex.sub('_', s.type)
+				clean_unit = regex.sub('_', s.unit)
+				ds_name = "_".join([ s.id, clean_type, clean_unit ])
 
 				if len(s.range) > 0:
 					ds_range = ":{0}:{1}".format(s.range[0], s.range[1])
