@@ -221,6 +221,13 @@ class Avalanche(object):
 			return
 
 				
+	def setupVirtualChannel(self, ch_id, virtual_config, sensors):
+		'''
+		Virtual channel can pull data from other channels and combine according to 
+		methods provided in the configuration.
+		'''
+		pass
+
 	def setupChannels(self):
 		'''
 		Attempt to setup channels for each hardware configuration channel found in CHDIR
@@ -232,14 +239,26 @@ class Avalanche(object):
 		for ch_config in sorted(channel_configs):
 			# read channel _config into object
 			with open(ch_config, 'r') as f:
-				ch = json.load(f)
+				try:
+					ch = json.load(f)
+				except Exception as e:
+					self._logger.error("Error loading {0} configuration file: {1}".format(ch_config, e))
+					return
 
 			# configure channel based on bus type
-			bus_type = ch['_config']['bus_type']
+			id = ch['id']
+			config = ch['_config']
+			sensors = ch['sensors']
+
+			bus_type = config['bus_type']
 
 			if bus_type == 'SPI':
-				self.setupSpiChannel(ch['id'], ch['_config'], ch['sensors'])
+				self.setupSpiChannel(id, config, sensors)
 				count = count + 1
+
+			if bus_type == 'VIRTUAL':
+				self.setupVirtualChannel(id, config, sensors)
+
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 
