@@ -226,6 +226,7 @@ class Avalanche(object):
 		Virtual channel can pull data from other channels and combine according to 
 		methods provided in the configuration.
 		'''
+		self._logger.info("Adding a virtual channel {0}".format(ch_id))
 		pass
 
 	def setupChannels(self):
@@ -256,7 +257,7 @@ class Avalanche(object):
 				self.setupSpiChannel(id, config, sensors)
 				count = count + 1
 
-			if bus_type == 'VIRTUAL':
+			elif bus_type == 'VIRTUAL':
 				self.setupVirtualChannel(id, config, sensors)
 
 			else:
