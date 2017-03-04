@@ -119,7 +119,7 @@ class Avalanche(object):
 		self._logger.info("Enable/Powerup SPI devices")
 		self.enableSequence()
 
-		self._logger.info("Setup SPI devices")
+		self._logger.info("Setup channels")
 		self.setupChannels()
 
 
@@ -226,8 +226,10 @@ class Avalanche(object):
 		Virtual channel can pull data from other channels and combine according to 
 		methods provided in the configuration.
 		'''
-		self._logger.info("Adding a virtual channel {0}".format(ch_id))
-		pass
+		self._logger.info("Configuring VIRTUAL channel {0}".format(ch_id))
+
+		self._logger.info("VIRTUAL CHANNEL ADDED: {0} with {1} sensors".format(ch_id, len(sensors)))
+
 
 	def setupChannels(self):
 		'''
@@ -259,6 +261,7 @@ class Avalanche(object):
 
 			elif bus_type == 'VIRTUAL':
 				self.setupVirtualChannel(id, config, sensors)
+				count = count + 1
 
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))

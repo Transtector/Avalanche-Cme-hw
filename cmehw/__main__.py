@@ -63,7 +63,8 @@ def main(args=None):
 				channels.append(ch)
 
 			rrd.publish(ch) # ch is current hw_ch - publish its values
-			ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
+			
+		#ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
 
 
 		# how long to finish loop?
