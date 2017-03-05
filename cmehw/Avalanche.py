@@ -334,7 +334,7 @@ class Avalanche(object):
 					continue
 
 			# configure channel based on bus type
-			id = ch_config.split('_')[0] # take id from filename
+			id = os.path.basename(ch_config).split('_')[0] # take id from filename
 			config = ch['_config']
 			sensors = ch['sensors']
 			bus_type = config['bus_type']
