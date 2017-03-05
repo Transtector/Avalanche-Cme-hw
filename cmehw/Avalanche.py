@@ -284,9 +284,10 @@ class Avalanche(object):
 						ref = src.split('.') # [ chId, sId ]
 						ch = self._Channels.get(ref[0], None)
 						if ch:
-							s = ch.get(ref[1], None)
+							s = self._Channels[ch].get(ref[1], None)
 						if s: 
-							_sources.append(s) # ref to sensor source for virtual channel
+							s_obj = self._Channels[ch].sensors[s]
+							_sources.append(s_obj) # ref to sensor source for virtual channel
 
 					if stype == 'PIB':
 						# Phase Imbalance
@@ -306,7 +307,9 @@ class Avalanche(object):
 							m = abs(Vsum - s.values[0])
 							Vmax = m if m > Vmax else Vmax
 
-						return 100 * (Vmax / Vavg) # Phase Imbalance as percentage
+						PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
+						print("PI = {0:.2f} %".format(PI))
+						return PI
 
 					else:
 						# Ch error - unknown sensor type
