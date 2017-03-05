@@ -282,9 +282,9 @@ class Avalanche(object):
 					_sources = []
 					for src in sources:
 						ref = src.split('.') # [ chId, sId ]
-						ch = self._Channels.get(ref[0], None)
+						ch = self._Channels.get(ref[0])
 						if ch:
-							s = self._Channels[ch].get(ref[1], None)
+							s = self._Channels[ch].sensors.get(ref[1])
 						if s: 
 							s_obj = self._Channels[ch].sensors[s]
 							_sources.append(s_obj) # ref to sensor source for virtual channel
