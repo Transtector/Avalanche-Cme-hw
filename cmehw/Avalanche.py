@@ -112,7 +112,7 @@ class _VirtualChannel:
 
 class Avalanche(object):
 
-	_Channels = {} # dict of _Channel
+	Channels = {} # dict of _Channel
 
 	def __init__(self):
 
@@ -243,7 +243,7 @@ class Avalanche(object):
 				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
-			self._Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
+			self.Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
 			self._logger.info("CHANNEL ADDED: {0} SPI[{1}, {2}] STPM3X device with {3} sensors.\n\n".format(ch_id, bus_index, device_index, len(_sensors)))
 
 		else:
@@ -279,35 +279,27 @@ class Avalanche(object):
 
 				def r():
 					# find and get references to the source sensors
-					_sources = []
+					_sensor_values = []
 					for src in sources:
-						print("{0}: Source {1} found for reading VIRTUAL CHANNEL".format(stype, src))
 						ref = src.split('.') # [ chId, sId ]
 						_ch = channels.get(ref[0])
 						if _ch:
 							_s = _ch.sensors.get(ref[1])
-						if _s: 
-							_sources.append(_s) # ref to sensor source for virtual channel
+						if _s and _s.values and len(_s.values) > 1 and _s.values[0] and len(_s.values[0]) > 1:
+							val = _s.values[0][1]
+							print("PIB: {0}.{1} sensor value found: {2}".format(_ch.id, _s.id, val))
+							_sensor_values.append(val)
 					
 					if stype == 'PIB':
 						# Phase Imbalance
-						if not _sources:
+						if not _sensor_values:
 							print("ERROR: Found no source sensors to calculate phase imbalance.")
 							return 0
 
 						# Many references for this calculation, but here I'm going
 						# to use the maximum difference from average Vrms to calculate
 						Vsum = 0
-						sensor_values = []
-						for _s in _sources:
-							if _s.values and len(_s.values) > 1 and _s.values[0] and len(_s.values[0]) > 1:
-								val = _s.values[0][1]
-								print("PIB: {0}.{1} sensor value found: {2}".format(_ch.id, _s.id, val))
-								sensor_values.append(val)
-							else:
-								val = 0
-								print("PIB: {0}.{1} sensor value NOT found".format(_ch.id, _s.id))
-								sensor_values.append(val)
+						for _s in _sensor_values:
 							Vsum = Vsum + val
 						Vavg = Vsum / len(_sources)  # RMS average of the phases
 
@@ -331,10 +323,10 @@ class Avalanche(object):
 				return r
 
 			# Add the sensor the the _sensors for the Channel
-			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(self._Channels, s_sources, s_type))
+			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(self.Channels, s_sources, s_type))
 			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
 
-		self._Channels[ch_id] = _VirtualChannel(ch_id, ch_rra, False, _sensors)
+		self.Channels[ch_id] = _VirtualChannel(ch_id, ch_rra, False, _sensors)
 		self._logger.info("CHANNEL ADDED: {0} VIRTUAL with {1} sensors.\n\n".format(ch_id, len(_sensors)))
 
 
@@ -375,8 +367,8 @@ class Avalanche(object):
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 
 		self._logger.info("Done setting up {0} channels:".format(count))
-		for ch in sorted(self._Channels):
-			self._logger.info("\t{0}: {1}".format(ch, self._Channels[ch]))
+		for ch in sorted(self.Channels):
+			self._logger.info("\t{0}: {1}".format(ch, self.Channels[ch]))
 
 
 	def updateChannels(self):
@@ -385,13 +377,13 @@ class Avalanche(object):
 		'''
 		self.tick = self.syncSensors()
 		
-		for ch in self._Channels.values():
+		for ch in self.Channels.values():
 			# update sensor values
 			if not ch.error:
 				for s in ch.sensors.values():
 					s.read(self.tick)
 
-		return self._Channels
+		return self.Channels
 
 
 	def syncSensors(self):

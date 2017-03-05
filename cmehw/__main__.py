@@ -25,33 +25,16 @@ def main(args=None):
 
 	rrd = RRD() # round-robin database - stores channel data
 
-	channels = {} # transducer channels cache
-
 	print("\n ---")
 
 	while(True):
 		start_time = time.time() # start of loop
 
-		# Show Loop operation via Heartbeat LED
-		#avalanche.ledToggle(5)
-
-		# start polling update by marking all channels stale
-		for ch in channels:
-			ch.stale = True
-
 		# The updateChannels() call on the avalanche object
 		# updates all channels' sensor values to the latest readings.
-		for hw_ch in avalanche.updateChannels():
-			# cache channel for each hardware channel found
-			if not hw_ch in channels:
-				channels[hw_ch] = avalanche._Channels[hw_ch]
-
-			ch = channels[hw_ch]
-			ch.stale = False
-			rrd.publish(ch) # ch is current hw_ch - publish its values
+		for ch in avalanche.updateChannels():
+			rrd.publish(avalanche.Channels[ch])
 			
-		# TODO: remove stale channels (for pluggable support)
-
 		#ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
 
 		# how long to finish loop?
