@@ -300,8 +300,8 @@ class Avalanche(object):
 						sensor_value = s.values[0][1]
 
 						if not sensor_value:
-							print("ERROR: Invalid sensor value, cannot calculate phase imbalance.")
-							return None
+							print("ERROR: Invalid sensor value returning 0 phase imbalance.")
+							return 0
 
 
 						# Many references for this calculation, but here I'm going
@@ -310,6 +310,9 @@ class Avalanche(object):
 						for s in _sources:
 							Vsum = Vsum + sensor_value
 						Vavg = Vsum / len(_sources)  # RMS average of the phases
+
+						if Vavg == 0:
+							return 0 # avoid div by zero
 
 						Vmax = 0
 						for s in _sources:
