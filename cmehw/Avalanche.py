@@ -279,8 +279,8 @@ class Avalanche(object):
 				
 				if stype == 'PIB':
 					# Phase Imbalance
-					if not _sensor_values:
-						print("ERROR: Found no source sensors to calculate phase imbalance.")
+					if not _sensor_values or len(_sensor_values) < 3:
+						print("ERROR: Not enough source sensor values to calculate phase imbalance.")
 						return 0
 
 					# Many references for this calculation, but here I'm going
