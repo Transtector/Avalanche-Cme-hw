@@ -199,8 +199,8 @@ class Avalanche(object):
 
 			for i, s in enumerate(sensors):
 
-				s_config = s['_config'].copy()
-				s_id = s_config.get('id', i)
+				s_id = s_config['id']
+				s_config = s['_config']
 
 				# There are some constraints on the sensor type and units as these strings
 				# are used to construct the RRD data stream attributes.  For now, we have
@@ -255,17 +255,16 @@ class Avalanche(object):
 		_sensors = {} # added to Channels as a dict
 		for i, s in enumerate(sensors):
 
-			s_config = s['_config'].copy()
-
-			s_id = s.get('id', i)
+			s_id = s['id'] # required id
+			s_config = s['_config']
 			s_type = s_config['type']
 			s_units = s_config['units'] # % - but will not be used in DS name
-			s_range = s_config.get('range', [])
+			s_range = s_config['range']
 
 			# Virtual channel sensors can combine the values from other
 			# channels (configured from sources) depending on the type
 			# set for the sensor.
-			s_sources = s_config.get('sources', []) # [ chId.sId, ...]
+			s_sources = s_config['sources'] # [ chId.sId, ...]
 
 			# The STPM3X sensor read function as a closure to
 			# capture register, scale, and threshold config
