@@ -309,7 +309,7 @@ class Avalanche(object):
 
 						Vmax = 0
 						for _s in _sensor_values:
-							m = abs(Vsum - sensor_value)
+							m = abs(Vsum - _s)
 							Vmax = m if m > Vmax else Vmax
 
 						PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
