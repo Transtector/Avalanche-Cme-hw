@@ -238,7 +238,7 @@ class Avalanche(object):
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
 			self._Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, stpm3x.error, _sensors)
-			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.\n\n".format(bus_index, device_index, len(_sensors)))
+			self._logger.info("CHANNEL ADDED: {0} SPI[{1}, {2}] STPM3X device with {3} sensors.\n\n".format(ch_id, bus_index, device_index, len(_sensors)))
 
 		else:
 			self._logger.error("SPI channel setup unknown device type {0}".format(device_type))
@@ -313,7 +313,7 @@ class Avalanche(object):
 			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
 
 		self._Channels[ch_id] = _VirtualChannel(ch_id, False, _sensors)
-		self._logger.info("CHANNEL ADDED: VIRTUAL with {0} sensors.\n\n".format(len(_sensors)))
+		self._logger.info("CHANNEL ADDED: {0} VIRTUAL with {1} sensors.\n\n".format(ch_id, len(_sensors)))
 
 
 	def setupChannels(self):
@@ -331,10 +331,10 @@ class Avalanche(object):
 					ch = json.load(f)
 				except Exception as e:
 					self._logger.error("Error loading {0} configuration file: {1}".format(ch_config, e))
-					return
+					continue
 
 			# configure channel based on bus type
-			id = ch['id']
+			id = ch_config.split('_')[0] # take id from filename
 			config = ch['_config']
 			sensors = ch['sensors']
 			bus_type = config['bus_type']
