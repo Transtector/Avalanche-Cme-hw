@@ -248,7 +248,7 @@ class Avalanche(object):
 			# Virtual channel sensors can combine the values from other
 			# channels (configured from sources) depending on the type
 			# set for the sensor.
-			s_sources - s_config.get('sources', []) # [ chId.sId, ...]
+			s_sources = s_config.get('sources', []) # [ chId.sId, ...]
 
 			# The STPM3X sensor read function as a closure to
 			# capture register, scale, and threshold config
