@@ -82,6 +82,7 @@ class _Channel:
 		self.bus_index = bus_index
 		self.bus_device_index = bus_device_index
 		self.rra = rra
+		self.stale = False
 		self.error = error
 		self.sensors = sensors
 
@@ -97,6 +98,7 @@ class _VirtualChannel:
 	def __init__(self, id, rra, error, sensors):
 		self.id = id
 		self.rra = rra
+		self.stale = False
 		self.error = error
 		self.sensors = sensors
 
@@ -276,16 +278,16 @@ class Avalanche(object):
 			def s_read(channels, sources, stype):
 
 				def r():
-					# find the source sensors
+					# find and get references to the source sensors
 					_sources = []
 					for src in sources:
 						print("{0}: Source {1} found for reading VIRTUAL CHANNEL".format(stype, src))
 						ref = src.split('.') # [ chId, sId ]
-						ch = channels.get(ref[0])
-						if ch:
-							s = ch.sensors.get(ref[1])
-						if s: 
-							_sources.append(s) # ref to sensor source for virtual channel
+						_ch = channels.get(ref[0])
+						if _ch:
+							_s = _ch.sensors.get(ref[1])
+						if _s: 
+							_sources.append(_s) # ref to sensor source for virtual channel
 					
 					if stype == 'PIB':
 						# Phase Imbalance
@@ -297,14 +299,14 @@ class Avalanche(object):
 						# to use the maximum difference from average Vrms to calculate
 						Vsum = 0
 						sensor_values = []
-						for s in _sources:
-							if s.values and len(s.values) > 1 and s.values[0] and len(s.values[0]) > 1:
-								val = s.values[0][1]
-								print("PIB: {0}.{1} sensor value found: {2}".format(ch.id, s.id, val))
+						for _s in _sources:
+							if _s.values and len(_s.values) > 1 and _s.values[0] and len(_s.values[0]) > 1:
+								val = _s.values[0][1]
+								print("PIB: {0}.{1} sensor value found: {2}".format(_ch.id, _s.id, val))
 								sensor_values.append(val)
 							else:
 								val = 0
-								print("PIB: {0}.{1} sensor value NOT found".format(ch.id, s.id))
+								print("PIB: {0}.{1} sensor value NOT found".format(_ch.id, _s.id))
 								sensor_values.append(val)
 							Vsum = Vsum + val
 						Vavg = Vsum / len(_sources)  # RMS average of the phases
@@ -314,17 +316,17 @@ class Avalanche(object):
 							return 0 # avoid div by zero
 
 						Vmax = 0
-						for s in _sources:
+						for _s in _sources:
 							m = abs(Vsum - sensor_value)
 							Vmax = m if m > Vmax else Vmax
 
 						PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
-						print("PI = {0:.2f} %".format(PI))
+						print("\n\tPI = {0:.2f} %\n".format(PI))
 						return PI
 
 					else:
-						# Ch error - unknown sensor type
-						return
+						print("ERROR: Unknown virtual channel type: {0}".format(stype))
+						return 0
 
 				return r
 
