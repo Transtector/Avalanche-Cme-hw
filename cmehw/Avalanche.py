@@ -290,20 +290,27 @@ class Avalanche(object):
 					if stype == 'PIB':
 						# Phase Imbalance
 						if not _sources:
-							print("ERROR: found no source sensors to calculate phase imbalance.")
+							print("ERROR: Found no source sensors to calculate phase imbalance.")
 							return 0
 
 						# Many references for this calculation, but here I'm going
 						# to use the maximum difference from average Vrms to calculate
 						Vsum = 0
+						sensor_values = []
 						for s in _sources:
-							print("PIB: reading {0}.{1} for phase imbalance".format(ch.id, s.id))
-							sensor_value = s.values and s.values[0][1] or 0
-
-							Vsum = Vsum + sensor_value
+							if s.values and len(s.values) > 1:
+								val = s.values[0][1]
+								print("PIB: {0}.{1} sensor value found: {2}".format(ch.id, s.id, val))
+								sensor_values.append(val)
+							else:
+								val = 0
+								print("PIB: {0}.{1} sensor value NOT found".format(ch.id, s.id))
+								sensor_values.append(val)
+							Vsum = Vsum + val
 						Vavg = Vsum / len(_sources)  # RMS average of the phases
 
 						if Vavg == 0:
+							print("PIB: Voltage average is zero cannot calculate phase imbalance")
 							return 0 # avoid div by zero
 
 						Vmax = 0
