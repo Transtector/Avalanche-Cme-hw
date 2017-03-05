@@ -191,6 +191,19 @@ class Avalanche(object):
 		spi.open(bus_index, 0)
 		spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
 
+		# The STPM3X sensor read function as a closure to
+		# capture register, scale, and threshold config
+		def stpm3x_read(sensorId, device, register, scale, threshold):
+
+			def r():
+				self.selectSensor(device)
+				v = stpm3x.read(register, threshold) * scale
+				print("\tREAD {0}.{1}: reg {2} (scale: {3}, threshold: {4}) = {5}".format(ch_id, sensor_id, register, scale, threshold, v))
+				return v
+
+			return r
+
+
 		# configure based on device type
 		if device_type == 'STPM3X':
 
@@ -227,20 +240,8 @@ class Avalanche(object):
 				s_scale = s_config['scale']
 				s_threshold = s_config.get('threshold', None)
 
-				# The STPM3X sensor read function as a closure to
-				# capture register, scale, and threshold config
-				def s_read(device, register, scale, threshold):
-
-					def r():
-						self.selectSensor(device)
-						v = stpm3x.read(register, threshold) * scale
-						#print("\t{0} (scale: {1}, threshold: {2}) = {3}".format(register, scale, threshold, v))
-						return v
-
-					return r
-
 				# Add the sensor the the _sensors for the Channel
-				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold))
+				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, stpm3x_read(s_id, device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
 			self.Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
@@ -299,7 +300,7 @@ class Avalanche(object):
 						Vmax = m if m > Vmax else Vmax
 
 					PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
-					print("\n\tPI = {0:.2f} %\n".format(PI))
+					print("\n\tPI [ {0:.2f}, {1:.2f}. {2:.2f} ] = {3:.2f} %\n".format(_sensor_values[0], _sensor_values[1], _sensor_values[2], PI))
 					return PI
 
 				else:
