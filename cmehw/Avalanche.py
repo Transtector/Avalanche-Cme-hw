@@ -199,7 +199,7 @@ class Avalanche(object):
 
 			for i, s in enumerate(sensors):
 
-				s_id = s_config['id']
+				s_id = s['id']
 				s_config = s['_config']
 
 				# There are some constraints on the sensor type and units as these strings
