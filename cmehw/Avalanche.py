@@ -198,7 +198,7 @@ class Avalanche(object):
 			def r():
 				self.selectSensor(device)
 				v = stpm3x.read(register, threshold) * scale
-				print("\tREAD {0}.{1}: reg {2} (scale: {3}, threshold: {4}) = {5}".format(ch_id, sensor_id, register, scale, threshold, v))
+				#print("\tREAD {0}.{1}: reg {2} (scale: {3}, threshold: {4}) = {5}".format(ch_id, sensor_id, register, scale, threshold, v))
 				return v
 
 			return r
