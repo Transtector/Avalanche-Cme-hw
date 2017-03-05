@@ -273,16 +273,15 @@ class Avalanche(object):
 			# set for the sensor.
 			s_sources = s_config['sources'] # [ chId.sId, ...]
 
-			# The STPM3X sensor read function as a closure to
-			# capture register, scale, and threshold config
-			def s_read(sources, stype):
-				def r():
+			def s_read(channels, sources, stype):
 
+				def r():
 					# find the source sensors
 					_sources = []
 					for src in sources:
+						print("{0}: Source {1} found for reading VIRTUAL CHANNEL".format(stype, src))
 						ref = src.split('.') # [ chId, sId ]
-						ch = self._Channels.get(ref[0])
+						ch = channels.get(ref[0])
 						if ch:
 							s = ch.sensors.get(ref[1])
 						if s: 
@@ -292,22 +291,15 @@ class Avalanche(object):
 						# Phase Imbalance
 						if not _sources:
 							print("ERROR: found no source sensors to calculate phase imbalance.")
-							return
-
-						for s in _sources:
-							print("PIB: reading {0}.{1} for phase imbalance".format(ch.id, s.id))
-
-						if s.values and s.values[0][1]:
-							sensor_value = s.values[0][1]
-						else:
-							print("ERROR: Invalid sensor value from {0}.{1} - returning 0 phase imbalance.".format(ch.id, s.id))
 							return 0
-
 
 						# Many references for this calculation, but here I'm going
 						# to use the maximum difference from average Vrms to calculate
 						Vsum = 0
 						for s in _sources:
+							print("PIB: reading {0}.{1} for phase imbalance".format(ch.id, s.id))
+							sensor_value = s.values and s.values[0][1] or 0
+
 							Vsum = Vsum + sensor_value
 						Vavg = Vsum / len(_sources)  # RMS average of the phases
 
@@ -330,7 +322,7 @@ class Avalanche(object):
 				return r
 
 			# Add the sensor the the _sensors for the Channel
-			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(s_sources, s_type))
+			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(self._Channels, s_sources, s_type))
 			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
 
 		self._Channels[ch_id] = _VirtualChannel(ch_id, ch_rra, False, _sensors)
