@@ -85,7 +85,7 @@ class _Channel:
 		self.sensors = sensors
 
 	def __repr__(self):
-		s = "Channel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
+		s = "Channel {0} has {1} sensors".format(self.id, len(self.sensors))
 		for k, v in self.sensors.items():
 			s += "\n\t{0}".format(repr(v))
 		return s
@@ -99,7 +99,7 @@ class _VirtualChannel:
 		self.sensors = sensors
 
 	def __repr__(self):
-		s = "VirtualChannel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
+		s = "VirtualChannel {0} has {1} sensors".format(self.id, len(self.sensors))
 		for k, v in self.sensors.items():
 			s += "\n\t{0}".format(repr(v))
 		return s
