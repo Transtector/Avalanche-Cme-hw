@@ -260,6 +260,54 @@ class Avalanche(object):
 
 		ch_rra = virtual_config['rra']
 
+		# defines the function called when sensors are read
+		def s_read(channels, sources, stype):
+
+			def r():
+				# find and get references to the source sensors
+				_sensor_values = []
+				for src in sources:
+					ref = src.split('.') # [ chId, sId ]
+					_ch = channels.get(ref[0])
+					if _ch:
+						_s = _ch.sensors.get(ref[1])
+					if _s and _s.values and len(_s.values) > 1 and _s.values[0] and len(_s.values[0]) > 1:
+						val = _s.values[0][1]
+						#print("{0}: {1}.{2} sensor value found: {3}".format(stype, _ch.id, _s.id, val))
+						_sensor_values.append(val)
+				
+				if stype == 'PIB':
+					# Phase Imbalance
+					if not _sensor_values:
+						print("ERROR: Found no source sensors to calculate phase imbalance.")
+						return 0
+
+					# Many references for this calculation, but here I'm going
+					# to use the maximum difference from average Vrms to calculate
+					Vsum = 0
+					for _s in _sensor_values:
+						Vsum = Vsum + val
+					Vavg = Vsum / len(_sensor_values)  # RMS average of the phases
+
+					if Vavg == 0:
+						#print("PIB: Voltage average is zero cannot calculate phase imbalance")
+						return 0 # avoid div by zero
+
+					Vmax = 0
+					for _s in _sensor_values:
+						m = abs(Vsum - _s)
+						Vmax = m if m > Vmax else Vmax
+
+					PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
+					print("\n\tPI = {0:.2f} %\n".format(PI))
+					return PI
+
+				else:
+					print("ERROR: Unknown virtual channel type: {0}".format(stype))
+					return 0
+
+			return r
+
 		_sensors = {} # added to Channels as a dict
 		for i, s in enumerate(sensors):
 
@@ -274,53 +322,6 @@ class Avalanche(object):
 			# channels (configured from sources) depending on the type
 			# set for the sensor.
 			s_sources = s_config['sources'] # [ chId.sId, ...]
-
-			def s_read(channels, sources, stype):
-
-				def r():
-					# find and get references to the source sensors
-					_sensor_values = []
-					for src in sources:
-						ref = src.split('.') # [ chId, sId ]
-						_ch = channels.get(ref[0])
-						if _ch:
-							_s = _ch.sensors.get(ref[1])
-						if _s and _s.values and len(_s.values) > 1 and _s.values[0] and len(_s.values[0]) > 1:
-							val = _s.values[0][1]
-							print("PIB: {0}.{1} sensor value found: {2}".format(_ch.id, _s.id, val))
-							_sensor_values.append(val)
-					
-					if stype == 'PIB':
-						# Phase Imbalance
-						if not _sensor_values:
-							print("ERROR: Found no source sensors to calculate phase imbalance.")
-							return 0
-
-						# Many references for this calculation, but here I'm going
-						# to use the maximum difference from average Vrms to calculate
-						Vsum = 0
-						for _s in _sensor_values:
-							Vsum = Vsum + val
-						Vavg = Vsum / len(_sensor_values)  # RMS average of the phases
-
-						if Vavg == 0:
-							print("PIB: Voltage average is zero cannot calculate phase imbalance")
-							return 0 # avoid div by zero
-
-						Vmax = 0
-						for _s in _sensor_values:
-							m = abs(Vsum - _s)
-							Vmax = m if m > Vmax else Vmax
-
-						PI = 100 * (Vmax / Vavg) # Phase Imbalance as percentage
-						print("\n\tPI = {0:.2f} %\n".format(PI))
-						return PI
-
-					else:
-						print("ERROR: Unknown virtual channel type: {0}".format(stype))
-						return 0
-
-				return r
 
 			# Add the sensor the the _sensors for the Channel
 			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(self.Channels, s_sources, s_type))
