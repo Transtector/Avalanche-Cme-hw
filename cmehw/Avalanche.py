@@ -299,7 +299,7 @@ class Avalanche(object):
 
 						sensor_value = s.values[0][1]
 
-						if not sensors_value:
+						if not sensor_value:
 							print("ERROR: Invalid sensor value, cannot calculate phase imbalance.")
 							return None
 
