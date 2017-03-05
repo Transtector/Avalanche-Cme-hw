@@ -301,14 +301,14 @@ class Avalanche(object):
 						Vsum = 0
 						for _s in _sensor_values:
 							Vsum = Vsum + val
-						Vavg = Vsum / len(_sources)  # RMS average of the phases
+						Vavg = Vsum / len(_sensor_values)  # RMS average of the phases
 
 						if Vavg == 0:
 							print("PIB: Voltage average is zero cannot calculate phase imbalance")
 							return 0 # avoid div by zero
 
 						Vmax = 0
-						for _s in _sources:
+						for _s in _sensor_values:
 							m = abs(Vsum - sensor_value)
 							Vmax = m if m > Vmax else Vmax
 
