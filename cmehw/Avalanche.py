@@ -298,7 +298,7 @@ class Avalanche(object):
 						Vsum = 0
 						sensor_values = []
 						for s in _sources:
-							if s.values and len(s.values) > 1 and len(s.values[0]) > 1:
+							if s.values and len(s.values) > 1 and s.values[0] and len(s.values[0]) > 1:
 								val = s.values[0][1]
 								print("PIB: {0}.{1} sensor value found: {2}".format(ch.id, s.id, val))
 								sensor_values.append(val)
