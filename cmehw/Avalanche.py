@@ -284,15 +284,18 @@ class Avalanche(object):
 						ref = src.split('.') # [ chId, sId ]
 						ch = self._Channels.get(ref[0])
 						if ch:
-							s = self._Channels[ch].sensors.get(ref[1])
+							s = ch.sensors.get(ref[1])
 						if s: 
-							s_obj = self._Channels[ch].sensors[s]
-							_sources.append(s_obj) # ref to sensor source for virtual channel
-
+							_sources.append(s) # ref to sensor source for virtual channel
+					
 					if stype == 'PIB':
 						# Phase Imbalance
 						if not _sources:
+							print("ERROR: found no source sensors to calculate phase imbalance!")
 							return
+
+						for s in _sources:
+							print("PIB: reading {0}.{1} for phase imbalance".format(ch.id, s.id))
 
 						# Many references for this calculation, but here I'm going
 						# to use the maximum difference from average Vrms to calculate
