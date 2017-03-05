@@ -76,11 +76,12 @@ class _Sensor:
 
 
 class _Channel:
-	def __init__(self, id, bus_type, bus_index, bus_device_index, error, sensors):
+	def __init__(self, id, bus_type, bus_index, bus_device_index, rra, error, sensors):
 		self.id = id
 		self.bus_type = bus_type
 		self.bus_index = bus_index
 		self.bus_device_index = bus_device_index
+		self.rra = rra
 		self.error = error
 		self.sensors = sensors
 
@@ -93,8 +94,9 @@ class _Channel:
 
 
 class _VirtualChannel:
-	def __init__(self, id, error, sensors):
+	def __init__(self, id, rra, error, sensors):
 		self.id = id
+		self.rra = rra
 		self.error = error
 		self.sensors = sensors
 
@@ -179,6 +181,8 @@ class Avalanche(object):
 		bus_index = spi_config['bus_index']
 		device_type = spi_config['device_type']
 		device_index = spi_config['device_index']
+
+		ch_rra = spi_config['rra']
 		
 		# configure SPI bus
 		spi = spidev.SpiDev()
@@ -237,7 +241,7 @@ class Avalanche(object):
 				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
-			self._Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, stpm3x.error, _sensors)
+			self._Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
 			self._logger.info("CHANNEL ADDED: {0} SPI[{1}, {2}] STPM3X device with {3} sensors.\n\n".format(ch_id, bus_index, device_index, len(_sensors)))
 
 		else:
@@ -252,10 +256,13 @@ class Avalanche(object):
 		'''
 		self._logger.info("Configuring VIRTUAL channel {0}".format(ch_id))
 
+		ch_rra = virtual_config['rra']
+
 		_sensors = {} # added to Channels as a dict
 		for i, s in enumerate(sensors):
 
 			s_id = s['id'] # required id
+
 			s_config = s['_config']
 			s_type = s_config['type']
 			s_units = s_config['units'] # % - but will not be used in DS name
@@ -311,7 +318,7 @@ class Avalanche(object):
 			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(s_sources, s_type))
 			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
 
-		self._Channels[ch_id] = _VirtualChannel(ch_id, False, _sensors)
+		self._Channels[ch_id] = _VirtualChannel(ch_id, ch_rra, False, _sensors)
 		self._logger.info("CHANNEL ADDED: {0} VIRTUAL with {1} sensors.\n\n".format(ch_id, len(_sensors)))
 
 
@@ -353,8 +360,8 @@ class Avalanche(object):
 
 		self._logger.info("Done setting up {0} channels".format(count))
 
-		for k, v in self._Channels.items():
-			print("\n{0}: {1}".format(k, repr(v)))
+		for ch in sorted(self._Channels):
+			print("\n{0}: {1}".format(ch, self._Channels[ch]))
 
 
 	def updateChannels(self):
@@ -363,10 +370,10 @@ class Avalanche(object):
 		'''
 		self.tick = self.syncSensors()
 		
-		for chId, ch in self._Channels:
+		for ch in self._Channels.values():
 			# update sensor values
 			if not ch.error:
-				for sId, s in ch.sensors:
+				for s in ch.sensors.values():
 					s.read(self.tick)
 
 		return self._Channels

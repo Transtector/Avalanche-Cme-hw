@@ -168,7 +168,7 @@ class RRD():
 			ch_rrd = channel.id + '_' + str(int(time.time())) + '.rrd'
 
 			DS = []
-			for s in channel.sensors:
+			for k, s in channel.sensors.items():
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
 				
@@ -188,7 +188,11 @@ class RRD():
 				DS.append(ds)
 				self._logger.info("\tRRD sensor DS added {0}".format(ds))
 
+			RRA = []
+			for rra in channel.rra.values():
+				RRA.append(rra)
 
+			'''
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
 			RRA = [ 
 				# live - every point for 15 minutes (3600 points/hour, 900 points/15 min)
@@ -214,6 +218,7 @@ class RRD():
 				"RRA:MIN:0.5:1d:{:d}".format( 1 * 365 ),
 				"RRA:MAX:0.5:1d:{:d}".format( 1 * 365 )
 			]
+			'''
 
 			# Note: be careful here - the last argment here *(DS + RRA) requires a
 			# list of str.  Loading configs from file that make their way here can
@@ -227,7 +232,7 @@ class RRD():
 			ch_rrd = os.path.basename(ch_rrd)
 
 		# Create the update argument for the channel's RRD
-		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.values[0][1]) for s in channel.sensors ])
+		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.values[0][1]) for s in channel.sensors.values() ])
 
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
 

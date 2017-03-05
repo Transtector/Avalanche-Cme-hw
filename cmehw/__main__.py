@@ -25,7 +25,7 @@ def main(args=None):
 
 	rrd = RRD() # round-robin database - stores channel data
 
-	channels = [] # transducer channels 
+	channels = {} # transducer channels cache
 
 	print("\n ---")
 
@@ -39,33 +39,20 @@ def main(args=None):
 		for ch in channels:
 			ch.stale = True
 
-		# The updateSpiChannels() call on the avalanche object
+		# The updateChannels() call on the avalanche object
 		# updates all channels' sensor values to the latest readings.
-		for i, hw_ch in enumerate(avalanche.updateChannels()):
-			# create or update a channel for each hardware channel found
-			found = False
+		for hw_ch in avalanche.updateChannels():
+			# cache channel for each hardware channel found
+			if not hw_ch in channels:
+				channels[hw_ch] = avalanche._Channels[hw_ch]
 
-			# search channels cache for each hw_ch enumerated
-			for ch in channels:
-				# search current channels for hw_ch and clear
-				# stale flag if found
-				if id(ch) == id(hw_ch):
-					# id() returns unique memory location of object
-					# so works for checking equality
-					found = True
-					ch.stale = False
-					break # break the loop leaving ch == current hw_ch
-
-			if not found:
-				# append the hw_ch as a new channel
-				ch = hw_ch
-				ch.stale = False
-				channels.append(ch)
-
+			ch = channels[hw_ch]
+			ch.stale = False
 			rrd.publish(ch) # ch is current hw_ch - publish its values
 			
-		#ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
+		# TODO: remove stale channels (for pluggable support)
 
+		#ProcessAlarms(ch) # check channel for alarms - i.e., value crossed threshold
 
 		# how long to finish loop?
 		process_time = time.time() - start_time
