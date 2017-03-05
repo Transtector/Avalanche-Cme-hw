@@ -193,7 +193,7 @@ class Avalanche(object):
 
 		# The STPM3X sensor read function as a closure to
 		# capture register, scale, and threshold config
-		def stpm3x_read(sensorId, device, register, scale, threshold):
+		def stpm3x_read(sensor_id, device, register, scale, threshold):
 
 			def r():
 				self.selectSensor(device)
