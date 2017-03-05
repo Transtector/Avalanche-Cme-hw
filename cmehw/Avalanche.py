@@ -70,6 +70,10 @@ class _Sensor:
 		self.values.pop() # remove oldest
 		return value
 
+	def __repr__(self):
+		s = "Sensor {0} type: {1}, unit: {2}, range: {3}".format(self.id, self.type, self.unit, self.range)
+		return s
+
 
 class _Channel:
 	def __init__(self, id, bus_type, bus_index, bus_device_index, error, sensors):
@@ -80,12 +84,25 @@ class _Channel:
 		self.error = error
 		self.sensors = sensors
 
+	def __repr__(self):
+		s = "Channel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
+		for k, v in self.sensors.items():
+			s += "\n{0}".format(repr(v))
+		return s
+
+
 
 class _VirtualChannel:
 	def __init__(self, id, error, sensors):
 		self.id = id
 		self.error = error
 		self.sensors = sensors
+
+	def __repr__(self):
+		s = "VirtualChannel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
+		for k, v in self.sensors.items():
+			s += "\n{0}".format(repr(v))
+		return s
 
 
 
@@ -335,6 +352,9 @@ class Avalanche(object):
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 
 		self._logger.info("Done setting up {0} channels".format(count))
+
+		for k, v in self._Channels.items():
+			print("{0}: {1}".format(k, repr(v)))
 
 
 	def updateChannels(self):
