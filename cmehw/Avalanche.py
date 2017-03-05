@@ -87,7 +87,7 @@ class _Channel:
 	def __repr__(self):
 		s = "Channel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
 		for k, v in self.sensors.items():
-			s += "\n{0}".format(repr(v))
+			s += "\n\t{0}".format(repr(v))
 		return s
 
 
@@ -101,7 +101,7 @@ class _VirtualChannel:
 	def __repr__(self):
 		s = "VirtualChannel {0} ({1}) has {2} sensors".format(self.id, self.error, len(self.sensors))
 		for k, v in self.sensors.items():
-			s += "\n{0}".format(repr(v))
+			s += "\n\t{0}".format(repr(v))
 		return s
 
 
@@ -353,8 +353,8 @@ class Avalanche(object):
 
 		self._logger.info("Done setting up {0} channels".format(count))
 
-		for k, v in self._Channels.items():
-			print("{0}: {1}".format(k, repr(v)))
+		for k, v in sorted(self._Channels.items(), key=lambda x: x.id):
+			print("\n{0}: {1}".format(k, repr(v)))
 
 
 	def updateChannels(self):
