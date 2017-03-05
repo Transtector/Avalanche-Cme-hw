@@ -175,8 +175,8 @@ class RRD():
 				# NOTE: from rrdtool.org that ds_name must be from 1 to
 				# 19 characters long in the characters [a-zA-Z0-9_].
 				regex = re.compile('[^a-zA-Z0-9_]')
-				clean_type = regex.sub('_', s.type)
-				clean_unit = regex.sub('_', s.unit)
+				clean_type = regex.sub('_', s.type)[:3]
+				clean_unit = regex.sub('_', s.unit)[:3]
 				ds_name = "_".join([ s.id, clean_type, clean_unit ])
 
 				if len(s.range) > 0:

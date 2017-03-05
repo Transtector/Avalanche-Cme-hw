@@ -11,7 +11,6 @@ from .common import Config
 # load the STPM3X module and import Stpm3x class
 from .STPM3X import Stpm3x
 
-
 # GPIO assignments
 AVALANCHE_GPIO_SENSOR_POWER     = 5
 AVALANCHE_GPIO_ISOLATE_SPI_BUS  = 6
@@ -50,6 +49,7 @@ CHDIR = Config.CHDIR
 
 BUFFER_POINTS = Config.BUFFER_POINTS
 
+
 class _Sensor:
 	def __init__(self, id, sensor_type, unit, sensor_range, read_function):
 		self.id = id
@@ -81,10 +81,17 @@ class _Channel:
 		self.sensors = sensors
 
 
+class _VirtualChannel:
+	def __init__(self, id, error, sensors):
+		self.id = id
+		self.error = error
+		self.sensors = sensors
+
+
+
 class Avalanche(object):
 
-	_Channels = [] # list of _Channel
-
+	_Channels = {} # dict of _Channel
 
 	def __init__(self):
 
@@ -171,11 +178,12 @@ class Avalanche(object):
 			stpm3x = Stpm3x(spi, spi_config)
 
 			# Construct a list of sensors for which we have configuration objects (passed in on sensors)
-			_sensors = []
+			_sensors = {}
 
 			for i, s in enumerate(sensors):
 
 				s_config = s['_config'].copy()
+				s_id = s_config.get('id', i)
 
 				# There are some constraints on the sensor type and units as these strings
 				# are used to construct the RRD data stream attributes.  For now, we have
@@ -209,11 +217,10 @@ class Avalanche(object):
 					return r
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors.append(_Sensor('s' + str(i), s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold)))
-
+				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
-			self._Channels.append(_Channel(ch_id, "SPI", bus_index, device_index, stpm3x.error, _sensors))
+			self._Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, stpm3x.error, _sensors)
 			self._logger.info("CHANNEL ADDED: SPI[{0}, {1}] STPM3X device with {2} sensors.".format(bus_index, device_index, len(_sensors)))
 
 		else:
@@ -228,7 +235,68 @@ class Avalanche(object):
 		'''
 		self._logger.info("Configuring VIRTUAL channel {0}".format(ch_id))
 
-		self._logger.info("VIRTUAL CHANNEL ADDED: {0} with {1} sensors".format(ch_id, len(sensors)))
+		_sensors = {} # added to Channels as a dict
+		for i, s in enumerate(sensors):
+
+			s_config = s['_config'].copy()
+
+			s_id = s.get('id', i)
+			s_type = s_config['type']
+			s_units = s_config['units'] # % - but will not be used in DS name
+			s_range = s_config.get('range', [])
+
+			# Virtual channel sensors can combine the values from other
+			# channels (configured from sources) depending on the type
+			# set for the sensor.
+			s_sources - s_config.get('sources', []) # [ chId.sId, ...]
+
+			# The STPM3X sensor read function as a closure to
+			# capture register, scale, and threshold config
+			def s_read(sources, stype):
+				def r():
+
+					# find the source sensors
+					_sources = []
+					for src in sources:
+						ref = src.split('.') # [ chId, sId ]
+						ch = self._Channels.get(ref[0], None)
+						if ch:
+							s = ch.get(ref[1], None)
+						if s: 
+							_sources.append(s) # ref to sensor source for virtual channel
+
+					if stype == 'PIB':
+						# Phase Imbalance
+						if not _sources:
+							return
+
+						# Many references for this calculation, but here I'm going
+						# to use the maximum difference from average Vrms to calculate
+						# 
+						Vsum = 0
+						for s in _sources:
+							Vsum = Vsum + s.values[0]
+						Vavg = Vsum / len(_sources)  # RMS average of the phases
+
+						Vmax = 0
+						for s in _sources:
+							m = abs(Vsum - s.values[0])
+							Vmax = m if m > Vmax else Vmax
+
+						return 100 * (Vmax / Vavg) # Phase Imbalance as percentage
+
+					else:
+						# Ch error - unknown sensor type
+						return
+
+				return r
+
+			# Add the sensor the the _sensors for the Channel
+			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(s_sources, s_type))
+			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
+
+		self._Channels[ch_id] = _VirtualChannel(ch_id, False, _sensors)
+		self._logger.info("CHANNEL ADDED: VIRTUAL with {0} sensors.".format(len(_sensors)))
 
 
 	def setupChannels(self):
@@ -275,10 +343,10 @@ class Avalanche(object):
 		'''
 		self.tick = self.syncSensors()
 		
-		for ch in self._Channels:
+		for chId, ch in self._Channels:
 			# update sensor values
 			if not ch.error:
-				for s in ch.sensors:
+				for sId, s in ch.sensors:
 					s.read(self.tick)
 
 		return self._Channels
