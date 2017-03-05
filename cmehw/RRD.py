@@ -67,7 +67,7 @@ class RRD():
 		from .Logging import Logger
 
 		self._logger = Logger # get main logger
-		self._logger.info("Setting up RRD")
+		self._logger.info("\nSetting up RRD")
 
 		start_time = time.time()
 

@@ -297,10 +297,10 @@ class Avalanche(object):
 						for s in _sources:
 							print("PIB: reading {0}.{1} for phase imbalance".format(ch.id, s.id))
 
-						sensor_value = s.values[0][1]
-
-						if not sensor_value:
-							print("ERROR: Invalid sensor value returning 0 phase imbalance.")
+						if s.values and s.values[0][1]:
+							sensor_value = s.values[0][1]
+						else:
+							print("ERROR: Invalid sensor value from {0}.{1} - returning 0 phase imbalance.".format(ch.id, s.id))
 							return 0
 
 
@@ -373,10 +373,9 @@ class Avalanche(object):
 			else:
 				self._logger.error("Unknown channel bus type {0}".format(bus_type))
 
-		self._logger.info("Done setting up {0} channels".format(count))
-
+		self._logger.info("Done setting up {0} channels:".format(count))
 		for ch in sorted(self._Channels):
-			print("\n{0}: {1}".format(ch, self._Channels[ch]))
+			self._logger.info("\t{0}: {1}".format(ch, self._Channels[ch]))
 
 
 	def updateChannels(self):
