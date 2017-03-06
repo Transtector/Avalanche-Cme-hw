@@ -280,7 +280,7 @@ class Avalanche(object):
 				if stype == 'PIB':
 					# Phase Imbalance
 					if not _sensor_values or len(_sensor_values) < 3:
-						print("ERROR: Not enough source sensor values to calculate phase imbalance.")
+						#print("ERROR: Not enough source sensor values to calculate phase imbalance.")
 						return 0
 
 					# Many references for this calculation, but here I'm going
@@ -305,7 +305,7 @@ class Avalanche(object):
 					return PI
 
 				else:
-					print("ERROR: Unknown virtual channel type: {0}".format(stype))
+					self._logger.error("Unknown virtual channel type: {0}".format(stype))
 					return 0
 
 			return r
