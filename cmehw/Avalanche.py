@@ -287,7 +287,7 @@ class Avalanche(object):
 					# to use the maximum difference from average Vrms to calculate
 					Vsum = 0
 					for _s in _sensor_values:
-						Vsum = Vsum + val
+						Vsum = Vsum + _s
 					Vavg = Vsum / len(_sensor_values)  # RMS average of the phases
 
 					if Vavg == 0:
