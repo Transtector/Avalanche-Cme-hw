@@ -190,7 +190,8 @@ class RRD():
 
 			RRA = []
 			for rra in channel.rra.values():
-				RRA.append(rra)
+				for r in rra:
+					RRA.append(r)
 
 			'''
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
