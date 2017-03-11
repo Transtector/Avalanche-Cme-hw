@@ -42,8 +42,8 @@ def main(args=None):
 
 		# sleep until at least LOOP_PERIOD
 		delay_time = 0
-		if process_time < Config.LOOP_PERIOD_s:
-			delay_time = Config.LOOP_PERIOD_s - process_time
+		if process_time < Config.HARDWARE.LOOP_PERIOD_s:
+			delay_time = Config.HARDWARE.LOOP_PERIOD_s - process_time
 
 		# debug/print channel values
 		#cc = "\n".join([ "{0}".format(ch.debugPrint()) for ch in channels ])

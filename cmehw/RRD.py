@@ -4,7 +4,7 @@ import rrdtool
 from .common import Config
 
 # The location where channel data and configuration are stored (typically /data/channels/)
-CHDIR = Config.CHDIR
+CHDIR = Config.PATHS.CHDIR
 
 '''
 Notes:
@@ -22,7 +22,7 @@ the input/output data logging system from the software update perspective.  As t
 loosely coupled, we can more easily replace layer contents with newer/better/working software
 without greatly impacting the other layers.
 '''
-RRDCACHED = Config.RRDCACHED
+RRDCACHED = Config.RRD.RRDCACHED
 
 # This is an rrd that's created at init to ensure the RRD system
 # is working properly.  Note that the full path to the file is not
@@ -86,7 +86,7 @@ class RRD():
 
 		# if test.rrd exists in our APPROOT folder
 		'''  JJB:  Commented out for use w/o RRDCacheD
-		BAD_RRD = os.path.join(Config.APPROOT, TESTRRD)
+		BAD_RRD = os.path.join(Config.PATHS.APPROOT, TESTRRD)
 		if os.path.exists(BAD_RRD):
 			# delete the bad test.rrd
 			os.remove(BAD_RRD)

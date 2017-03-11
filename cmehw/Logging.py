@@ -13,11 +13,11 @@ formatter = logging.Formatter('%(asctime)s %(levelname)-8s [%(name)s] %(message)
 							   datefmt='%Y-%m-%d %H:%M:%S')
 
 # always send app log to file
-fh = logging.handlers.RotatingFileHandler(Config.HWLOG,
-										  maxBytes=Config.LOGBYTES,
-										  backupCount=Config.LOGCOUNT)
+fh = logging.handlers.RotatingFileHandler(Config.LOGGING.HWLOG,
+										  maxBytes=Config.LOGGING.LOGBYTES,
+										  backupCount=Config.LOGGING.LOGCOUNT)
 # increase level if DEBUG set
-if Config.DEBUG:
+if Config.INFO.DEBUG:
 	fh.setLevel(logging.DEBUG)
 else:
 	fh.setLevel(logging.INFO)
@@ -27,7 +27,7 @@ fh.setFormatter(formatter)
 Logger.addHandler(fh)
 
 # Log to console too if DEBUG set
-if Config.DEBUG:
+if Config.INFO.DEBUG:
 	h = logging.StreamHandler()
 	h.setFormatter(logging.Formatter('%(message)s'))
 	Logger.addHandler(h)

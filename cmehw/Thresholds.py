@@ -13,10 +13,10 @@ from .common.Switch import switch
 from .common.LockedOpen import LockedOpen
 
 # The location where channel data and configuration are stored (typically /data/channels/)
-CHDIR = Config.CHDIR
+CHDIR = Config.PATHS.CHDIR
 
-MAX_ALARM_POINTS = Config.MAX_ALARM_POINTS # how many points collected while in alarm condition
-ALARM_LEAD_POINTS = Config.ALARM_LEAD_POINTS # how many pre- and post- alarm points are saved
+MAX_ALARM_POINTS = Config.HARDWARE.MAX_ALARM_POINTS # how many points collected while in alarm condition
+ALARM_LEAD_POINTS = Config.HARDWARE.ALARM_LEAD_POINTS # how many pre- and post- alarm points are saved
 
 # Cache the channel configuration files so we
 # don't have to read from disk every time through.

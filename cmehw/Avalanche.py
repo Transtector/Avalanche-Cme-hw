@@ -45,9 +45,9 @@ AVALANCHE_GPIO_MUX_PUPD_CNTL    = 19
 SPI_BUS_DISCHARGE_WAIT_s = 10
 
 # Hardware channels configurations stored here
-CHDIR = Config.CHDIR
+CHDIR = Config.PATHS.CHDIR
 
-BUFFER_POINTS = Config.BUFFER_POINTS
+BUFFER_POINTS = Config.HARDWARE.BUFFER_POINTS
 
 
 class _Sensor:
