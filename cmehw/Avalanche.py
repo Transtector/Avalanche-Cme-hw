@@ -240,7 +240,7 @@ class Avalanche(object):
 				s_threshold = s_config.get('threshold', None)
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors[sId] = _Sensor(sId, s_type, s_units, s_range, stpm3x_read(s_id, device_index, s_register, s_scale, s_threshold))
+				_sensors[sId] = _Sensor(sId, s_type, s_units, s_range, stpm3x_read(sId, device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
 			self.Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
