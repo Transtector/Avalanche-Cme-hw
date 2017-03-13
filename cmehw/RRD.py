@@ -160,6 +160,9 @@ class RRD():
 			# remove the ch reset file			
 			os.remove(ch_rrd_reset)
 
+		# Order sensors by sensor Id (s0, s1, ...)
+		sorted_sensors = sorted(channel.sensors.values(), key = lambda s: s.id)
+
 		if not ch_rrd:
 			# Channel RRD not found or was reset. (Re)create it here.
 			# One DS for every sensor in the channel.
@@ -168,7 +171,7 @@ class RRD():
 			ch_rrd = channel.id + '_' + str(int(time.time())) + '.rrd'
 
 			DS = []
-			for k, s in channel.sensors.items():
+			for s in sorted_sensors:
 				# TODO: get the min/max sensor values from the sensor
 				# and replace the "U" (unknowns) in the DS definition.
 				
@@ -176,7 +179,7 @@ class RRD():
 				# 19 characters long in the characters [a-zA-Z0-9_].
 				regex = re.compile('[^a-zA-Z0-9_]')
 				clean_type = regex.sub('_', s.type)[:3]
-				clean_unit = regex.sub('_', s.unit)[:3]
+				clean_unit = regex.sub('_', s.unit)[:5]
 				ds_name = "_".join([ s.id, clean_type, clean_unit ])
 
 				if len(s.range) > 0:
@@ -188,10 +191,14 @@ class RRD():
 				DS.append(ds)
 				self._logger.info("\tRRD sensor DS added {0}".format(ds))
 
+
+			# Channel RRA definitions 
+			# TODO: Use an OrderedDict for the RRA's config, so they get created in the 
+			# same order as they appear in the config file.  Currently, they are
+			# using alphabetical order by key (so, "live", "weekly", ...)
 			RRA = []
-			for rra in channel.rra.values():
-				for r in rra:
-					RRA.append(r)
+			for R in [rra[1] in sorted(channel.rra.items(), key = lambda r: r[0])]:
+				RRA.append(R)
 
 			'''
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
@@ -233,7 +240,11 @@ class RRD():
 			ch_rrd = os.path.basename(ch_rrd)
 
 		# Create the update argument for the channel's RRD
-		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.values[0][1]) for s in channel.sensors.values() ])
+		# These have to go in order of the channel's sensor DS's (s0_, s1_, ...)
+		UPDATE = []
+
+		# Sensors must be updated in the same order as well
+		DATA_UPDATE = 'N:' + ':'.join([ '{:f}'.format(s.values[0][1]) for s in sorted_sensors ])
 
 		#self._logger.debug("RRD update: " + DATA_UPDATE) 
 
