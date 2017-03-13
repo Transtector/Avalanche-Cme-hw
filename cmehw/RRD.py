@@ -197,8 +197,11 @@ class RRD():
 			# same order as they appear in the config file.  Currently, they are
 			# using alphabetical order by key (so, "live", "weekly", ...)
 			RRA = []
-			for R in [ rra[1] for rra in sorted(channel.rra.items(), key = lambda r: r[0]) ]:
-				RRA.append(R)
+			sorted_rras = sorted(channel.rra.items(), key = lambda r: r[0])
+			# [ ('live', [...]), ('weekly', [ ... ]), ... ]
+			for R in sorted_rras:
+				for rra in R[1]:
+					RRA.append(rra)
 
 			'''
 			# Add RRA's (anticipating 400 point (pixel) outputs for plotting)
