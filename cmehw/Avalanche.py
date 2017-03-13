@@ -216,9 +216,8 @@ class Avalanche(object):
 			# Construct a list of sensors for which we have configuration objects (passed in on sensors)
 			_sensors = {}
 
-			for i, s in enumerate(sensors):
+			for sId, s in sensors.items():
 
-				s_id = s['id']
 				s_config = s['_config']
 
 				# There are some constraints on the sensor type and units as these strings
@@ -241,7 +240,7 @@ class Avalanche(object):
 				s_threshold = s_config.get('threshold', None)
 
 				# Add the sensor the the _sensors for the Channel
-				_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, stpm3x_read(s_id, device_index, s_register, s_scale, s_threshold))
+				_sensors[sId] = _Sensor(sId, s_type, s_units, s_range, stpm3x_read(s_id, device_index, s_register, s_scale, s_threshold))
 				self._logger.info("\tSTPMX3 device sensor added (register: {0}, type: {1}, units: {2})".format(s_register, s_type, s_units))	
 
 			self.Channels[ch_id] = _Channel(ch_id, "SPI", bus_index, device_index, ch_rra, stpm3x.error, _sensors)
@@ -311,11 +310,10 @@ class Avalanche(object):
 			return r
 
 		_sensors = {} # added to Channels as a dict
-		for i, s in enumerate(sensors):
-
-			s_id = s['id'] # required id
+		for sId, s in sensors.items():
 
 			s_config = s['_config']
+
 			s_type = s_config['type']
 			s_units = s_config['units'] # % - but will not be used in DS name
 			s_range = s_config['range']
@@ -326,7 +324,7 @@ class Avalanche(object):
 			s_sources = s_config['sources'] # [ chId.sId, ...]
 
 			# Add the sensor the the _sensors for the Channel
-			_sensors[s_id] = _Sensor(s_id, s_type, s_units, s_range, s_read(self.Channels, s_sources, s_type))
+			_sensors[sId] = _Sensor(sId, s_type, s_units, s_range, s_read(self.Channels, s_sources, s_type))
 			self._logger.info("\tVIRTUAL sensor added (type: {0}, units: {1})".format(s_type, s_units))	
 
 		self.Channels[ch_id] = _VirtualChannel(ch_id, ch_rra, False, _sensors)
