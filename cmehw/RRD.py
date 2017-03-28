@@ -50,7 +50,14 @@ def _rrdupdate(rrdfile, *args):
 	if RRDCACHED:
 		return rrdtool.update(rrdfile, '-d', RRDCACHED, *args)
 
-	return rrdtool.update(os.path.join(CHDIR, rrdfile), *args)
+	# supplement the update call wtih "--skip-past-updates" that
+	# stops rrdtool from reporting an "illegal attempt to update"
+	# faster than a 1 second interval.  This seems like a common
+	# issue when the Cme-hw runs in a 1-second loop and uses the
+	# rrdtool update "N:" parameter.
+	newargs = args + ('--skip-past-updates', )
+
+	return rrdtool.update(os.path.join(CHDIR, rrdfile), *newargs)
 
 def _rrdfetch(rrdfile, *args):
 	if RRDCACHED:
@@ -254,6 +261,8 @@ class RRD():
 		# try/catch to watch out for updates that occur too often.  Here we just
 		# log and ignore the exception (for now).  This may just be related to
 		# an issue with the RRDCacheD and floating point rounding errors.
+		# (JJB) NOTE: Rrdtool has a command switch to silently ignore these errors
+		# which I've turned on as the errors were filling up the syslog.
 		try:
 			_rrdupdate(ch_rrd, DATA_UPDATE)
 
