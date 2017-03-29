@@ -25,7 +25,7 @@ def main(args=None):
 
 	rrd = RRD() # round-robin database - stores channel data
 
-	print("\n ---")
+	#print("\n ---")
 
 	while(True):
 		start_time = time.time() # start of loop
@@ -50,8 +50,8 @@ def main(args=None):
 		#Logger.debug(cc)		
 			
 		# "\x1b[K" is ANSII clear to end of line
-		sys.stdout.write("\tHardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
-		sys.stdout.flush()
+		#sys.stdout.write("\tHardware looping [{0:.3f} s, {1:.3f} s] {2}\x1b[K\r".format(process_time, delay_time, spinners[spinner_i])) 
+		#sys.stdout.flush()
 		spinner_i = (spinner_i + 1) % len(spinners)
 
 		time.sleep(delay_time)
