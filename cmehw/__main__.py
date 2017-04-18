@@ -1,6 +1,6 @@
 # cmehw package main entry
 
-import sys, time
+import sys, time, signal
 
 from .common import Config
 
@@ -9,6 +9,24 @@ from .Avalanche import Avalanche
 from .RRD import RRD
 
 from .Thresholds import ProcessAlarms
+
+SHUTDOWN_FLAG = False
+
+def cleanup(signum=None, frame=None):
+	global SHUTDOWN_FLAG
+	if SHUTDOWN_FLAG: # we've already received SIGTERM and set this
+		return
+
+	SHUTDOWN_FLAG = True # stop main loop
+	Logger.info("Shutdown detected - cleaning up")
+
+
+# SIGTERM signal handler - called at shutdown (see common/Reboot.py)
+# This lets us reboot/halt from other code modules without having
+# GPIO included in them.
+signal.signal(signal.SIGTERM, cleanup)
+signal.signal(signal.SIGHUP, cleanup)
+
 
 def main(args=None):
 	'''Main hardware loop'''
@@ -27,7 +45,7 @@ def main(args=None):
 
 	#print("\n ---")
 
-	while(True):
+	while not SHUTDOWN_FLAG:
 		start_time = time.time() # start of loop
 
 		# The updateChannels() call on the avalanche object
@@ -56,6 +74,7 @@ def main(args=None):
 
 		time.sleep(delay_time)
 
+
 if __name__ == "__main__":
 	try:
 		main()
@@ -69,4 +88,5 @@ if __name__ == "__main__":
 		# re-raise to print stack trace here (useful for debugging the problem)
 		raise
 
-	sys.exit(0)
+	finally:
+		cleanup()
