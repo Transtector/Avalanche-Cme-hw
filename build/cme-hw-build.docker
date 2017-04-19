@@ -1,0 +1,55 @@
+# This docker is used to build the Cme-hw application layer.
+#
+# Adds Python libraries, external toolsets, and headers
+# required to build the cme application.  Pip wheel is then
+# used to make a set of wheels which can be bundled into a
+# clean docker image used to run the cme application.
+#
+# This docker MUST be built from the top-level project folder:
+#
+# E.g., in ~/Cme-hw/
+#
+#	$ docker build -t cme-hw-build -f build/cme-hw-build.docker .
+#
+# Running this image builds the application.  You must map
+# the project root folder to the container /app volume.
+#
+#	$ docker run --rm -v "<APP_ROOT>":/app cme-hw-build
+#
+# The docker has created the CME_HW_BIN.tgz binary package
+# used to build the application layer docker.
+
+# Uses the cme-base image
+FROM cme-base
+
+MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
+
+# Add build tools, headers, and Python dev tools
+RUN apk add --update \
+		build-base \
+		linux-headers \
+		rrdtool-dev \
+		python3-dev && \
+		pip install wheel 	
+
+# Copy the source files into the container (this requires the
+# docker to be built from Cme-api/ project root folder).
+COPY ["setup.py", "VERSION", "dist/"]
+COPY ["cmehw", "dist/cmehw/"]
+
+RUN mkdir dist/wheelhouse
+
+ENV WHEELHOUSE=wheelhouse
+ENV PIP_WHEEL_DIR=wheelhouse
+ENV PIP_FIND_LINKS=wheelhouse
+
+VOLUME /app
+
+# Create and use srcdist/ for the build because wheel
+# is adding in extraneous folders (node_modules, cme_venv,
+# and .git for example).
+ENTRYPOINT cd dist; \
+	pip wheel .; \
+	rm setup.py; \
+	rm -rf cmehw/; \
+	tar -czvf /app/build/CME_HW_BIN.tgz .
