@@ -1,7 +1,5 @@
-# This docker is used to run the cmehw application.
+# This docker is used to run the Cme-hw application layer.
 #
-# Requires the cmehw binary Python wheels are built into
-# wheelhouse/ folder in the dockerfile context.
 #
 # The Cme-hw application requires root access to hardware, memory
 # and a shared /data location on the docker host as well as a link
@@ -22,13 +20,11 @@ FROM cme-base
 
 MAINTAINER James Brunner <james.brunner@smithsmicrowave.com>
 
-# Application wheels should be built into wheelhouse folder
-COPY VERSION VERSION
-COPY wheelhouse wheelhouse/
+# Add the application binaries
+ADD CME_HW_BIN.tgz .
 
-# Install the app using pip and built wheels
+# Install app using pip and built wheels
 RUN pip install --no-index -f wheelhouse cmehw
 RUN rm -rf wheelhouse/
 
-# Run the Cme-hw application
 CMD ["cmehw"]
