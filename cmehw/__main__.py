@@ -39,9 +39,11 @@ def main(args=None):
 	spinners = "|/-\\"
 	spinner_i = 0
 
+	rrd = RRD() # round-robin database - stores channel data
+
 	avalanche = Avalanche() # CME transducer bus initialization
 
-	rrd = RRD() # round-robin database - stores channel data
+
 
 	#print("\n ---")
 
