@@ -82,12 +82,42 @@ TOTREG2_REGADDR = 0x86
 TOTREG3_REGADDR = 0x88
 TOTREG4_REGADDR = 0x8A
 
+CH1_REGADDR = 0xD1
+CH2_REGADDR = 0xD2
+CH3_REGADDR = 0xD3
+CH4_REGADDR = 0xD4
+CH5_REGADDR = 0xD5
+CH6_REGADDR = 0xD6
+
+ALARM_READ	= 0xF0
+
 
 def calcMask(width, position):
 	return ((2 ** width) - 1) << position
 
 
 class STPM3X:
+
+
+	CH1VRMS = {'address': CH1_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH1CRMS = {'address': CH1_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+	CH2VRMS = {'address': CH2_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH2CRMS = {'address': CH2_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+	CH3VRMS = {'address': CH3_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH3CRMS = {'address': CH3_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+	CH4VRMS = {'address': CH4_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH4CRMS = {'address': CH4_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+	CH5VRMS = {'address': CH5_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH5CRMS = {'address': CH5_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+	CH6VRMS = {'address': CH6_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
+	CH6CRMS = {'address': CH6_REGADDR, 'width': 17, 'position': 15, 'mask': calcMask(17,15)}
+
+
 	#RMS Voltages
 	V1RMS = {'address': DSPREG14_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
 	V2RMS = {'address': DSPREG15_REGADDR, 'width': 15, 'position': 0, 'mask': calcMask(15,0)}
@@ -150,6 +180,22 @@ class STPM3X:
 	#Current Channel Calibration
 	ZCR_EN = {'address': DSPCR3_REGADDR, 'width': 1, 'position': 16, 'mask': calcMask(1,16)}
 	ZCR_SEL = {'address': DSPCR3_REGADDR, 'width': 2, 'position': 14, 'mask': calcMask(2,14)}
+
+	#Voltage Data
+	V1DATA = {'address': DSPREG2_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+	V2DATA = {'address': DSPREG4_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+
+	#Voltage Fundamental
+	V1FUND = {'address': DSPREG6_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+	V2FUND = {'address': DSPREG8_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+
+	#Current Data
+	C1DATA = {'address': DSPREG3_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+	C2DATA = {'address': DSPREG5_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+
+	#Current Fundamental
+	C1FUND = {'address': DSPREG7_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
+	C2FUND = {'address': DSPREG9_REGADDR, 'width': 32, 'position': 0, 'mask': calcMask(32,0)}
 
 
 # STPM3X sensor configuration
@@ -255,28 +301,28 @@ class Stpm3x(object):
 		self._logger = Logger
 		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(bus_index, device_index))
 
-		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2','ZCR_EN','ZCR_SEL']:
-			status = 0
-			if not p in config:
-				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(bus_index, device_index, p)
-				self.error = error_msg
-				self._logger.error(error_msg)
-			else:
-				# check for strings and convert as necessary before writing register
-				if type(config[p]) is str or type(config[p]) is bytes:
-					config[p] = int(config[p], 0)
-
-				status |= self.write(STPM3X.__dict__[p], config[p])
-
-				if not status == 0:
-					error_msg = '\tSPI [{0}, {1}] STPM3X device error writing {2} to device'.format(bus_index, device_index, p)
-					self.error = error_msg if not self.error else self.error + ', ' + error_msg
-					self._logger.info(error_msg)
-				else:
-					msg = '\tSPI [{0}, {1}] STPM3X device parameter {2} written'.format(bus_index, device_index, p)
-					self._logger.info(msg)
-
-		self.readConfigRegs()
+#		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2','ZCR_EN','ZCR_SEL']:
+#			status = 0
+#			if not p in config:
+#				error_msg = '\tSPI [{0}, {1}] STPM3X device error: missing {2} configuration'.format(bus_index, device_index, p)
+#				self.error = error_msg
+#				self._logger.error(error_msg)
+#			else:
+#				# check for strings and convert as necessary before writing register
+#				if type(config[p]) is str or type(config[p]) is bytes:
+#					config[p] = int(config[p], 0)
+#
+#				status |= self.write(STPM3X.__dict__[p], config[p])
+#
+#				if not status == 0:
+#					error_msg = '\tSPI [{0}, {1}] STPM3X device error writing {2} to device'.format(bus_index, device_index, p)
+#					self.error = error_msg if not self.error else self.error + ', ' + error_msg
+#					self._logger.info(error_msg)
+#				else:
+#					msg = '\tSPI [{0}, {1}] STPM3X device parameter {2} written'.format(bus_index, device_index, p)
+#					self._logger.info(msg)
+#
+#		self.readConfigRegs()
 
 	def test(self):
 		self._logger.info('hello world')
@@ -418,6 +464,27 @@ class Stpm3x(object):
 
 		if threshold is not None and (value < threshold):
 			value = 0
+
+		return value
+
+	def convert_raw(self, reg_bytes, register, threshold=None):
+		''' Returns the value from raw data bytes.  If the 
+			value is less than the optional threshold, then 0 (zero)
+			is returned.
+		''' 
+		#print(reg_bytes)
+		register = STPM3X.__dict__[register] # get register index from passed name
+
+		regValue = self._bytes2int32_rev(self, reg_bytes[0:4])
+		#print("Register Value: " + hex(regValue))
+
+		#get value from register, mask and shift
+		maskedValue = (regValue & register['mask']) >> register['position']
+		#print("Masked Value:   " + hex(maskedValue))
+
+		#convert signed value of various bit width to signed int
+		value = self.convert(self, maskedValue, register['width'])
+		#print ("Converted Value: " + str(value))
 
 		return value
 

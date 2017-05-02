@@ -10,6 +10,8 @@ from .RRD import RRD
 
 from .Thresholds import ProcessAlarms
 
+from .Alarms import AlarmManager
+
 SHUTDOWN_FLAG = False
 
 def cleanup(signum=None, frame=None):
@@ -41,9 +43,9 @@ def main(args=None):
 
 	rrd = RRD() # round-robin database - stores channel data
 
-	avalanche = Avalanche() # CME transducer bus initialization
+	alarmManager = AlarmManager()
 
-
+	avalanche = Avalanche(alarmManager) # CME transducer bus initialization
 
 	#print("\n ---")
 

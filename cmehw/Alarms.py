@@ -1,4 +1,4 @@
-import os, json, time
+import os, json, time, threading
 
 import sqlite3
 
@@ -99,114 +99,117 @@ class AlarmManager(metaclass=Singleton):
 		self._connection.close()
 
 
-	def InsertAlarm(self, raw_data OR Alarm_object):
+	def InsertAlarm(self, Alarm_object):
 
 		alarms = []
 
-		for c in range(0, count):
+		# for c in range(0, count):
 
-			# start randomly some days * hours * milliseconds before now
-			start_ms = int(round(time.time() * 1000)) - random.randint(1, 2) * random.randint(1, 23) * random.randint(1, 3599999)
+		# 	# start randomly some days * hours * milliseconds before now
+		# 	start_ms = int(round(time.time() * 1000)) - random.randint(1, 2) * random.randint(1, 23) * random.randint(1, 3599999)
 
-			# end 1 - 5 minutes after start, but no greater than now
-			end_ms = start_ms + random.randint(1, 4) * 60 * 1000 + random.randint(0, 59) * 1000 + random.randint(0, 999)
-			end_ms = min(time.time() * 1000, end_ms)
+		# 	# end 1 - 5 minutes after start, but no greater than now
+		# 	end_ms = start_ms + random.randint(1, 4) * 60 * 1000 + random.randint(0, 59) * 1000 + random.randint(0, 999)
+		# 	end_ms = min(time.time() * 1000, end_ms)
 
-			# generate fake waveform data for the alarms
-			sample_rate = 7.8125 * 1000 # 7.8125 kHz
-			sample_period = 50 * 0.001 # 50 ms
-			samples = math.ceil(sample_rate * sample_period)
+		# 	# generate fake waveform data for the alarms
+		# 	sample_rate = 7.8125 * 1000 # 7.8125 kHz
+		# 	sample_period = 50 * 0.001 # 50 ms
+		# 	samples = math.ceil(sample_rate * sample_period)
 
-			# Generates the format [ [ t0, Va, Vb, Vc, PI ], [t1, Va, Vb, Vc, PI ], ... [tN, Va, Vb, Vc, PI ] ]
-			def gen_fake_phases(amplitude_rms, frequency_hz):
+		# 	# Generates the format [ [ t0, Va, Vb, Vc, PI ], [t1, Va, Vb, Vc, PI ], ... [tN, Va, Vb, Vc, PI ] ]
+		# 	def gen_fake_phases(amplitude_rms, frequency_hz):
 
-				def sin(amp_rms, t_seconds, phi_degrees):
+		# 		def sin(amp_rms, t_seconds, phi_degrees):
 
-					return amp_rms * math.sqrt(2) * math.sin(2 * math.pi * frequency_hz * t_seconds / sample_rate + math.radians(phi_degrees))
+		# 			return amp_rms * math.sqrt(2) * math.sin(2 * math.pi * frequency_hz * t_seconds / sample_rate + math.radians(phi_degrees))
 
-				def pib(phA, phB, phC):
-					phAVG = ( phA + phB + phC ) / 3
-					phMAX = max([ abs(phAVG - phA), abs(phAVG - phB), abs(phAVG - phC) ])
+		# 		def pib(phA, phB, phC):
+		# 			phAVG = ( phA + phB + phC ) / 3
+		# 			phMAX = max([ abs(phAVG - phA), abs(phAVG - phB), abs(phAVG - phC) ])
 
-					if phAVG:
-						return 100 * ( phMAX / phAVG )
-					else:
-						return 0
+		# 			if phAVG:
+		# 				return 100 * ( phMAX / phAVG )
+		# 			else:
+		# 				return 0
 
-				result = []
-				for t in range(0, samples):
-					sample_time = t / sample_rate
+		# 		result = []
+		# 		for t in range(0, samples):
+		# 			sample_time = t / sample_rate
 
-					PHA_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
-					PHB_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
-					PHC_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
+		# 			PHA_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
+		# 			PHB_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
+		# 			PHC_AMP = amplitude_rms + 0.05 * amplitude_rms * (0.5 - random.random())
 
-					PHA = sin(PHA_AMP, t, 0)
-					PHB = sin(PHB_AMP, t, 120)
-					PHC = sin(PHC_AMP, t, 240)
-					PIB = pib(PHA_AMP, PHB_AMP, PHC_AMP)
+		# 			PHA = sin(PHA_AMP, t, 0)
+		# 			PHB = sin(PHB_AMP, t, 120)
+		# 			PHC = sin(PHC_AMP, t, 240)
+		# 			PIB = pib(PHA_AMP, PHB_AMP, PHC_AMP)
 
-					result.append([ sample_time, PHA, PHB, PHC, PIB ])
+		# 			result.append([ sample_time, PHA, PHB, PHC, PIB ])
 
-				return result
+		# 		return result
 
-			input_voltages_and_PI_START = gen_fake_phases(208, 60)
-			input_voltages_and_PI_END = gen_fake_phases(208, 60)
+		# 	input_voltages_and_PI_START = gen_fake_phases(208, 60)
+		# 	input_voltages_and_PI_END = gen_fake_phases(208, 60)
 
-			output_voltages_and_PI_START = gen_fake_phases(277, 60)
-			output_voltages_and_PI_END = gen_fake_phases(277, 60)
+		# 	output_voltages_and_PI_START = gen_fake_phases(277, 60)
+		# 	output_voltages_and_PI_END = gen_fake_phases(277, 60)
 			
-			output_currents_START = gen_fake_phases(90, 60)
-			output_currents_END = gen_fake_phases(90, 60)
+		# 	output_currents_START = gen_fake_phases(90, 60)
+		# 	output_currents_END = gen_fake_phases(90, 60)
 
-			# Which channel will trigger? (don't include the current channels which use s1)
-			alarm_ch = "ch" + str(random.randint(0, 7))
+		# 	# Which channel will trigger? (don't include the current channels which use s1)
+		# 	alarm_ch = "ch" + str(random.randint(0, 7))
 
-			# Slice the generated data to individual channel/sensors
-			a = {
-				"channel": alarm_ch,
-				"sensor": "s0",
-				"type": "FAKE",
-				"start_ms": start_ms,
-				"end_ms": end_ms,
-				"step_ms": 1 / sample_rate,
-				"data": {
-					"ch0": {
-						"s0": [ V[1] for V in input_voltages_and_PI_START ] + [ V[1] for V in input_voltages_and_PI_END ]
-					},
-					"ch1": {
-						"s0": [ V[2] for V in input_voltages_and_PI_START ] + [ V[2] for V in input_voltages_and_PI_END ]
-					},
-					"ch2": {
-						"s0": [ V[3] for V in input_voltages_and_PI_START ] + [ V[3] for V in input_voltages_and_PI_END ]
-					},
-					"ch3": {
-						"s0": [ V[4] for V in input_voltages_and_PI_START ] + [ V[4] for V in input_voltages_and_PI_END ]
-					},
-					"ch4": {
-						"s0": [ V[1] for V in output_voltages_and_PI_START ] + [ V[1] for V in output_voltages_and_PI_END ],
-						"s1": [ V[1] for V in output_currents_START ] + [ V[1] for V in output_currents_END ]
-					},
-					"ch5": {
-						"s0": [ V[2] for V in output_voltages_and_PI_START ] + [ V[2] for V in output_voltages_and_PI_END ],
-						"s1": [ V[2] for V in output_currents_START ] + [ V[2] for V in output_currents_END ]
-					},
-					"ch6": {
-						"s0": [ V[3] for V in output_voltages_and_PI_START ] + [ V[3] for V in output_voltages_and_PI_END ],
-						"s1": [ V[3] for V in output_currents_START ] + [ V[3] for V in output_currents_END ]
-					},
-					"ch7": {
-						"s0": [ V[4] for V in output_voltages_and_PI_START ] + [ V[4] for V in output_voltages_and_PI_END ] 
-					}
-				}
-			}
+		# 	# Slice the generated data to individual channel/sensors
+		# 	a = {
+		# 		"channel": alarm_ch,
+		# 		"sensor": "s0",
+		# 		"type": "FAKE",
+		# 		"start_ms": start_ms,
+		# 		"end_ms": end_ms,
+		# 		"step_ms": 1 / sample_rate,
+		# 		"data": {
+		# 			"ch0": {
+		# 				"s0": [ V[1] for V in input_voltages_and_PI_START ] + [ V[1] for V in input_voltages_and_PI_END ]
+		# 			},
+		# 			"ch1": {
+		# 				"s0": [ V[2] for V in input_voltages_and_PI_START ] + [ V[2] for V in input_voltages_and_PI_END ]
+		# 			},
+		# 			"ch2": {
+		# 				"s0": [ V[3] for V in input_voltages_and_PI_START ] + [ V[3] for V in input_voltages_and_PI_END ]
+		# 			},
+		# 			"ch3": {
+		# 				"s0": [ V[4] for V in input_voltages_and_PI_START ] + [ V[4] for V in input_voltages_and_PI_END ]
+		# 			},
+		# 			"ch4": {
+		# 				"s0": [ V[1] for V in output_voltages_and_PI_START ] + [ V[1] for V in output_voltages_and_PI_END ],
+		# 				"s1": [ V[1] for V in output_currents_START ] + [ V[1] for V in output_currents_END ]
+		# 			},
+		# 			"ch5": {
+		# 				"s0": [ V[2] for V in output_voltages_and_PI_START ] + [ V[2] for V in output_voltages_and_PI_END ],
+		# 				"s1": [ V[2] for V in output_currents_START ] + [ V[2] for V in output_currents_END ]
+		# 			},
+		# 			"ch6": {
+		# 				"s0": [ V[3] for V in output_voltages_and_PI_START ] + [ V[3] for V in output_voltages_and_PI_END ],
+		# 				"s1": [ V[3] for V in output_currents_START ] + [ V[3] for V in output_currents_END ]
+		# 			},
+		# 			"ch7": {
+		# 				"s0": [ V[4] for V in output_voltages_and_PI_START ] + [ V[4] for V in output_voltages_and_PI_END ] 
+		# 			}
+		# 		}
+		# 	}
 
-			# Make the alarm a tuple of the fields
-			alarms.append( (a['channel'], a['sensor'], a['type'], a['start_ms'], a['end_ms'], a['step_ms'], json.dumps(a['data'])) )
+			# # Make the alarm a tuple of the fields
+			# alarms.append( (a['channel'], a['sensor'], a['type'], a['start_ms'], a['end_ms'], a['step_ms'], json.dumps(a['data'])) )
+
+		alarms.append( (Alarm_object.channel, Alarm_object.sensor, Alarm_object.type, Alarm_object.start_ms, Alarm_object.end_ms,  \
+			Alarm_object.step_ms, json.dumps(Alarm_object.data)) )
 
 		self._cursor.executemany('INSERT INTO alarms(channel, sensor, type, start_ms, end_ms, step_ms, data) VALUES(?, ?, ?, ?, ?, ?, ?)', alarms)
 		self._connection.commit()
-		return count
+		return 0
 
 
 
@@ -222,35 +225,35 @@ class Alarm():
 	my_new_alarm['end_ms'] = time.time() * 1000
 	my_new_alarm['step_ms'] = 0.512 # 512 us sample rate
 
-	my_new_alarm['data'] = {
-		"ch0": {
-			"s0": [ V[1] for V in input_voltages_and_PI_START ] + [ V[1] for V in input_voltages_and_PI_END ]
-		},
-		"ch1": {
-			"s0": [ V[2] for V in input_voltages_and_PI_START ] + [ V[2] for V in input_voltages_and_PI_END ]
-		},
-		"ch2": {
-			"s0": [ V[3] for V in input_voltages_and_PI_START ] + [ V[3] for V in input_voltages_and_PI_END ]
-		},
-		"ch3": {
-			"s0": [ V[4] for V in input_voltages_and_PI_START ] + [ V[4] for V in input_voltages_and_PI_END ]
-		},
-		"ch4": {
-			"s0": [ V[1] for V in output_voltages_and_PI_START ] + [ V[1] for V in output_voltages_and_PI_END ],
-			"s1": [ V[1] for V in output_currents_START ] + [ V[1] for V in output_currents_END ]
-		},
-		"ch5": {
-			"s0": [ V[2] for V in output_voltages_and_PI_START ] + [ V[2] for V in output_voltages_and_PI_END ],
-			"s1": [ V[2] for V in output_currents_START ] + [ V[2] for V in output_currents_END ]
-		},
-		"ch6": {
-			"s0": [ V[3] for V in output_voltages_and_PI_START ] + [ V[3] for V in output_voltages_and_PI_END ],
-			"s1": [ V[3] for V in output_currents_START ] + [ V[3] for V in output_currents_END ]
-		},
-		"ch7": {
-			"s0": [ V[4] for V in output_voltages_and_PI_START ] + [ V[4] for V in output_voltages_and_PI_END ] 
-		}
-	}
+	# my_new_alarm['data'] = {
+	# 	"ch0": {
+	# 		"s0": [ V[1] for V in input_voltages_and_PI_START ] + [ V[1] for V in input_voltages_and_PI_END ]
+	# 	},
+	# 	"ch1": {
+	# 		"s0": [ V[2] for V in input_voltages_and_PI_START ] + [ V[2] for V in input_voltages_and_PI_END ]
+	# 	},
+	# 	"ch2": {
+	# 		"s0": [ V[3] for V in input_voltages_and_PI_START ] + [ V[3] for V in input_voltages_and_PI_END ]
+	# 	},
+	# 	"ch3": {
+	# 		"s0": [ V[4] for V in input_voltages_and_PI_START ] + [ V[4] for V in input_voltages_and_PI_END ]
+	# 	},
+	# 	"ch4": {
+	# 		"s0": [ V[1] for V in output_voltages_and_PI_START ] + [ V[1] for V in output_voltages_and_PI_END ],
+	# 		"s1": [ V[1] for V in output_currents_START ] + [ V[1] for V in output_currents_END ]
+	# 	},
+	# 	"ch5": {
+	# 		"s0": [ V[2] for V in output_voltages_and_PI_START ] + [ V[2] for V in output_voltages_and_PI_END ],
+	# 		"s1": [ V[2] for V in output_currents_START ] + [ V[2] for V in output_currents_END ]
+	# 	},
+	# 	"ch6": {
+	# 		"s0": [ V[3] for V in output_voltages_and_PI_START ] + [ V[3] for V in output_voltages_and_PI_END ],
+	# 		"s1": [ V[3] for V in output_currents_START ] + [ V[3] for V in output_currents_END ]
+	# 	},
+	# 	"ch7": {
+	# 		"s0": [ V[4] for V in output_voltages_and_PI_START ] + [ V[4] for V in output_voltages_and_PI_END ] 
+	# 	}
+	# }
 
 
 
