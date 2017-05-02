@@ -10,6 +10,6 @@ setup (
 	version				= version,
 	description			= "CME hardware/sensor interface",
 	packages			= ['cmehw', 'cmehw.common'],
-	install_requires	= ["crcmod", "rrdtool", "RPi.GPIO",	"spidev" ],
+	install_requires	= ["crcmod", "rrdtool==0.1.4", "RPi.GPIO",	"spidev" ],
 	entry_points		= {'console_scripts': ['cmehw = cmehw.__main__:main']}
 )
