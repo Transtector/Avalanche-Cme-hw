@@ -12,7 +12,7 @@ DIST=$(pwd)/dist # built code ends up here
 # Read the VERSION file to use in the created archive name
 VERSION=$(<${SRC}/VERSION)
 
-PACKAGE=${CME_HW_PN}-v${VERSION}-SWARE-CME_HW.tgz
+PACKAGE=${CME_HW_PN}-v${VERSION}-SWARE-CME_HW$1.tgz
 
 # Point PIP env paths to wheelhouse
 export WHEELHOUSE=${DIST}/wheelhouse
@@ -31,11 +31,11 @@ cp -R ${SRC}/cmehw/ .
 cp ${SRC}/VERSION .
 cp ${SRC}/setup.py .
 
-# Activate the virtual env
+# Activate the venv
 source ${SRC}/cmehw_venv/bin/activate
 
 # Generate the wheels for the application.
-# These will show up in WHEELHOUSE
+# These will show up in WHEELHOUSE folder.
 pip wheel .
 
 popd
