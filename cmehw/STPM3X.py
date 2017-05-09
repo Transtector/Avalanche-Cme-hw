@@ -297,9 +297,7 @@ class Stpm3x(object):
 		bus_index = config['bus_index']
 		device_index = config['device_index']
 
-		self._logger = Logger
 		self._logger = logging.getLogger(__name__)
-
 		self._logger.info('SPI [{0}, {1}] configuring STPM3X device'.format(bus_index, device_index))
 
 #		for p in ['GAIN1', 'GAIN2','ENVREF1','ENVREF2','TC1','TC2','REF_FREQ','CHV1','CHV2','CHC1','CHC2','ZCR_EN','ZCR_SEL']:

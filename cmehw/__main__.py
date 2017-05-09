@@ -1,6 +1,6 @@
 # cmehw package main entry
 
-import sys, time, signal
+import os, sys, time, signal
 
 from .common import Config, Logging
 
@@ -29,7 +29,7 @@ def main(args=None):
 		args = sys.argv[1:]
 
 	# Log to console/screen too
-	CONSOLE_LOGGING = False
+	CONSOLE_LOGGING = '--console' in args
 	
 	global LOGGER
 	LOGGER = Logging.GetLogger('cmehw', {
