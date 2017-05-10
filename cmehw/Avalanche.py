@@ -151,114 +151,40 @@ class Avalanche(object):
 	alarm_start_time = 0
 	alarm_stop_time  = 0
 
+	def alarm_end(self, arg1):
+		self.alarm_stop_time = time.time() * 1000
+
 	def alarm(self, arg1):
 	#self._logger.info("\n\nAlarm Occurred"))
-		scales = self.getChannelScales()
-		inst_scales = []
+		if GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH:
+			self.alarm_start_time = time.time() * 1000
 
-		for scale in scales:
-			inst_scales.append(scale / 256)
+			print("\nAlarm Start: ", self.alarm_start_time)
 
-		#print(inst_scales)
+			self.b1_voltage_pha = []
+			self.b1_current_pha = [] 
+			self.b1_voltage_phb = []
+			self.b1_current_phb = []
+			self.b1_voltage_phc = []
+			self.b1_current_phc = []
+			self.b1_status_pha = []
+			self.b1_status_phb = []
+			self.b1_ph_imbalance = []
+			self.b2_voltage_pha = []
+			self.b2_current_pha = [] 
+			self.b2_voltage_phb = []
+			self.b2_current_phb = []
+			self.b2_voltage_phc = []
+			self.b2_current_phc = []
+			self.b2_status_phc = []
+			self.b2_ph_imbalance = []
 
-		# new_alarm = Alarm()
-		# new_alarm.step_ms = 0.512
-		# new_alarm.start_ms = time.time() * 1000
-		# new_alarm.end_ms = 0
+			self.alarm_state = True
+		else:
+			self.alarm_stop_time = time.time() * 1000
 
-		self.alarm_start_time = time.time() * 1000
+			print("Alarm Stop : ", self.alarm_stop_time * 1000)
 
-		print("\nAlarm Start: ", time.time() * 1000)
-
-		self.b1_voltage_pha = []
-		self.b1_current_pha = [] 
-		self.b1_voltage_phb = []
-		self.b1_current_phb = []
-		self.b1_voltage_phc = []
-		self.b1_current_phc = []
-		self.b1_status_pha = []
-		self.b1_status_phb = []
-		self.b1_ph_imbalance = []
-		self.b2_voltage_pha = []
-		self.b2_current_pha = [] 
-		self.b2_voltage_phb = []
-		self.b2_current_phb = []
-		self.b2_voltage_phc = []
-		self.b2_current_phc = []
-		self.b2_status_phc = []
-		self.b2_ph_imbalance = []
-
-		self.alarm_state = True
-
-		# configure SPI bus
-		# spi = spidev.SpiDev()
-		# spi.open(0, 0)
-		# spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
-		# spi.max_speed_hz = 5000000
-
-		# '''
-		# Get/Request the alarm source and update alarm
-		# '''
-		# new_alarm = self.readAlarmSource(spi, new_alarm)
-		
-
-		# for sample in range(0,390):
-		# 	#print("\nSend Block Request: %d", sample)
-		# 	sampleMSB = (sample >> 8) & 0xFF
-		# 	sampleLSB = (sample >> 0) & 0xFF				
-
-		# 	spi.xfer2([0xF0, sampleLSB, sampleMSB, 0xFF, 0xFF])
-		# 	self.readAlarmData(spi, inst_scales)
-
-		# spi.xfer2([0xF2, 0xFF, 0xFF, 0xFF, 0xFF])
-
-
-
-
-
-		# while GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH: {}
-		# print(new_alarm)
-		# #spi.close()
-		# #print("Alarm Ended")
-		# # new_alarm.end_ms = 0
-
-		# new_alarm.data = {
-		# 	"ch0": {
-		# 		"s0": self.b1_voltage_pha
-		# 	},
-		# 	"ch1": {
-		# 		"s0": self.b1_voltage_phb
-		# 	},
-		# 	"ch2": {
-		# 		"s0": self.b1_voltage_phc
-		# 	},
-		# 	"ch3": {
-		# 		"s0": self.b1_ph_imbalance
-		# 	},
-		# 	"ch4": {
-		# 		"s0": self.b2_voltage_pha,
-		# 		"s1": self.b2_current_pha
-		# 	},
-		# 	"ch5": {
-		# 		"s0": self.b2_voltage_phb,
-		# 		"s1": self.b2_current_phb
-		# 	},
-		# 	"ch6": {
-		# 		"s0": self.b2_voltage_phc,
-		# 		"s1": self.b2_current_phc
-		# 	},
-		# 	"ch7": {
-		# 		"s0": self.b2_ph_imbalance
-		# 	}
-		# }
-
-		#print(new_alarm)
-		#print(new_alarm.data)
-
-		# print("B2 Voltage PHA")
-		# print(self.b2_voltage_pha)
-		# print("")
-		# self.alarmManager.InsertAlarm(new_alarm)
 
 
 	def __init__(self, alarmManager):
@@ -280,7 +206,7 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_ALARM, GPIO.IN)
 		GPIO.setup(AVALANCHE_GPIO_DATA_RDY, GPIO.IN)
 
-		GPIO.add_event_detect(AVALANCHE_GPIO_ALARM, GPIO.RISING, callback=self.alarm, bouncetime=50)
+		GPIO.add_event_detect(AVALANCHE_GPIO_ALARM, GPIO.BOTH, callback=self.alarm, bouncetime=50)
 
 		#initialize chip enables
 		#GPIO.setup(AVALANCHE_GPIO_SPI_CE0, GPIO.OUT, initial=GPIO.LOW)
@@ -583,14 +509,13 @@ class Avalanche(object):
 				Setup Alarm Structure
 				'''
 				self.alarm_state = False
-				self.alarm_stop_time = time.time() * 1000
-
+				
 				new_alarm = Alarm()
-				new_alarm.step_ms = 0.512
+				new_alarm.step_ms = 0.000512
 				new_alarm.start_ms = self.alarm_start_time
 				new_alarm.end_ms = self.alarm_stop_time
 
-				print("Alarm End  : ", self.alarm_stop_time )
+				print("Reading Alarm Data...", end='')
 				
 
 				#configure SPI bus
@@ -601,13 +526,32 @@ class Avalanche(object):
 
 				new_alarm = self.readAlarmSource(spi, new_alarm)
 
-				for sample in range(0,390):
+				for sample in range(0,390*2):
 					#print("\nSend Block Request: %d", sample)
 					sampleMSB = (sample >> 8) & 0xFF
 					sampleLSB = (sample >> 0) & 0xFF				
 
 					spi.xfer2([0xF0, sampleLSB, sampleMSB, 0xFF, 0xFF])
 					self.readAlarmData(spi, inst_scales)
+
+				# for sample in range(0,390):
+				# 	self.b1_voltage_pha.append(500)
+				# 	self.b1_current_pha.append(500)
+				# 	self.b1_voltage_phb.append(500)
+				# 	self.b1_current_phb.append(500)
+				# 	self.b1_voltage_phc.append(500)
+				# 	self.b1_current_phc.append(500)
+				# 	self.b1_status_pha.append(500)
+				# 	self.b1_status_phb.append(500)
+				# 	self.b1_ph_imbalance.append(500)
+				# 	self.b2_voltage_pha.append(500)
+				# 	self.b2_current_pha.append(500)
+				# 	self.b2_voltage_phb.append(500)
+				# 	self.b2_current_phb.append(500)
+				# 	self.b2_voltage_phc.append(500)
+				# 	self.b2_current_phc.append(500)
+				# 	self.b2_status_phc.append(500)
+				# 	self.b2_ph_imbalance.append(500)
 
 				spi.xfer2([0xF2, 0xFF, 0xFF, 0xFF, 0xFF])
 
@@ -656,6 +600,8 @@ class Avalanche(object):
 				# print(self.b2_voltage_pha)
 				# print("")
 				self.alarmManager.InsertAlarm(new_alarm)
+				print("Finished")
+				print(new_alarm)
 
 
  
