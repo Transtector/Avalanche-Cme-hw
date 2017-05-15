@@ -147,101 +147,44 @@ class Avalanche(object):
 	b1_status_phc = []
 	b2_ph_imbalance = []
 
+	alarm_state = False
+	alarm_start_time = 0
+	alarm_stop_time  = 0
+
+	def alarm_end(self, arg1):
+		self.alarm_stop_time = time.time() * 1000
+
 	def alarm(self, arg1):
 	#self._logger.info("\n\nAlarm Occurred"))
-		scales = self.getChannelScales()
-		inst_scales = []
+		if GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH:
+			self.alarm_start_time = time.time() * 1000
 
-		for scale in scales:
-			inst_scales.append(scale / 256)
+			print("\nAlarm Start: ", self.alarm_start_time)
 
-		#print(inst_scales)
+			self.b1_voltage_pha = []
+			self.b1_current_pha = [] 
+			self.b1_voltage_phb = []
+			self.b1_current_phb = []
+			self.b1_voltage_phc = []
+			self.b1_current_phc = []
+			self.b1_status_pha = []
+			self.b1_status_phb = []
+			self.b1_ph_imbalance = []
+			self.b2_voltage_pha = []
+			self.b2_current_pha = [] 
+			self.b2_voltage_phb = []
+			self.b2_current_phb = []
+			self.b2_voltage_phc = []
+			self.b2_current_phc = []
+			self.b2_status_phc = []
+			self.b2_ph_imbalance = []
 
-		new_alarm = Alarm()
-		new_alarm.step_ms = 0.512 / 1000
-		new_alarm.type = 'SAG'
-		new_alarm.start_ms = time.time() * 1000
-		new_alarm.end_ms = 0
+			self.alarm_state = True
+		else:
+			self.alarm_stop_time = time.time() * 1000
 
-		print("\n\nAlarm event occurred!!")
+			print("Alarm Stop : ", self.alarm_stop_time * 1000)
 
-		self.b1_voltage_pha = []
-		self.b1_current_pha = [] 
-		self.b1_voltage_phb = []
-		self.b1_current_phb = []
-		self.b1_voltage_phc = []
-		self.b1_current_phc = []
-		self.b1_status_pha = []
-		self.b1_status_phb = []
-		self.b1_ph_imbalance = []
-		self.b2_voltage_pha = []
-		self.b2_current_pha = [] 
-		self.b2_voltage_phb = []
-		self.b2_current_phb = []
-		self.b2_voltage_phc = []
-		self.b2_current_phc = []
-		self.b2_status_phc = []
-		self.b2_ph_imbalance = []
-
-		# configure SPI bus
-		spi = spidev.SpiDev()
-		spi.open(0, 0)
-		spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
-		spi.max_speed_hz = 5000000
-
-
-		for sample in range(0,390):
-			#print("\nSend Block Request: %d", sample)
-			sampleMSB = (sample >> 8) & 0xFF
-			sampleLSB = (sample >> 0) & 0xFF				
-
-			spi.xfer2([0xF0, sampleLSB, sampleMSB, 0xFF, 0xFF])
-			self.readAlarmData(spi, inst_scales)
-
-		spi.xfer2([0xF2, 0xFF, 0xFF, 0xFF, 0xFF])
-		while GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH: {}
-
-		#spi.close()
-		print("Alarm Ended")
-		# new_alarm.end_ms = 0
-
-		new_alarm.data = {
-			"ch0": {
-				"s0": self.b1_voltage_pha
-			},
-			"ch1": {
-				"s0": self.b1_voltage_phb
-			},
-			"ch2": {
-				"s0": self.b1_voltage_phc
-			},
-			"ch3": {
-				"s0": self.b1_ph_imbalance
-			},
-			"ch4": {
-				"s0": self.b2_voltage_pha,
-				"s1": self.b2_current_pha
-			},
-			"ch5": {
-				"s0": self.b2_voltage_phb,
-				"s1": self.b2_current_phb
-			},
-			"ch6": {
-				"s0": self.b2_voltage_phc,
-				"s1": self.b2_current_phc
-			},
-			"ch7": {
-				"s0": self.b2_ph_imbalance
-			}
-		}
-
-		#print(new_alarm)
-		#print(new_alarm.data)
-
-		# print("B2 Voltage PHA")
-		# print(self.b2_voltage_pha)
-		# print("")
-		self.alarmManager.InsertAlarm(new_alarm)
 
 
 	def __init__(self, alarmManager):
@@ -262,7 +205,7 @@ class Avalanche(object):
 		GPIO.setup(AVALANCHE_GPIO_ALARM, GPIO.IN)
 		GPIO.setup(AVALANCHE_GPIO_DATA_RDY, GPIO.IN)
 
-		#GPIO.add_event_detect(AVALANCHE_GPIO_ALARM, GPIO.RISING, callback=self.alarm, bouncetime=50)
+		GPIO.add_event_detect(AVALANCHE_GPIO_ALARM, GPIO.BOTH, callback=self.alarm, bouncetime=50)
 
 		#initialize chip enables
 		#GPIO.setup(AVALANCHE_GPIO_SPI_CE0, GPIO.OUT, initial=GPIO.LOW)
@@ -286,6 +229,8 @@ class Avalanche(object):
 
 		self._logger.info("Setup channels")
 		self.setupChannels()
+
+		self.alarm_state = False
 
 
 	def sensorPower(self, state):
@@ -547,10 +492,118 @@ class Avalanche(object):
 		Runs through each channel's sensors and reads their value into the value property
 		'''
 
-		#if GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH:
-			#self.alarm()
-			
-		#else:
+		if self.alarm_state == True:
+			if GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.LOW:
+				'''
+				Get the system scale factors
+				'''
+				scales = self.getChannelScales()
+				inst_scales = []
+
+				for scale in scales:
+					inst_scales.append(scale / 256)
+
+
+				'''
+				Setup Alarm Structure
+				'''
+				self.alarm_state = False
+				
+				new_alarm = Alarm()
+				new_alarm.step_ms = 0.000512
+				new_alarm.start_ms = self.alarm_start_time
+				new_alarm.end_ms = self.alarm_stop_time
+
+				print("Reading Alarm Data...", end='')
+				
+
+				#configure SPI bus
+				spi = spidev.SpiDev()
+				spi.open(0, 0)
+				spi.mode = 3 # (CPOL = 1 | CPHA = 1) (0b11)
+				spi.max_speed_hz = 5000000
+
+				new_alarm = self.readAlarmSource(spi, new_alarm)
+
+				for sample in range(0,390*2):
+					#print("\nSend Block Request: %d", sample)
+					sampleMSB = (sample >> 8) & 0xFF
+					sampleLSB = (sample >> 0) & 0xFF				
+
+					spi.xfer2([0xF0, sampleLSB, sampleMSB, 0xFF, 0xFF])
+					self.readAlarmData(spi, inst_scales)
+
+				# for sample in range(0,390):
+				# 	self.b1_voltage_pha.append(500)
+				# 	self.b1_current_pha.append(500)
+				# 	self.b1_voltage_phb.append(500)
+				# 	self.b1_current_phb.append(500)
+				# 	self.b1_voltage_phc.append(500)
+				# 	self.b1_current_phc.append(500)
+				# 	self.b1_status_pha.append(500)
+				# 	self.b1_status_phb.append(500)
+				# 	self.b1_ph_imbalance.append(500)
+				# 	self.b2_voltage_pha.append(500)
+				# 	self.b2_current_pha.append(500)
+				# 	self.b2_voltage_phb.append(500)
+				# 	self.b2_current_phb.append(500)
+				# 	self.b2_voltage_phc.append(500)
+				# 	self.b2_current_phc.append(500)
+				# 	self.b2_status_phc.append(500)
+				# 	self.b2_ph_imbalance.append(500)
+
+				spi.xfer2([0xF2, 0xFF, 0xFF, 0xFF, 0xFF])
+
+				spi.close()
+
+				# while GPIO.input(AVALANCHE_GPIO_ALARM) == GPIO.HIGH: {}
+				#print(new_alarm)
+				#spi.close()
+				#print("Alarm Ended")
+				# new_alarm.end_ms = 0
+
+				new_alarm.data = {
+					"ch0": {
+						"s0": self.b1_voltage_pha
+					},
+					"ch1": {
+						"s0": self.b1_voltage_phb
+					},
+					"ch2": {
+						"s0": self.b1_voltage_phc
+					},
+					"ch3": {
+						"s0": self.b1_ph_imbalance
+					},
+					"ch4": {
+						"s0": self.b2_voltage_pha,
+						"s1": self.b2_current_pha
+					},
+					"ch5": {
+						"s0": self.b2_voltage_phb,
+						"s1": self.b2_current_phb
+					},
+					"ch6": {
+						"s0": self.b2_voltage_phc,
+						"s1": self.b2_current_phc
+					},
+					"ch7": {
+						"s0": self.b2_ph_imbalance
+					}
+				}
+
+				# print(new_alarm)
+				# print(new_alarm.data)
+
+				# print("B2 Voltage PHA")
+				# print(self.b2_voltage_pha)
+				# print("")
+				self.alarmManager.InsertAlarm(new_alarm)
+				print("Finished")
+				print(new_alarm)
+
+
+ 
 		for ch in self.Channels.values():
 			# update sensor values
 			if not ch.error:
@@ -561,6 +614,83 @@ class Avalanche(object):
 		self.tick = self.syncSensors()
 
 		return self.Channels
+
+
+	def readAlarmSource(self, handle, alarm):
+		alarm_source = 0
+		rxArray = []
+
+		handle.xfer2([0xF3, 0xFF, 0xFF, 0xFF, 0xFF])
+		rxArray = handle.xfer2([0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+		alarm_source = Stpm3x._bytes2int32_rev(Stpm3x, rxArray[0:4])
+
+		b0_pha_swell  = bool(alarm_source & (0x1 << 0))		#ch0
+		b0_pha_sag    = bool(alarm_source & (0x1 << 1))
+		b0_pha_outage = bool(alarm_source & (0x1 << 2))
+		b0_phb_swell  = bool(alarm_source & (0x1 << 3))		#ch1
+		b0_phb_sag    = bool(alarm_source & (0x1 << 4))
+		b0_phb_outage = bool(alarm_source & (0x1 << 5))
+		b0_phc_swell  = bool(alarm_source & (0x1 << 6))		#ch2
+		b0_phc_sag    = bool(alarm_source & (0x1 << 7))
+		b0_phc_outage = bool(alarm_source & (0x1 << 8))
+		b0_ph_imb     = bool(alarm_source & (0x1 << 9))
+
+		b1_pha_swell  = bool(alarm_source & (0x1 << 10))	#ch4
+		b1_pha_sag    = bool(alarm_source & (0x1 << 11))
+		b1_pha_outage = bool(alarm_source & (0x1 << 12))
+		b1_phb_swell  = bool(alarm_source & (0x1 << 13))	#ch5
+		b1_phb_sag    = bool(alarm_source & (0x1 << 14))
+		b1_phb_outage = bool(alarm_source & (0x1 << 15))
+		b1_phc_swell  = bool(alarm_source & (0x1 << 16))	#ch6
+		b1_phc_sag    = bool(alarm_source & (0x1 << 17))
+		b1_phc_outage = bool(alarm_source & (0x1 << 18))
+		b1_ph_imb     = bool(alarm_source & (0x1 << 19))
+
+		#Determine alarm type
+
+
+		if b0_pha_swell | b0_phb_swell | b0_phc_swell | b1_pha_swell | b1_phb_swell | b1_phc_swell:
+			alarm.type = 'SWELL'
+
+		if b0_pha_sag | b0_phb_sag | b0_phc_sag | b1_pha_sag | b1_phb_sag | b1_phc_sag:
+			alarm.type = 'SAG'
+
+		if b0_ph_imb | b1_ph_imb:
+			alarm.type = 'IMBALANCE'
+
+		if b0_pha_outage | b0_phb_outage | b0_phc_outage | b1_pha_outage | b1_phb_outage | b1_phc_outage:
+			alarm.type = 'OUTAGE'
+
+		#Determine alarm channel
+		if b0_pha_swell | b0_pha_sag | b0_pha_outage:
+			alarm.channel = 'ch0'
+
+		if b0_phb_swell | b0_phb_sag | b0_phb_outage:
+			alarm.channel = 'ch1'
+
+		if b0_phc_swell | b0_phc_sag | b0_phc_outage:
+			alarm.channel = 'ch2'
+
+		if b0_ph_imb:
+			alarm.channel = 'ch3'
+
+		if b1_pha_swell | b1_pha_sag | b1_pha_outage:
+			alarm.channel = 'ch4'
+
+		if b1_phb_swell | b1_phb_sag | b1_phb_outage:
+			alarm.channel = 'ch5'
+
+		if b1_phc_swell | b1_phc_sag | b1_phc_outage:
+			alarm.channel = 'ch6'
+
+		if b1_ph_imb:
+			alarm.channel = 'ch7'
+
+		#Determine alarm sensor
+		alarm.sensor = 's0'
+
+		return alarm
+
 
 	def readAlarmData(self, handle, scales):
 		txArray = []
@@ -593,7 +723,7 @@ class Avalanche(object):
 		self.b1_current_phc.append(Stpm3x.convert_raw(Stpm3x, rxArray[44:48], 'C1DATA', 0) * 0.02037096)
 		#b1_crmsvrms_phc = Stpm3x._bytes2int32_rev(Stpm3x, rxArray[48:52])
 		#b1_status_phc = Stpm3x._bytes2int32_rev(Stpm3x, rxArray[52:56])
-		self.b1_ph_imbalance.append(Stpm3x._bytes2int32_rev(Stpm3x, rxArray[56:60]))
+		self.b1_ph_imbalance.append(Stpm3x._bytes2int32_rev(Stpm3x, rxArray[56:60]) / 1000)
 
 		self.b2_voltage_pha.append(Stpm3x.convert_raw(Stpm3x, rxArray[60:64], 'V1DATA', 0) * scales[3])
 		self.b2_current_pha.append(Stpm3x.convert_raw(Stpm3x, rxArray[64:68], 'C1DATA', 0) * scales[4])
@@ -607,7 +737,7 @@ class Avalanche(object):
 		self.b2_current_phc.append(Stpm3x.convert_raw(Stpm3x, rxArray[96:100], 'C1DATA', 0) * scales[8])
 		#b2_crmsvrms_phc = Stpm3x._bytes2int32_rev(Stpm3x, rxArray[100:104])
 		#b2_status_phc = Stpm3x._bytes2int32_rev(Stpm3x, rxArray[104:108])
-		#self.b2_ph_imbalance.append(Stpm3x._bytes2int32_rev(Stpm3x, rxArray[108:112]))
+		self.b2_ph_imbalance.append(Stpm3x._bytes2int32_rev(Stpm3x, rxArray[108:112]) / 1000)
 
 		'''
 		#print(rxArray)
