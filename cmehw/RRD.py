@@ -1,4 +1,4 @@
-import os, glob, sys, time, random, re
+import os, logging, glob, sys, time, random, re
 import rrdtool
 
 from .common import Config
@@ -71,9 +71,8 @@ class RRD():
 	def __init__(self):
 		''' Verify connection to rrdcached on init
 		'''
-		from .Logging import Logger
 
-		self._logger = Logger # get main logger
+		self._logger = logging.getLogger(__name__)
 		self._logger.info("\nSetting up RRD")
 
 		start_time = time.time()

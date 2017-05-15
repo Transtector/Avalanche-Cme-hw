@@ -3,11 +3,10 @@
 # Works with hardware channels to save alarms if current channel values are not within nominal
 # region defined by channel threshold configuration
 
-import os, json, time, tempfile
+import os, logging, json, time, tempfile
 
 from random import randint
 
-from .Logging import Logger
 from .common import Config
 from .common.Switch import switch
 from .common.LockedOpen import LockedOpen
@@ -216,6 +215,8 @@ def _loadAlarms(channel):
 	# check for presence of "chX.alarms.reset" file
 	ch_alarms_reset = os.path.join(CHDIR, channel.id + '.alarms.reset')
 
+	logger = logging.getLogger(__name__)
+
 	if os.path.isfile(ch_alarms_reset):
 		# remove ch_alarms if it is present
 		if os.path.isfile(ch_alarms_file):
@@ -226,7 +227,7 @@ def _loadAlarms(channel):
 
 		# clear the global cache
 		ALARMS_CACHE[channel.id] = {}
-		Logger.info("{0} alarms reset".format(channel.id))
+		logger.info("{0} alarms reset".format(channel.id))
 
 	# read alarms from file to load cache - note that this is
 	# only done at startup.  Rest of the time, the cache
@@ -288,10 +289,13 @@ def _loadConfig(channel):
 	config_file = os.path.join(CHDIR, channel.id + '_config.json')
 	config_file_lastmod = os.stat(config_file).st_mtime
 
+	logger = logging.getLogger(__name__)
+
+
 	# if there's no config in the CONFIGS cache OR if the modification
 	# time has changed on the config file then go ahead and load from file
 	if not CONFIGS_CACHE.get(channel.id, None) or CONFIGS_CACHE.get(channel.id + '_lastmod', 0) != config_file_lastmod:
-		Logger.debug("Loading channel {0} configuration".format(channel.id))
+		logger.debug("Loading channel {0} configuration".format(channel.id))
 		# load channel config (if any)
 		if os.path.isfile(config_file):
 			with open(config_file, 'r') as f:

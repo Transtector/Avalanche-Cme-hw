@@ -1,4 +1,4 @@
-import os, time, glob, json
+import os, logging, time, glob, json
 
 from collections import deque
 
@@ -246,11 +246,10 @@ class Avalanche(object):
 
 	def __init__(self, alarmManager):
 
-		from .Logging import Logger
+		self._logger = logging.getLogger(__name__)
 
 		self.alarmManager = alarmManager
 
-		self._logger = Logger # get main logger
 		self._logger.info("Setting up GPIO")
 
 		GPIO.setwarnings(False)
