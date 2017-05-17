@@ -24,30 +24,30 @@ DOCKER_PKG=${BASENAME}.pkg.tgz
 DOCKER_NAME=cmehw:${VERSION}
 
 # Stage 1.  Build and publish base (recovery) package
-echo
-echo "    Stage 1.  Building and publishing base package: ${PACKAGE} ..."
-echo
+#echo
+#echo "    Stage 1.  Building and publishing base package: ${PACKAGE} ..."
+#echo
 
 # Build base image
-build/build.sh 
+#build/build.sh 
 
-echo
-echo "    ... done building."
-echo
+#echo
+#echo "    ... done building."
+#echo
 
 # Publish base image to S3
-cd build
-putS3 ${PACKAGE} Cme
-cd ..
+#cd build
+#putS3 ${PACKAGE} Cme
+#cd ..
 
-echo
-echo "    ... done publishing."
-echo
+#echo
+#echo "    ... done publishing."
+#echo
 
 
-# Stage 2.  Build and publish docker package
+# Stage 1.  Build and publish docker package
 echo
-echo "    Stage 2.  Building and publishing docker package: ${DOCKER_PKG} ..."
+echo "    Stage 1.  Building and publishing docker package: ${DOCKER_PKG} ..."
 echo "        a) Building docker image binaries ..."
 echo
 
