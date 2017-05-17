@@ -73,7 +73,7 @@ class RRD():
 		'''
 
 		self._logger = logging.getLogger(__name__)
-		self._logger.info("\nSetting up RRD")
+		self._logger.info("Setting up RRD")
 
 		start_time = time.time()
 
